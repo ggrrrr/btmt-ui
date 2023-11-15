@@ -10,7 +10,7 @@ jwt:
   ttl: 10m
   crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt
   keyFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.key
-  useMock: mock
+  # useMock: mock
 rest:
   address: 0.0.0.0:8010
 grpc:

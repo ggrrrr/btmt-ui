@@ -1,5 +1,8 @@
 import { defineStore } from "pinia";
 
+import { useConfig } from "@/store/app";
+const config = useConfig;
+
 export const useErrorStore = defineStore({
   id: "error",
   state: () => ({
@@ -26,7 +29,10 @@ export const useErrorStore = defineStore({
     networkErr(msg, err) {
       this.type = "network";
       this.message = msg;
-      this.errors = { network: err };
+      this.errors = {
+        baseUrl: config.BASE_URL,
+        network: err,
+      };
     },
     invalidResponse(message, error, response) {
       console.log("json.error", error);

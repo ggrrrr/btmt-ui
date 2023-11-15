@@ -25,6 +25,9 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Authorization")
+
 		if r.Method == http.MethodOptions {
 			logger.Log().Info().
 				Any("headers", r.Header).
@@ -38,15 +41,13 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 			// w.Header().Set("Access-Control-Allow-Origin", "*")
 			// w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			// w.Header().Set("Access-Control-Allow-Origin", "*")
+			// w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			out := "ok"
 			w.WriteHeader(200)
 			w.Write([]byte(out))
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 		var infoLog *zerolog.Event
 		if s.cfg.Jwt.UseMock == "" {
@@ -84,9 +85,9 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 
 		authInfo.Device = userRequest.Device
 		ctx := roles.CtxWithAuthInfo(r.Context(), authInfo)
-		r = r.Clone(ctx)
+		newReq := r.WithContext(ctx)
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, newReq)
 	})
 }
 

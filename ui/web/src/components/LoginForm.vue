@@ -20,6 +20,11 @@
                     <v-btn block class="mt-1" @click="loginClick">Login</v-btn>
                 </v-col>
             </v-row>
+            <v-row>
+                <v-col cols="4" md="4">
+                    <v-btn block class="mt-1" @click="validateClick">validate</v-btn>
+                </v-col>
+            </v-row>
         </v-container>
     </v-form>
 </template>
@@ -37,6 +42,10 @@ let loginStore = useLoginStore()
 function loginClick() {
     console.log("email", email.value)
     loginStore.loginRequest(email.value, password.value)
+}
+function validateClick() {
+    console.log("email", email.value)
+    loginStore.validateRequest()
 }
 
 </script>
