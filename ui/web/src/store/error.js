@@ -35,7 +35,7 @@ export const useErrorStore = defineStore({
 
       this.type = "system";
       this.message = message;
-      this.error = {
+      this.errors = {
         error: error,
         response: `[${response.status}]: ${response.statusText}`,
       };

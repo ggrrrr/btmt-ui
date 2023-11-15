@@ -6,7 +6,8 @@
         {{ errorStore.message }}
     </div>
     <div>
-        {{ errorStore.error }}
+        <li v-for="(item, index) in errorStore.errors" :key="index"> {{ index }} {{ item }} </li>
+        <!-- {{ errorStore.errors }} -->
     </div>
 </template>
 

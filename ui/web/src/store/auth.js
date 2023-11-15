@@ -27,8 +27,8 @@ export const useLoginStore = defineStore({
     async loginRequest(email, passwd) {
       // console.log("jsonData");
       // console.log(jsonData); nojson
-      // const url = config.BASE_URL + "/v1/auth/login/passwd";
-      const url = config.BASE_URL + "/v1/nojson";
+      const url = config.BASE_URL + "/v1/auth/login/passwd";
+      // const url = config.BASE_URL + "/v1/nojson";
       const requestOptions = {
         // mode: "no-cors",
         method: "POST",
