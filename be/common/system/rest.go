@@ -78,6 +78,7 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 		}
 		infoLog.
 			Any("Method", r.Method).
+			Any("asd", r.Header.Get(roles.HttpUserAgent)).
 			Any("remoteAddr", r.RemoteAddr).
 			Any("device", userRequest.Device).
 			Str("AuthScheme", userRequest.Authorization.AuthScheme).

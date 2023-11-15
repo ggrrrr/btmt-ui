@@ -11,9 +11,9 @@ let errorStore = useErrorStore();
 export const useLoginStore = defineStore({
   id: "auth",
   state: () => ({
-    email: "",
-    token: "",
-    error: "",
+    email: localStorage.getItem("email"),
+    token: localStorage.getItem("token"),
+    // error: "",
   }),
   actions: {
     createHeaders() {
@@ -35,6 +35,8 @@ export const useLoginStore = defineStore({
     resetLogin() {
       this.token = "";
       this.email = "";
+      localStorage.setItem("email", "");
+      localStorage.setItem("token", "");
     },
     async validateRequest() {
       const url = config.BASE_URL + "/v1/auth/validate";
@@ -51,12 +53,12 @@ export const useLoginStore = defineStore({
             console.log("data");
             console.log(data);
             if (data.code == 200) {
-              errorStore.reset();
+              errorStore.clean();
             } else if (data.code > 400 && data.code < 500) {
               this.resetLogin();
               errorStore.authError(data.message);
             } else {
-              errorStore.authError(data.message);
+              errorStore.networkErr(data.message, "");
             }
           })
           .catch((error) => {
@@ -92,14 +94,16 @@ export const useLoginStore = defineStore({
               console.log(data);
               this.email = data.payload.email;
               this.token = data.payload.token;
-              errorStore.reset();
+              localStorage.setItem("email", data.payload.email);
+              localStorage.setItem("token", data.payload.token);
+              errorStore.clean();
             } else if (data.code > 400 && data.code < 500) {
               console.log("code > 400 < 500");
               this.resetLogin();
               errorStore.authError(data.message);
             } else {
               console.log("code", data.code);
-              errorStore.authError(data.message);
+              errorStore.networkErr(data.message);
             }
           })
           .catch((error) => {

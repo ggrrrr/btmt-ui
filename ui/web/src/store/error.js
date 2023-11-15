@@ -9,24 +9,41 @@ export const useErrorStore = defineStore({
     type: "",
     message: "",
     errors: "",
+    show: false,
   }),
   actions: {
-    reset() {
+    alertType() {
+      if (this.type == "network") {
+        return "error";
+      }
+      if (this.type == "auth") {
+        return "error";
+      }
+      return "warning";
+    },
+    Hide() {
+      this.show = false;
+    },
+    clean() {
       this.type = "";
       this.message = "";
       this.errors = {};
+      this.show = false;
     },
     authError(msg) {
       this.type = "auth";
       this.message = msg;
       this.errors = {};
+      this.show = true;
     },
     systemErr(msg, err) {
       this.type = "system";
       this.message = msg;
       this.errors = { system: err };
+      this.show = true;
     },
     networkErr(msg, err) {
+      this.show = true;
       this.type = "network";
       this.message = msg;
       this.errors = {
@@ -35,10 +52,12 @@ export const useErrorStore = defineStore({
       };
     },
     invalidResponse(message, error, response) {
+      this.show = true;
       console.log("json.error", error);
       console.log(error);
       console.log(response);
 
+      this.alertType = "error";
       this.type = "system";
       this.message = message;
       this.errors = {

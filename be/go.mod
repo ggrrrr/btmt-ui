@@ -55,6 +55,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.284
 	github.com/go-chi/chi v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/mileusna/useragent v1.3.4
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.17.0

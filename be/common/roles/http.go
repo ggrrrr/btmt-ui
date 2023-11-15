@@ -1,8 +1,11 @@
 package roles
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/mileusna/useragent"
 )
 
 const (
@@ -19,6 +22,13 @@ func FromHttpMetadata(md http.Header, fullMethod string) UserRequest {
 	}
 	out.Authorization = extractHttpAuthorization(md)
 	out.Device = extractHttpDevice(md)
+
+	ua := useragent.Parse(out.Device.DeviceInfo)
+
+	// ua.String
+
+	out.Device.DeviceInfo = fmt.Sprintf("%s/%s/%s", ua.OS, ua.OSVersionNoFull(), ua.Name)
+
 	return out
 }
 
@@ -38,10 +48,10 @@ func extractHttpAuthorization(md http.Header) Authorization {
 
 func extractHttpDevice(md http.Header) Device {
 	out := Device{}
-	if len(md[lower(HttpUserAgent)]) > 0 {
+	if len(md[HttpUserAgent]) > 0 {
 		out.DeviceInfo = strings.Join(md[HttpUserAgent], ",")
 	}
-	if len(md[lower(HttpForwardedFor)]) > 0 {
+	if len(md[HttpForwardedFor]) > 0 {
 		out.RemoteAddr = strings.Join(md[HttpForwardedFor], ",")
 	}
 	return out

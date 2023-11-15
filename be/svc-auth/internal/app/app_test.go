@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -114,6 +115,95 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, authItemLocked.Email, "authItem.Passwd")
 				assert.ErrorIs(t, err, ErrAuthEmailLocked)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.test, tc.prep)
+	}
+
+}
+
+func TestValidate(t *testing.T) {
+	ctx := context.Background()
+	admin := roles.CreateAdminUser("test", roles.Device{})
+	ctx = roles.CtxWithAuthInfo(ctx, admin)
+	ctxNoEmail := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{})
+
+	sess, err := session.NewSession(&aws.Config{
+		Region:   aws.String("us-east-1"),
+		Endpoint: aws.String("http://localhost:4566"),
+	})
+	require.NoError(t, err)
+
+	store, err := dynamodb.New(sess, awsdb.DynamodbConfig{Prefix: "test"})
+	require.NoError(t, err)
+
+	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
+	require.NoError(t, err)
+
+	authItem := ddd.AuthPasswd{
+		Email:       "test@asd",
+		Passwd:      "newpass",
+		Status:      ddd.StatusEnabled,
+		SystemRoles: []string{"admin"},
+	}
+
+	authItemLocked := ddd.AuthPasswd{
+		Email:  "test@asdlocked",
+		Passwd: "newpass",
+		Status: ddd.StatusDisable,
+	}
+
+	// if this fail it will attempt to create table.
+	// We will ignore first error coz it will.
+	_ = testApp.CreateAuth(ctx, authItem)
+	err = testApp.CreateAuth(ctx, authItem)
+	require.NoError(t, err)
+
+	err = testApp.CreateAuth(ctx, authItemLocked)
+	require.NoError(t, err)
+
+	tests := []testCase{
+		{
+			test: "Validate empty auth info",
+			prep: func(tt *testing.T) {
+				err := testApp.Validate(ctxNoEmail)
+				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
+			},
+		},
+		{
+			test: "Validate ErrAuthEmailNotFound",
+			prep: func(tt *testing.T) {
+				authInfoNotFound := roles.AuthInfo{
+					User: "asdasdasd",
+				}
+				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
+				err := testApp.Validate(testCtx)
+				assert.ErrorIs(tt, err, ErrAuthEmailNotFound)
+			},
+		},
+		{
+			test: "Validate locked",
+			prep: func(tt *testing.T) {
+				authInfoNotFound := roles.AuthInfo{
+					User: authItemLocked.Email,
+				}
+				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
+				err := testApp.Validate(testCtx)
+				assert.ErrorIs(tt, err, ErrAuthEmailLocked)
+			},
+		},
+		{
+			test: "Validate ok",
+			prep: func(tt *testing.T) {
+				authInfoNotFound := roles.AuthInfo{
+					User: authItem.Email,
+				}
+				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
+				err := testApp.Validate(testCtx)
+				assert.NoError(tt, err)
 			},
 		},
 	}

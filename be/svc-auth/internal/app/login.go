@@ -45,5 +45,16 @@ func (ap *application) Validate(ctx context.Context) error {
 	if authInfo.User == "" {
 		return app.ErrAuthUnauthenticated
 	}
+	auth, err := ap.findEmail(ctx, authInfo.User)
+	if err != nil {
+		logger.Log().Debug().Err(err).Msg("failed to fetch email")
+		return app.ErrorSystem("failed to fetch email", err)
+	}
+	if auth == nil {
+		return ErrAuthEmailNotFound
+	}
+	if !canLogin(auth) {
+		return ErrAuthEmailLocked
+	}
 	return nil
 }
