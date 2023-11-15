@@ -42,6 +42,13 @@ export const useErrorStore = defineStore({
       this.errors = { system: err };
       this.show = true;
     },
+    inputErr(msg, err) {
+      console.log("asdasdasdasdasdasdasdas");
+      this.type = "input";
+      this.message = msg;
+      this.errors = { input: err };
+      this.show = true;
+    },
     networkErr(msg, err) {
       this.show = true;
       this.type = "network";
