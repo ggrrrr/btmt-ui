@@ -1,0 +1,310 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "buf:lint:ignore PACKAGE_VERSION_SUFFIX\nSome doc",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AuthSvc"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/auth/create": {
+      "post": {
+        "operationId": "AuthSvc_CreateAuth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbCreateAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbCreateAuthRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/list": {
+      "get": {
+        "operationId": "AuthSvc_ListAuth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbListAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/login/oauth2": {
+      "post": {
+        "operationId": "AuthSvc_LoginOauth2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbLoginOauth2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbLoginOauth2Request"
+            }
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/login/passwd": {
+      "post": {
+        "operationId": "AuthSvc_LoginPasswd",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbLoginPasswdResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbLoginPasswdRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/update/passwd": {
+      "get": {
+        "operationId": "AuthSvc_UpdatePasswd",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbUpdatePasswdResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "newPassword",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/validate": {
+      "post": {
+        "operationId": "AuthSvc_ValidateToken",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbValidateTokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbValidateTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "authpbCreateAuthRequest": {
+      "type": "object"
+    },
+    "authpbCreateAuthResponse": {
+      "type": "object"
+    },
+    "authpbListAuthResponse": {
+      "type": "object"
+    },
+    "authpbLoginOauth2Request": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "redirectUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "authpbLoginOauth2Response": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "authpbLoginPasswdRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "authpbLoginPasswdResponse": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "authpbUpdatePasswdResponse": {
+      "type": "object"
+    },
+    "authpbValidateTokenRequest": {
+      "type": "object"
+    },
+    "authpbValidateTokenResponse": {
+      "type": "object"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

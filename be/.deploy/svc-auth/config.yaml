@@ -1,0 +1,17 @@
+log:
+  level: debug
+  format: console
+aws:
+  database:
+    prefix: module
+  region: us-east-1
+  endpoint: http://localstack:4566
+jwt:
+  ttl: 10m
+  crtFile: /app/jwt.crt
+  keyFile: /app/jwt.key
+  # useMock: mock
+rest:
+  address: 0.0.0.0:8010
+grpc:
+  address: 0.0.0.0:8011

@@ -1,0 +1,26 @@
+log:
+  level: debug
+  format: console
+aws:
+  database:
+    prefix: module
+  region: us-east-1
+  endpoint: http://localhost:4566
+jwt:
+  ttl: 10m
+  crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt
+  keyFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.key
+  useMock: mock
+rest:
+  address: 0.0.0.0:8010
+grpc:
+  address: 0.0.0.0:8011
+prefix: module
+mongo:
+  debug: shit
+  ttl: 10s
+  collection: people
+  user: admin
+  passwd: pass
+  database: people
+  url: mongodb://localhost:27017/

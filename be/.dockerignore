@@ -1,0 +1,9 @@
+.*
+aws
+mongo
+swagger
+swagger-ui
+docker-compose.yaml
+jwt.*
+README.md
+config.yaml

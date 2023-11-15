@@ -1,0 +1,65 @@
+package repo
+
+import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func Test_objectId(t *testing.T) {
+	uuid1 := primitive.NewObjectID()
+	fmt.Printf("uiud: %v \n", uuid1)
+	hex := uuid1.Hex()
+	fmt.Printf("uiud: %x %v\n", hex, len(hex))
+
+	uuid1p, err := convertPersonId(hex)
+	assert.NoError(t, err)
+	assert.Equal(t, uuid1, uuid1p)
+	fmt.Printf("uiud : %s \n", uuid1p.String())
+	hex = uuid1p.Hex()
+	fmt.Printf("uiud: %s %v\n", hex, len(hex))
+
+	map1 := map[string]string{"key1": "val1", "key2": "val2"}
+	slice1 := toSlice(map1)
+	map1out := toMap(slice1)
+	fmt.Printf("%v %v\n", map1, slice1)
+	fmt.Printf("%v %v", map1out, slice1)
+	assert.Equal(t, map1, map1out)
+
+}
+
+func Test_FromPerson(t *testing.T) {
+
+	id1 := primitive.NewObjectID()
+
+	p1 := ddd.Person{
+		Id:       id1.Hex(),
+		PIN:      "123",
+		Email:    "asd@asd",
+		Name:     "asd",
+		FullName: "ewrcxf asd",
+		DateOfBirth: &ddd.Dob{
+			Year:  2001,
+			Month: 3,
+			Day:   13,
+		},
+		Gender:      "m",
+		Phones:      map[string]string{"asd": "asdasd"},
+		Labels:      []string{"red"},
+		Attr:        map[string]string{"some": "1"},
+		CreatedTime: time.Now(),
+	}
+
+	out1, err := fromPerson(&p1)
+	require.NoError(t, err)
+	p11 := out1.toPerson()
+	age := (time.Now().Year() - p1.DateOfBirth.Year)
+	p1.Age = &age
+	TestPerson(t, p11, p1, 10)
+	// assert.Equal(t, p1.DateOfBirth, p11.DateOfBirth)
+}

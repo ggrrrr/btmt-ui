@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+//buf:lint:ignore PACKAGE_VERSION_SUFFIX
+package peoplepb;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+// import "protoc-gen-openapiv2/options/annotations.proto";
+
+service PeopleSvc {
+  rpc Update(UpdateRequest) returns (UpdateResponse) {
+    option (google.api.http) = {
+      post: "/v1/people/update";
+      body: "*";
+    };
+  };
+  rpc Save(SaveRequest) returns (SaveResponse) {
+    option (google.api.http) = {
+      post: "/v1/people/save";
+      body: "*";
+    };
+  };
+  rpc Get(GetRequest) returns (GetResponse) {
+    option (google.api.http) = {
+      post: "/v1/people/get";
+      body: "*";
+    };
+  };
+  rpc List(ListRequest) returns (ListResponse) {
+    option (google.api.http) = {
+      post: "/v1/people/list";
+      body: "*";
+    };
+  };
+}
+
+
+message SaveRequest{
+  Person data = 1;
+}
+
+message SaveResponse{
+  string id = 1;
+}
+
+message UpdateRequest{
+  Person data = 1;
+}
+
+message UpdateResponse{
+}
+
+message ListText {
+  repeated string list = 1;
+}
+
+message ListRequest{
+  map<string,ListText> filters = 1;
+}
+
+message ListResponse{
+  repeated Person list = 1;
+}
+
+message GetRequest{
+  string id = 1;
+}
+
+message GetResponse{
+  Person data = 1;
+}
+
+message Dob {
+  uint32 year  = 1;
+  uint32 month  = 2;
+  uint32 day  = 3;
+}
+
+message Person{
+  string id = 1;
+  string pin = 2;
+  string email = 3;
+  string name = 4;
+  string full_name = 5;
+  Dob dob = 6;
+  string gender = 7;
+  map<string,string> phones = 8;
+  repeated string labels = 9;
+  map<string,string> attr = 10;
+  google.protobuf.Timestamp created_at = 11;
+  string age = 12;
+}

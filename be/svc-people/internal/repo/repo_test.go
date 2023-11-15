@@ -1,0 +1,464 @@
+package repo
+
+import (
+	"context"
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+)
+
+type (
+	testCase struct {
+		test string
+		run  func(t *testing.T)
+	}
+)
+
+func TestSave(t *testing.T) {
+	ctx := context.Background()
+	cfg := mongodb.Config{
+		TTL:        10 * time.Second,
+		Collection: "TestSave",
+		User:       "admin",
+		Passwd:     "pass",
+		Database:   "people",
+		Url:        "mongodb://localhost:27017/",
+	}
+	testDb, err := mongodb.New(ctx, cfg)
+	require.NoError(t, err)
+	// defer testRepo.Close()
+	defer testDb.Close(ctx)
+
+	testRepo := New(cfg.Collection, testDb)
+
+	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
+	require.NoError(t, err)
+
+	tests := []testCase{
+		{
+			test: "happy get nil",
+			run: (func(t *testing.T) {
+				noRec, err := testRepo.GetById(ctx, primitive.NewObjectID().Hex())
+				assert.NoError(t, err)
+				assert.Nil(t, noRec)
+			}),
+		}, {
+			test: "happy save get",
+			run: func(t *testing.T) {
+				p1 := &ddd.Person{
+					PIN:      "sasd",
+					Name:     "ggrrrr",
+					Email:    "asdasd@asd",
+					FullName: "varban krushev",
+					Labels:   []string{"tours:bike", "tours:hike", "kids"},
+					Phones:   map[string]string{"mobile": "123123123"},
+					Attr:     map[string]string{"food": "veg"},
+					Gender:   "male",
+				}
+				err = testRepo.Save(ctx, p1)
+				assert.NoError(t, err)
+				assert.True(t, p1.Id != "")
+				assert.True(t, !p1.CreatedTime.IsZero(), "Created Time must be set")
+
+				p2, err := testRepo.GetById(ctx, p1.Id)
+				assert.NoError(t, err)
+				assert.True(t, !p2.CreatedTime.IsZero())
+				p1.CreatedTime = p2.CreatedTime
+				TestPerson(t, *p2, *p1, 10)
+				fmt.Printf("got %v \n", p2)
+			},
+		},
+		{
+			test: "update",
+			run: func(t *testing.T) {
+				p1 := &ddd.Person{
+					Name:     "ggrrrr",
+					Email:    "asdasd@asd",
+					FullName: "not varban krushev",
+				}
+				err = testRepo.Save(ctx, p1)
+				assert.NoError(t, err)
+				assert.True(t, p1.Id != "")
+				assert.True(t, !p1.CreatedTime.IsZero())
+
+				p2 := &ddd.Person{
+					Id:     p1.Id,
+					PIN:    "newpin",
+					Labels: []string{"tours:bike", "tours:hike", "kids"},
+					Phones: map[string]string{"mobile": "123123123"},
+					Attr:   map[string]string{"food": "veg"},
+					Gender: "male",
+				}
+
+				err = testRepo.Update(ctx, p2)
+				p3, err := testRepo.GetById(ctx, p1.Id)
+				require.NoError(t, err)
+				p3.CreatedTime = p1.CreatedTime
+				assert.Equal(t, p3.Name, p1.Name)
+				assert.Equal(t, p3.Email, p1.Email)
+				assert.Equal(t, p3.FullName, p1.FullName)
+				assert.Equal(t, p3.PIN, p2.PIN)
+				assert.Equal(t, p3.Labels, p2.Labels)
+				assert.Equal(t, p3.Phones, p2.Phones)
+				assert.Equal(t, p3.Attr, p2.Attr)
+				assert.Equal(t, p3.Gender, p2.Gender)
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.test, func(t *testing.T) {
+			tc.run(t)
+		})
+	}
+
+}
+
+// https://github.com/mongodb/mongo-go-driver/blob/v1.12.1/examples/documentation_examples/examples.go
+func TestList(t *testing.T) {
+	ctx := context.Background()
+	cfg := mongodb.Config{
+		TTL:        10 * time.Second,
+		Collection: "TestList",
+		User:       "admin",
+		Passwd:     "pass",
+		Database:   "people",
+		Url:        "mongodb://localhost:27017/",
+		Debug:      "console",
+	}
+	testDb, err := mongodb.New(ctx, cfg)
+	require.NoError(t, err)
+	defer testDb.Close(ctx)
+
+	testRepo := New(cfg.Collection, testDb)
+
+	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
+	require.NoError(t, err)
+
+	newData := map[string]*ddd.Person{
+		"ggrrrr": {
+			PIN:      "ggrrrrpin",
+			Name:     "ggrrrr",
+			Email:    "ggrrrr@gmail.com",
+			FullName: "ggrrrr varban krushev",
+			// DateOfBirth: time.Date(1978, 2, 13, 0, 0, 0, 0, time.Local),
+			Labels: []string{"tours:snow", "instructor:kids"},
+			Phones: map[string]string{"mobile": "99009900"},
+			Attr:   map[string]string{"food": "veg"},
+			Gender: "male",
+		},
+		"mandajiev": {
+			PIN:      "mandajievpin",
+			Name:     "mandajiev",
+			Email:    "mandajiev@yahoo.com",
+			FullName: "mandajiev asdasd asdasd",
+			// DateOfBirth: time.Date(1990, 4, 23, 0, 0, 0, 0, time.Local),
+			Labels: []string{"tours:bike", "volunteer:mtb", "bike:mtb"},
+			Phones: map[string]string{"mobile": "223123123"},
+			Attr:   map[string]string{"sleep": "no-tent"},
+			Gender: "male",
+		},
+	}
+	list, err := testRepo.List(ctx, nil)
+	require.NoError(t, err)
+	if len(list) == 0 {
+		for _, p := range newData {
+			err = testRepo.Save(ctx, p)
+			require.NoError(t, err)
+		}
+		printMap("NEW DATA", newData)
+	}
+
+	tests := []testCase{
+		{
+			test: "happy list all two records",
+			run: (func(t *testing.T) {
+				list, err = testRepo.List(ctx, nil)
+				require.NoError(t, err)
+				assert.Equal(t, 2, len(list), "records")
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		}, {
+			test: "happy list all two empty filter",
+			run: (func(t *testing.T) {
+				filter, err := NewFilter()
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, 2, len(list), "records")
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test regexpr for label add or  labels filter 1 rec",
+			run: (func(t *testing.T) {
+				filter, err := NewFilter(AddLabels("instructor"), AddLabels("mtb"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, 1, len(list), "records")
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test regexpr for label add or  labels filter 2 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddLabels("instructor"), AddLabels("bike:mtb"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 2)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test text search 0 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddTexts("ggrrrrpin"), AddTexts("pin"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 0)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test text search 2 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddTexts("ggrrrr"), AddTexts("asdasd"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 2)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test phone and label 1 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddLabels("volunteer"), AddPhones("223123123"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 1)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test phones and labels 2 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddLabels("volunteer", "tours"), AddPhones("223123123", "99009900"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 2)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "test text and phone 1 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddTexts("asdasd"), AddPhones("223123123", "99009900"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 1)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+		{
+			test: "pin 1 rec",
+			run: (func(t *testing.T) {
+				// t.Skip("1")
+				filter, err := NewFilter(AddPINs("mandajievpin"))
+				require.NoError(t, err)
+
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(t, err)
+				assert.Equal(t, len(list), 1)
+				for _, p := range list {
+					newData[p.Name].Id = p.Id
+					TestPerson(t, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.test, func(tt *testing.T) {
+			tc.run(tt)
+		})
+	}
+
+}
+
+func TestUpdate(t *testing.T) {
+	ctx := context.Background()
+	cfg := mongodb.Config{
+		TTL:        10 * time.Second,
+		Collection: "TestUpdate",
+		User:       "admin",
+		Passwd:     "pass",
+		Database:   "people",
+		Url:        "mongodb://localhost:27017/",
+	}
+	testDb, err := mongodb.New(ctx, cfg)
+	require.NoError(t, err)
+	defer testDb.Close(ctx)
+
+	testRepo := New(cfg.Collection, testDb)
+
+	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
+	require.NoError(t, err)
+
+	tests := []testCase{
+		{
+			test: "happy get nil",
+			run: (func(t *testing.T) {
+				noRec, err := testRepo.GetById(ctx, primitive.NewObjectID().Hex())
+				assert.NoError(t, err)
+				assert.Nil(t, noRec)
+			}),
+		}, {
+			test: "happy save get",
+			run: func(t *testing.T) {
+				p1 := &ddd.Person{
+					PIN:      "sasd",
+					Name:     "ggrrrr",
+					Email:    "asdasd@asd",
+					FullName: "varban krushev",
+					Labels:   []string{"tours:bike", "tours:hike", "kids"},
+					Phones:   map[string]string{"mobile": "123123123"},
+					Attr:     map[string]string{"food": "veg"},
+					Gender:   "male",
+				}
+				err = testRepo.Save(ctx, p1)
+				require.NoError(t, err)
+				require.True(t, p1.Id != "")
+				require.True(t, !p1.CreatedTime.IsZero(), "Created Time must be set")
+
+				p2, err := testRepo.GetById(ctx, p1.Id)
+				require.NoError(t, err)
+				require.True(t, !p2.CreatedTime.IsZero())
+				p1.CreatedTime = p2.CreatedTime
+				TestPerson(t, *p2, *p1, 10)
+				fmt.Printf("got %v \n", p2)
+			},
+		},
+		{
+			test: "update",
+			run: func(t *testing.T) {
+				p1 := &ddd.Person{
+					Name:     "ggrrrr",
+					Email:    "asdasd@asd",
+					FullName: "not varban krushev",
+				}
+				err = testRepo.Save(ctx, p1)
+				assert.NoError(t, err)
+				assert.True(t, p1.Id != "")
+				assert.True(t, !p1.CreatedTime.IsZero())
+
+				p2 := &ddd.Person{
+					Id:     p1.Id,
+					PIN:    "newpin",
+					Labels: []string{"tours:bike", "tours:hike", "kids"},
+					Phones: map[string]string{"mobile": "123123123"},
+					Attr:   map[string]string{"food": "veg"},
+					Gender: "male",
+				}
+
+				err = testRepo.Update(ctx, p2)
+				p3, err := testRepo.GetById(ctx, p1.Id)
+				require.NoError(t, err)
+				p3.CreatedTime = p1.CreatedTime
+				assert.Equal(t, p3.Name, p1.Name)
+				assert.Equal(t, p3.Email, p1.Email)
+				assert.Equal(t, p3.FullName, p1.FullName)
+				assert.Equal(t, p3.PIN, p2.PIN)
+				assert.Equal(t, p3.Labels, p2.Labels)
+				assert.Equal(t, p3.Phones, p2.Phones)
+				assert.Equal(t, p3.Attr, p2.Attr)
+				assert.Equal(t, p3.Gender, p2.Gender)
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.test, func(t *testing.T) {
+			tc.run(t)
+		})
+	}
+
+}
+
+func printList(name string, list []ddd.Person) {
+	fmt.Printf("%s: START---------------\n", name)
+	for _, v := range list {
+		fmt.Printf("%s: %#v\n", name, v)
+	}
+	fmt.Printf("%s: END.\n\n", name)
+}
+
+func printMap(name string, list map[string]*ddd.Person) {
+	fmt.Printf("%s: START---------------\n", name)
+	for _, v := range list {
+		fmt.Printf("%s: %#v\n", name, v)
+	}
+	fmt.Printf("%s: END.\n\n", name)
+}

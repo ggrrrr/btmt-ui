@@ -1,0 +1,19 @@
+log:
+  level: debug
+  format: console
+jwt:
+  crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt
+  useMock: mock
+rest:
+  address: 0.0.0.0:8020
+grpc:
+  address: 0.0.0.0:8021
+prefix: module
+mongo:
+  debug: shit
+  ttl: 10s
+  collection: people
+  user: admin
+  passwd: pass
+  database: people
+  url: mongodb://mongo:27017/

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+//buf:lint:ignore PACKAGE_VERSION_SUFFIX
+// Some doc
+package eventspb;
+
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message Event{
+    string id = 1;
+    string name = 2;
+    string status = 3;
+    // treking/kids/bike/...
+    string event_type = 4;
+    // kids:smola,kids:skala..., treking:snow
+    string event_category = 5;
+    string registration_deadline = 8;
+    string duration = 6;
+    string admin_group = 7;
+    string guides = 8;
+    string links = 8;
+    string prices = 9; 
+}

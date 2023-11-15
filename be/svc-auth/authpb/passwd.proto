@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+//buf:lint:ignore PACKAGE_VERSION_SUFFIX
+// Some doc
+package authpb;
+
+import "google/api/annotations.proto";
+// import "protoc-gen-openapiv2/options/annotations.proto";
+
+service AuthSvc {
+  rpc CreateAuth(CreateAuthRequest) returns (CreateAuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/create";
+      body: "*";
+    };
+  };
+  rpc LoginPasswd(LoginPasswdRequest) returns (LoginPasswdResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/login/passwd";
+      body: "*";
+    };
+  };
+  rpc LoginOauth2(LoginOauth2Request) returns (LoginOauth2Response) {
+    option (google.api.http) = {
+      post: "/v1/auth/login/oauth2";
+      body: "*";
+    };
+  };
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/validate";
+      body: "*";
+    };
+  };
+  rpc UpdatePasswd(UpdatePasswdRequest) returns (UpdatePasswdResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/update/passwd";
+    };
+  };
+  rpc ListAuth(ListAuthRequest) returns (ListAuthResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/list";
+    };
+  };
+}
+
+message CreateAuthRequest {}
+message CreateAuthResponse {
+    
+}
+
+message ListAuthRequest {}
+message ListAuthResponse {}
+
+message LoginPasswdRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginPasswdResponse {
+  string email = 1;
+  string token = 2;
+}
+
+message UpdatePasswdRequest {
+  string email = 1;
+  string password = 2;
+  string new_password = 3;
+}
+message UpdatePasswdResponse {}
+
+message ValidateTokenRequest {}
+message ValidateTokenResponse {}
+
+message LoginOauth2Request {
+  string state = 1;
+	string code = 2;
+	string provider = 3;
+	string redirect_url = 4;
+}
+
+message LoginOauth2Response {
+  string email = 1;
+  string token = 2;
+}
