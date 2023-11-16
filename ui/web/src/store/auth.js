@@ -27,60 +27,18 @@ export const useLoginStore = defineStore({
       localStorage.setItem("token", "");
     },
     async validateRequest() {
-      console.log("validateRequest validateRequest validateRequest");
       const url = config.BASE_URL + "/v1/auth/validate";
       const requestOptions = {
         method: "POST",
-        // headers: this.createHeaders(),
         body: JSON.stringify({}),
       };
-      try {
-        fetchAPIFunc(url, "payload", requestOptions)
-          .then((result) => {
-            console.log("result:", result);
-          })
-          .catch((error) => {
-            console.log("error::::", error);
-          });
-      } catch (error) {
-        console.log("catch.error:", error);
-      }
-    },
-    async validateRequest1() {
-      const url = config.BASE_URL + "/v1/auth/validate";
-      const requestOptions = {
-        method: "POST",
-        headers: this.createHeaders(),
-        body: JSON.stringify({}),
-      };
-      try {
-        const response = await fetch(url, requestOptions);
-        response
-          .json()
-          .then((data) => {
-            console.log("data");
-            console.log(data);
-            if (data.code == 200) {
-              errorStore.clean();
-            } else if (data.code > 400 && data.code < 500) {
-              this.resetLogin();
-              errorStore.authError(data.message);
-            } else {
-              errorStore.networkErr(data.message, "");
-            }
-          })
-          .catch((error) => {
-            errorStore.invalidResponse("invalid response", error, response);
-          });
-      } catch (error) {
-        console.log("error");
-        console.log(error);
-        errorStore.networkErr("unable to make request", error);
+      const result = await fetchAPIFunc(url, requestOptions);
+      if (!result.ok) {
+        console.log(result);
       }
     },
     async loginRequest(email, passwd) {
       const url = config.BASE_URL + "/v1/auth/login/passwd";
-      // const url = config.BASE_URL + "/v1/nojson";
       const requestOptions = {
         // mode: "no-cors",
         method: "POST",
@@ -89,78 +47,25 @@ export const useLoginStore = defineStore({
           password: passwd,
         }),
       };
-      // try {
-      fetchAPIFunc(url, "payload", requestOptions).then(
-        (result) => {
-          this.email = result.email;
-          this.token = result.token;
-          console.log("result:", result);
-        },
-        (error) => {
-          // errorStore.networkErr("network error", error.message);
-          console.log("error::::", error);
-        }
-      );
-      // } catch (error) {
-      // console.log("catch.error:", error);
-      // }
-    },
-
-    async loginRequest1(email, passwd) {
-      const url = config.BASE_URL + "/v1/auth/login/passwd";
-      // const url = config.BASE_URL + "/v1/nojson";
-      const requestOptions = {
-        // mode: "no-cors",
-        method: "POST",
-        body: JSON.stringify({
-          email: email,
-          password: passwd,
-        }),
-      };
-      try {
-        const response = await fetch(url, requestOptions);
-        response
-          .json()
-          .then((data) => {
-            console.log("data");
-            console.log(data);
-            if (data.code == 200) {
-              console.log("data === 200");
-              console.log(data);
-              this.email = data.payload.email;
-              this.token = data.payload.token;
-              localStorage.setItem("email", data.payload.email);
-              localStorage.setItem("token", data.payload.token);
-              errorStore.clean();
-            } else if (data.code > 400 && data.code < 500) {
-              console.log("code > 400 < 500");
-              this.resetLogin();
-              errorStore.authError(data.message);
-            } else {
-              console.log("code", data.code);
-              errorStore.networkErr(data.message);
-            }
-          })
-          .catch((error) => {
-            errorStore.invalidResponse("invalid response", error, response);
-          });
-      } catch (error) {
-        console.log("error");
-        console.log(error);
-        errorStore.networkErr("unable to make request", error);
+      const { result, ok, error } = await fetchAPIFunc(url, requestOptions);
+      if (ok) {
+        console.log("result", result);
+        this.email = result.email;
+        this.token = result.token;
+      } else {
+        console.log("error:", error);
       }
     },
   },
 });
 
-const fetchAPIFunc = async function (url, payload = "payload", opts = {}) {
+const fetchAPIFunc = function (url, opts = {}) {
   let loginStore = useLoginStore();
   let headers = {
     "Content-Type": "application/json",
   };
   if (loginStore.token) {
-    const bearer = "Bearer " + loginStore.token;
-    headers["Authorization"] = bearer;
+    headers["Authorization"] = "Bearer " + loginStore.token;
   }
 
   const options = {
@@ -171,74 +76,88 @@ const fetchAPIFunc = async function (url, payload = "payload", opts = {}) {
     options.method = opts.method;
   }
   if (opts.headers) {
-    options.headers.push(opts.method);
+    options.headers.push(opts.headers);
   }
   if (opts.body) {
     options.body = opts.body;
   }
-  return fetch(url, options).then((response) => {
-    if (response.ok) {
-      const contentType = response.headers.get("Content-Type") || "";
-      if (contentType.includes("application/json")) {
-        return response
-          .json()
-          .then((data) => {
-            console.log("json.data:", data);
-            if (data[payload]) {
-              console.log("json.data.payload:", data[payload]);
-              return data[payload];
+
+  let out = {
+    result: null,
+    ok: false,
+    err: null,
+  };
+
+  return fetch(url, options)
+    .then((response) => {
+      console.log("fetch.then OK");
+      let message = response.statusText;
+      let error = response.statusText;
+      return response
+        .json()
+        .then((data) => {
+          if (response.ok) {
+            console.log("fetch.then.json OK");
+            out.ok = true;
+            out.err = null;
+            if (data["payload"]) {
+              out.result = data["payload"];
+              return Promise.resolve(out);
             }
-            console.log("json.data:", data);
-            return data;
-          })
-          .catch((error) => {
-            console.log("json.data.error:", error);
-            errorStore.systemErr("json error", error);
-            return Promise.reject(new Error("Invalid JSON: " + error.message));
-          });
-      }
-      console.log("unkown error:::", response);
-      errorStore.systemErr("unkown error", response.statusText);
-      return Promise.reject(new Error("unkown error"));
-    }
+            out.result = data;
+            return Promise.resolve(out);
+          }
+          console.log("fetch.then.json !response.ok");
+          console.log("response.status", response.status);
+          console.log("error.json.data", data);
+          message = data.message;
+          error = data.error ? data.error : "";
+          // Auth error
+          if (response.status === 401 || response.status === 403) {
+            console.log("json.error 401/403", data);
+            errorStore.authError(message);
+            loginStore.resetLogin();
 
-    if (response.status == 401 || response.status == 403) {
-      console.log("reset login token", response.status, response.statusText);
-      loginStore.resetLogin();
-    }
+            out.result = null;
+            out.ok = false;
+            out.err = Error(`${message} ${error}`);
+            return Promise.resolve(out);
+          }
+          if (response.status === 400) {
+            console.log("json.error 400", data);
+            errorStore.inputErr(message, "");
+            out.result = null;
+            out.ok = false;
+            out.err = Error(`${message} ${error}`);
+            return Promise.resolve(out);
+          }
+          console.log("json.error none", data);
+          errorStore.networkErr("Pleasetry again later", response.statusText);
+          out.result = null;
+          out.ok = false;
+          out.err = Error(`${message} ${error}`);
+          // return null, false, Error(`${message} ${error}`);
+          return Promise.resolve(out);
+          // return Promise.reject(new Error(`${message} ${error}`));
+        })
+        .catch((err) => {
+          console.log("catch.json", err);
+          errorStore.networkErr(message, error);
 
-    let message = response.statusText;
-    let error = response.statusText;
-
-    return response
-      .json()
-      .then((data) => {
-        console.log("json.error", data);
-        console.log("response.status", response.status);
-        message = data.message;
-        error = data.error ? data.error : "";
-        // Auth error
-        if (response.status === 401 || response.status === 403) {
-          console.log("json.error 401", data);
-          errorStore.authError(message);
-          return Promise.reject(new Error(`${message} ${error}`));
-        }
-        if (response.status === 400) {
-          console.log("json.error 400", data);
-
-          errorStore.inputErr(message, "");
-          return Promise.reject(new Error(`${message} ${error}`));
-        }
-        console.log("json.error none", data);
-        errorStore.networkErr(message, "");
-        return Promise.reject(new Error(`${message} ${error}`));
-      })
-      .catch((err) => {
-        console.log("ASDASDASDASDASDASDASD", err);
-        // errorStore.networkErr(message, error);
-        return Promise.reject(err);
-      });
-  });
+          out.result = null;
+          out.ok = false;
+          out.err = Error(`${message} ${error}`);
+          return Promise.resolve(out);
+        });
+    })
+    .catch((error) => {
+      console.log("fetch.catch ", error);
+      errorStore.networkErr("network error", error);
+      out.result = null;
+      out.ok = false;
+      out.err = error;
+      return Promise.resolve(out);
+    });
 };
 
 export const fetchAPI = fetchAPIFunc;

@@ -43,7 +43,6 @@ export const useErrorStore = defineStore({
       this.show = true;
     },
     inputErr(msg, err) {
-      console.log("asdasdasdasdasdasdasdas");
       this.type = "input";
       this.message = msg;
       this.errors = { input: err };
@@ -54,8 +53,8 @@ export const useErrorStore = defineStore({
       this.type = "network";
       this.message = msg;
       this.errors = {
-        baseUrl: config.BASE_URL,
-        network: err,
+        url: config.BASE_URL,
+        error: err,
       };
     },
     invalidResponse(message, error, response) {

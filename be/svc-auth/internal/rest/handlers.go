@@ -26,7 +26,8 @@ func New(a app.App) *server {
 
 func (s *server) Router() chi.Router {
 	router := chi.NewRouter()
-	router.Post("/v1/nojson", noJson400)
+	router.Post("/v1/noJson400", noJson400)
+	router.Post("/v1/json500", json500)
 	router.Post("/v1/auth/login/passwd", s.LoginPasswd)
 	router.Get("/v1/auth/validate", s.Validate)
 	router.Post("/v1/auth/validate", s.Validate)
@@ -36,6 +37,11 @@ func (s *server) Router() chi.Router {
 func noJson400(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(400)
 	w.Write([]byte("asdasd"))
+}
+
+func json500(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(500)
+	w.Write([]byte(`{"me":"json500"}`))
 }
 
 func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {

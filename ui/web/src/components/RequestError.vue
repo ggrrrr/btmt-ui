@@ -3,7 +3,7 @@
 
     <v-dialog v-model="errorStore.show" width="500">
         <v-alert :type="errorStore.alertType()" :text="errorStore.message">
-            <div v-for="(item, index) in errorStore.errors" :key="index">{{ item }}</div>
+            <div v-for="(item, index) in errorStore.errors" :key="index">{{ index }} {{ item }}</div>
         </v-alert>
     </v-dialog>
     <!-- </v-flex> -->
