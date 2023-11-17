@@ -1,51 +1,37 @@
 <template>
-    <v-form>
-        <v-container>
-            <v-row>
-                <v-col cols="4" md="4">
-                    <v-text-field autocomplete="current-username" v-model="email" label="Email" type="text"
-                        prepend-icon="mdi-account-circle" required hide-details></v-text-field>
-                </v-col>
-            </v-row>
-            <v-row>
-                <v-col cols="4" md="4">
-                    <v-text-field autocomplete="current-password" v-model="password" label="Password" hide-details
-                        prepend-icon="mdi-lock" :append-icon="!showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                        :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword"
-                        required></v-text-field>
-                </v-col>
-            </v-row>
-            <v-row>
-                <v-col cols="4" md="4">
-                    <v-btn block class="mt-1" @click="loginClick">Login</v-btn>
-                </v-col>
-            </v-row>
-            <v-row>
-                <v-col cols="4" md="4">
-                    <v-btn block class="mt-1" @click="validateClick">validate</v-btn>
-                </v-col>
-            </v-row>
-        </v-container>
-    </v-form>
+    <v-sheet class="ma-2 pa-2" width="100%">
+        <v-form>
+            <v-text-field :disabled="!props.enabled" class="mr-2" autocomplete="current-username" v-model="email"
+                label="Email" type="email" prepend-icon="mdi-account-circle" required hide-details></v-text-field>
+            <v-text-field :disabled="!props.enabled" class="mr-2" autocomplete="current-password" v-model="password"
+                label="Password" hide-details prepend-icon="mdi-lock"
+                :append-inner-icon="!showPassword ? 'mdi-eye-off' : 'mdi-eye'" :type="showPassword ? 'text' : 'password'"
+                @click:append-inner="showPassword = !showPassword" required></v-text-field>
+            <v-card-actions justify="center">
+                <v-btn :disabled="!props.enabled" block rounded density="comfortable" @click="handleSubmit">Submit</v-btn>
+            </v-card-actions>
+        </v-form>
+    </v-sheet>
 </template>
 
 <script setup>
-import { useLoginStore } from "@/store/auth";
+import { defineEmits, defineProps } from 'vue'
 import { ref } from "vue";
 
 const email = ref("")
 const password = ref("")
 const showPassword = ref(false)
 
-let loginStore = useLoginStore()
+const emits = defineEmits(['submit'])
+const props = defineProps(["enabled"])
 
-function loginClick() {
-    console.log("email", email.value)
-    loginStore.loginRequest(email.value, password.value)
-}
-function validateClick() {
-    console.log("email", email.value)
-    loginStore.validateRequest()
+
+
+console.log("props.enabled:", props.enabled)
+
+function handleSubmit() {
+    console.log("handleSubmit", props.enabled)
+    emits("submit", email.value, password.value)
 }
 
 </script>

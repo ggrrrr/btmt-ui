@@ -74,7 +74,7 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 		web.SendError(w, err)
 	}
 	p := req.ToPerson()
-	logger.Log().Info().Any("person", &req).Any("", logger.LogTraceData(r.Context())).Msg("Save")
+	logger.Log().Info().Any("person", &req).Any("trace", logger.LogTraceData(r.Context())).Msg("Save")
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
 		web.SendError(w, err)

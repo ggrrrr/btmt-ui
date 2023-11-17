@@ -7,7 +7,7 @@ aws:
   region: us-east-1
   endpoint: http://localstack:4566
 jwt:
-  ttl: 10m
+  ttl: 1000m
   crtFile: /app/jwt.crt
   keyFile: /app/jwt.key
   # useMock: mock

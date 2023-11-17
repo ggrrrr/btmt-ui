@@ -1,5 +1,7 @@
 <template>
-  <HelloWorld />
+  <v-main>
+    <HelloWorld />
+  </v-main>
 </template>
 
 <script setup>

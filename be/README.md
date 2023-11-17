@@ -54,13 +54,25 @@ go run svc-auth/cmd/main.go list
 go run svc-auth/cmd/main.go client --email asd@asd -p asdasd
 
 
-curl -v -XPOST -d'{"email":"asd@asd123","password":"asdasdasd"}' ${REST_URL}/rest/v1/auth/login/passwd | jq -r '.token' | pbcopy
+curl -v -XPOST -d'{"email":"asd@asd","password":"asdasd"}' \
+  ${REST_URL}/rest/v1/auth/login/passwd | jq -r '.payload.token' | pbcopy
+
 export T="<CTRL+V>"
-curl -v -H"Authorization: Barier $T" -XPOST -d'{"password":"1asdasdasd","new_password":"asd"}' ${REST_URL}/v1/auth/update/passwd
 
-curl -v -H'Authorization: mock admin' -XPOST -d'{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}' ${REST_URL}/rest/v1/people/save
+curl -v -H"Authorization: Bearer $T" -XPOST  ${REST_URL}/rest/v1/auth/validate
 
-curl -v -H'Authorization: mock admin' -XPOST -d'{"filters":{"phones":{"list":["asd@asd123"]}}}' ${REST_URL}/rest/v1/people/list | jq
+curl -v -H"Authorization: Bearer $T" -XPOST \
+  -d'{"password":"1asdasdasd","new_password":"asd"}' \
+  ${REST_URL}/v1/auth/update/passwd
+
+   -d'{"data":{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}' \
+
+curl -v -H"Authorization: Bearer $T" -XPOST \
+   -d'{"data":{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}' \
+  ${REST_URL}/rest/v1/people/save
+
+curl -v -H"Authorization: Bearer $T" -XPOST -d'{"filters":{"phones":{"list":["asd@asd123"]}}}' \
+  ${REST_URL}/rest/v1/people/list | jq
 
 
 ```

@@ -13,6 +13,7 @@ export const useLoginStore = defineStore({
   state: () => ({
     email: localStorage.getItem("email"),
     token: localStorage.getItem("token"),
+    showLogin: false,
     // error: "",
   }),
   actions: {
@@ -20,9 +21,17 @@ export const useLoginStore = defineStore({
       this.token = "";
       this.email = "";
     },
+    logedIn(result) {
+      this.email = result.email;
+      this.token = result.token;
+      localStorage.setItem("email", result.email);
+      localStorage.setItem("token", result.token);
+      this.showLogin = false;
+    },
     resetLogin() {
       this.token = "";
       this.email = "";
+      this.showLogin = true;
       localStorage.setItem("email", "");
       localStorage.setItem("token", "");
     },
@@ -50,8 +59,7 @@ export const useLoginStore = defineStore({
       const { result, ok, error } = await fetchAPIFunc(url, requestOptions);
       if (ok) {
         console.log("result", result);
-        this.email = result.email;
-        this.token = result.token;
+        this.logedIn(result);
       } else {
         console.log("error:", error);
       }
