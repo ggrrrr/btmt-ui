@@ -30,7 +30,8 @@ services:
     container_name: auth
     # networks:
     # - dev
-    image: svc/auth
+    image: golang:1.21
+    command: /go/build-run.sh svc-auth/cmd/main.go
     labels:
       # - "traefik.http.routers.whoami.rule=Host(`auth.docker.localhost`)"
       - "traefik.http.routers.auth.rule=PathPrefix(`/rest/v1/auth`)"
@@ -40,21 +41,23 @@ services:
     #   - "localstack:localstack"
     depends_on:
       - localstack
-    build:
-      context: ./be
-      dockerfile: .deploy/Dockerfile
-      args:
-        SERVICE: svc-auth
+    # build:
+    # context: ./be
+    # dockerfile: .deploy/Dockerfile
+    # args:
+    # SERVICE: svc-auth
     environment:
       - JWT_KEYFILE=jwt.key
       - JWT_CRTFILE=jwt.crt
       - AWS_ACCESS_KEY_ID=AAA
       - WAS_SECRET_ACCESS_KEY=BBB
     volumes:
-      - ./.deploy/svc-auth/config.yaml:/app/config.yaml
-      - ./jwt.crt:/app/jwt.crt
-      - ./jwt.key:/app/jwt.key
-      - ~/.aws:/root/.aws/
+      - ./build-run.sh:/go/build-run.sh
+      - ./be:/go/src/be
+      # - ./jwt.crt:/go/src/be/jwt.crt
+      # - ./jwt.key:/go/src/be/jwt.key
+      # - ~/.aws:/root/.aws/
+      # - ./.deploy/svc-auth/config.yaml:/go/src/be
 
   people:
     hostname: people

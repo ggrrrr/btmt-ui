@@ -1,16 +1,16 @@
 <template>
   <v-main>
-    <the-toolbar />
-    <request-error />
+    <main-toolbar />
+    <error-dialog />
     <login-form />
     <router-view />
-    <the-footer />
+    <main-footer />
   </v-main>
 </template>
 
 <script setup>
-import RequestError from "@/components/RequestError.vue";
-import TheFooter from '@/components/TheFooter'
+import ErrorDialog from "@/components/ErrorDialog";
 import LoginForm from '@/components/LoginForm'
-import TheToolbar from "@/components/TheToolbar"
+import MainToolbar from "@/components/MainToolbar"
+import MainFooter from '@/components/MainFooter'
 </script>
