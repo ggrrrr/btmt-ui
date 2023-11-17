@@ -1,4 +1,4 @@
 {
   "BASE_URL1": "http://localhost:8010/rest",
-  "BASE_URL": "http://10.1.1.156:8010/rest"
+  "BASE_URL": "http://10.1.1.156:8000/rest"
 }

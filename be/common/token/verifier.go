@@ -41,7 +41,10 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Log().Info().Str("schema", roles.AuthSchemeBeaerer).Msg("Verifier")
+	logger.Log().Info().
+		Str("crtFile", crtFile).
+		Str("schema", roles.AuthSchemeBeaerer).
+		Msg("Verifier")
 	return &verifier{
 		signMethod: "RS256",
 		verifyKey:  verifyKey,

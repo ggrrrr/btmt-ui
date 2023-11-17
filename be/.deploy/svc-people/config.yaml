@@ -2,8 +2,8 @@ log:
   level: debug
   format: console
 jwt:
-  crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt
-  useMock: mock
+  crtFile: /app/jwt.crt
+  # useMock: mock
 rest:
   address: 0.0.0.0:8020
 grpc:

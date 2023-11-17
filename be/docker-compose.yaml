@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: .deploy/Dockerfile
       args:
-        SERVICE: svc-auth
+        MAIN_FILE: svc-auth/cmd/main.go
     environment:
       - JWT_KEYFILE=jwt.key
       - JWT_CRTFILE=jwt.crt
@@ -70,7 +70,7 @@ services:
       context: .
       dockerfile: .deploy/Dockerfile
       args:
-        SERVICE: svc-people
+        SERVICE: svc-people/cmd/main.go
     environment:
       - JWT_CRTFILE=jwt.crt
     volumes:

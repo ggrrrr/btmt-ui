@@ -11,10 +11,10 @@ RUN go mod download
 
 COPY  . ./
 
-ARG SERVICE
+ARG MAIN_FILE
 
 # RUN echo $SERVICE
-RUN MAIN_FILE=${SERVICE}/cmd/main.go && \
+RUN MAIN_FILE=${MAIN_FILE} && \
     go build -o app ${MAIN_FILE}
 
 FROM alpine:latest AS runtime
