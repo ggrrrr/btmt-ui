@@ -93,7 +93,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 	if err != nil {
 		return err
 	}
-	logger.Log().Info().Any("trace", logger.LogTraceData(ctx)).Msg("Save")
+	logger.Log().Debug().Any("data", p).Any("trace", logger.LogTraceData(ctx)).Msg("Save")
 	return nil
 }
 

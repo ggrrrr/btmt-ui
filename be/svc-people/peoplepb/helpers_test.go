@@ -1,10 +1,32 @@
 package peoplepb
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestToPersion(t *testing.T) {
+	req := `{"data":{"pin":"asdads","email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}`
+	var from SaveRequest
+	err := json.NewDecoder(bytes.NewReader([]byte(req))).Decode(&from)
+	require.NoError(t, err)
+
+	to := &ddd.Person{
+		PIN:         "asdads",
+		Email:       "asd@asd123",
+		Name:        "vesko",
+		Phones:      map[string]string{"mobile": "0889430425"},
+		CreatedTime: from.ToPerson().CreatedTime,
+	}
+
+	assert.Equal(t, from.ToPerson(), to)
+}
 
 func TestToMap(t *testing.T) {
 	empty1 := ListRequest{Filters: map[string]*ListText{}}

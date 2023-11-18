@@ -25,7 +25,6 @@
 import { fetchAPI } from "@/store/auth";
 import { ref } from 'vue'
 
-
 const list = ref({ list: [] })
 
 const headers = ref({
@@ -34,14 +33,14 @@ const headers = ref({
             text: "Names",
             align: "start",
             sortable: true,
-            value: "full_name",
+            value: "Name",
         },
-        { text: "Email", value: "email", sortable: true },
-        { text: "Labels", value: "labels" },
-        { text: "Phones", value: "phones" },
-        { text: "PIN", value: "pin" },
-        { text: "Date of birth", value: "dob" },
-        { text: "Age", value: "age" },
+        { text: "Email", value: "Email", sortable: true },
+        { text: "Labels", value: "Labels" },
+        { text: "Phones", value: "Phones" },
+        { text: "PIN", value: "Pin" },
+        { text: "Date of birth", value: "Dob" },
+        { text: "Age", value: "Age" },
         { text: "Actions", value: "actions", sortable: false },
     ]
 })

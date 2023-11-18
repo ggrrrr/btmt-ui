@@ -2,6 +2,7 @@ package token
 
 import (
 	"crypto/rsa"
+	"encoding/base64"
 	"errors"
 	"os"
 
@@ -57,7 +58,11 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtBadScheme
 
 	}
-	out, err := jwt.Parse(string(inputToken.AuthCredentials), func(token *jwt.Token) (interface{}, error) {
+	jwtToken, err := base64.StdEncoding.DecodeString(string(inputToken.AuthCredentials))
+	if err != nil {
+		return roles.AuthInfo{}, err
+	}
+	out, err := jwt.Parse(string(jwtToken), func(token *jwt.Token) (interface{}, error) {
 		return c.verifyKey, nil
 	})
 	if err != nil {

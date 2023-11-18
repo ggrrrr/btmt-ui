@@ -65,13 +65,13 @@ curl -v -H"Authorization: Bearer $T" -XPOST \
   -d'{"password":"1asdasdasd","new_password":"asd"}' \
   ${REST_URL}/v1/auth/update/passwd
 
-   -d'{"data":{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}' \
-
 curl -v -H"Authorization: Bearer $T" -XPOST \
-   -d'{"data":{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}' \
+   -d'{"data":{"pin":"asdads","email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}' \
   ${REST_URL}/rest/v1/people/save
 
-curl -v -H"Authorization: Bearer $T" -XPOST -d'{"filters":{"phones":{"list":["asd@asd123"]}}}' \
+curl -v -H"Authorization: Bearer $T" -XPOST -d"{}" ${REST_URL}/rest/v1/people/list
+
+curl -v -H"Authorization: Bearer $T" -XPOST -d'{"filters":{"phones":{"list":["430425"]}}}' \
   ${REST_URL}/rest/v1/people/list | jq
 
 

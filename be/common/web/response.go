@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"google.golang.org/grpc/codes"
 )
 
@@ -71,6 +72,7 @@ func DecodeJsonRequest(r *http.Request, payload any) error {
 	}
 	err = json.NewDecoder(bytes.NewReader(b)).Decode(&payload)
 	if err != nil {
+		logger.Log().Error().Str("body", string(b)).Err(err).Send()
 		return app.ErrorBadRequest("bad json", err)
 	}
 	return nil

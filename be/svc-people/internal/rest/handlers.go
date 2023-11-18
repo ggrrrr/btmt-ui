@@ -36,7 +36,9 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.ListRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
+		logger.Log().Error().Err(err).Send()
 		web.SendError(w, err)
+		return
 	}
 	logger.Log().Info().Any("filter", req.String()).Any("trace", logger.LogTraceData(r.Context())).Msg("List")
 	out, err := s.app.List(r.Context(), req.ToFilter())
@@ -51,7 +53,10 @@ func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.GetRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
+		logger.Log().Error().Err(err).Send()
 		web.SendError(w, err)
+		return
+
 	}
 	if req.Id == "" {
 		web.SendErrorBadRequest(w, "empty id", nil)
@@ -71,12 +76,15 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.SaveRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
+		logger.Log().Error().Err(err).Send()
 		web.SendError(w, err)
+		return
 	}
 	p := req.ToPerson()
 	logger.Log().Info().Any("person", &req).Any("trace", logger.LogTraceData(r.Context())).Msg("Save")
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
+		logger.Log().Error().Err(err).Send()
 		web.SendError(w, err)
 		return
 	}
@@ -87,12 +95,15 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.UpdateRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
+		logger.Log().Error().Err(err).Send()
 		web.SendError(w, err)
+		return
 	}
 	p := req.ToPerson()
 	logger.Log().Info().Any("person", &req).Any("", logger.LogTraceData(r.Context())).Msg("Save")
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
+		logger.Log().Error().Err(err).Send()
 		web.SendError(w, err)
 		return
 	}

@@ -9,7 +9,7 @@
             <v-btn dense v-show="!loginStore.email" icon="mdi-login" @click="showLogin"></v-btn>
             <v-btn dense v-show="loginStore.email" icon="mdi-refresh" @click="validateClick"></v-btn>
         </template>
-        <v-toolbar-title small><router-link to="/"><v-icon>mdi-home</v-icon></router-link>
+        <v-toolbar-title small><router-link to="/"><v-icon>mdi-home``</v-icon></router-link>
             <!-- <v-spacer flat></v-spacer> -->
             <login-dialog />
         </v-toolbar-title>

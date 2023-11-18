@@ -2,6 +2,7 @@ package token
 
 import (
 	"crypto/rsa"
+	"encoding/base64"
 	"os"
 	"time"
 
@@ -67,5 +68,6 @@ func (c *signer) Sign(authInfo roles.AuthInfo) (string, error) {
 	claims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(c.ttl))
 	mytoken := jwt.NewWithClaims(jwt.GetSigningMethod(c.signMethod), claims)
 	tokenString, err := mytoken.SignedString(c.signKey)
-	return tokenString, err
+	encoded := base64.StdEncoding.EncodeToString([]byte(tokenString))
+	return encoded, err
 }
