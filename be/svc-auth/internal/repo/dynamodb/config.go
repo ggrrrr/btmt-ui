@@ -26,7 +26,7 @@ func New(sess *session.Session, cfg awsdb.DynamodbConfig) (*repo, error) {
 
 	svc := awsdynamodb.New(sess)
 
-	logger.Log().Info().
+	logger.Info().
 		Str("table", tableNameName).
 		Str("prefix", cfg.Prefix).Msg("New")
 	return &repo{

@@ -51,11 +51,11 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		web.SendError(w, err)
 		return
 	}
-	logger.Log().Info().Any("asd", &req.Password).Send()
+	logger.InfoCtx(r.Context()).Any("asd", &req.Password).Send()
 	res, err := s.app.LoginPasswd(r.Context(), req.Email, req.Password)
 	if err != nil {
 		fmt.Printf("%+v \n", err)
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Msg("LoginPasswd")
 		web.SendError(w, err)
 		return
 	}
@@ -69,10 +69,10 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 func (s *server) Validate(w http.ResponseWriter, r *http.Request) {
 	err := s.app.Validate(r.Context())
 	if err != nil {
-		logger.Log().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Msg("Validate")
 		web.SendError(w, err)
 		return
 	}
-	logger.Log().Info().Msg("Validate")
+	logger.InfoCtx(r.Context()).Msg("Validate")
 	web.SendPayload(w, "ok", nil)
 }

@@ -42,7 +42,7 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Log().Info().
+	logger.Info().
 		Str("crtFile", crtFile).
 		Str("schema", roles.AuthSchemeBeaerer).
 		Msg("Verifier")

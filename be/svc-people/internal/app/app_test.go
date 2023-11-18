@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -25,7 +26,6 @@ func TestSave(t *testing.T) {
 	rootCtx := context.Background()
 	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateAdminUser("mock", roles.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
-	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
 	cfg := mongodb.Config{
 		TTL:        10 * time.Second,
@@ -55,10 +55,11 @@ func TestSave(t *testing.T) {
 				_, err = testApp.GetById(rootCtx, "asd")
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
 				err := testApp.Save(ctxNormal, &ddd.Person{
-					PIN:    "123123",
-					Email:  "new@asd",
-					Name:   "new",
-					Phones: map[string]string{"mobile": "123123"},
+					PIN:        "123123",
+					LoginEmail: "new@asd",
+					Emails:     map[string]string{"g": "new@asd"},
+					Name:       "new",
+					Phones:     map[string]string{"mobile": "123123"},
 				})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 				_, err = testApp.GetById(ctxNormal, "asd")
@@ -75,18 +76,19 @@ func TestSave(t *testing.T) {
 			test: "save",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
-					PIN:      "pin1",
-					Name:     "name 1",
-					Email:    "email 1",
-					FullName: "full name 1",
+					PIN:        "pin1",
+					Name:       "name 1",
+					LoginEmail: "email 1",
+					Emails:     map[string]string{"g": "asd@asd"},
+					FullName:   "full name 1",
 					// Phones:   map[string]string{"mobile": "phone1"},
 					// Attr:     make(map[string]string),
 					// Labels: []string{},
 				}
 				err := testApp.Save(ctxAdmin, p1)
-				assert.NoError(tt, err)
+				require.NoError(tt, err)
 				p2, err := testApp.GetById(ctxAdmin, p1.Id)
-				assert.NoError(tt, err)
+				require.NoError(tt, err)
 				repo.TestPerson(tt, *p2, *p1, 10)
 			},
 		},
@@ -94,10 +96,11 @@ func TestSave(t *testing.T) {
 			test: "forbiden",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
-					PIN:      "pin1",
-					Name:     "name 1",
-					Email:    "email 1",
-					FullName: "full name 1",
+					PIN:        "pin1",
+					Name:       "name 1",
+					LoginEmail: "email 1",
+					Emails:     map[string]string{"g1": "asd@asd1"},
+					FullName:   "full name 1",
 					// Phones:   map[string]string{"mobile": "phone1"},
 					// Attr:     make(map[string]string),
 					// Labels: []string{},
@@ -108,6 +111,33 @@ func TestSave(t *testing.T) {
 				// p2, err := testApp.GetById(ctxAdmin, p1.Id)
 				// assert.NoError(tt, err)
 				// repo.TestPerson(tt, *p2, *p1, 10)
+			},
+		},
+		{
+			test: "pin validateor",
+			testFunc: func(tt *testing.T) {
+				p1 := &ddd.Person{
+					PIN:        os.Getenv("PIN2"),
+					Name:       "name 1",
+					LoginEmail: "email 1",
+					Emails:     map[string]string{"g1": "asd@asd1"},
+					FullName:   "full name 1",
+					// Phones:   map[string]string{"mobile": "phone1"},
+					// Attr:     make(map[string]string),
+					// Labels: []string{},
+				}
+				err := testApp.Save(ctxAdmin, p1)
+				require.NoError(tt, err)
+				assert.Equal(tt, p1.DOB, &ddd.Dob{Year: 1978, Month: 2, Day: 13})
+				tt.Logf("%+v \n", p1)
+				age := time.Now().Year() - p1.DOB.Year
+				p1.Age = &age
+
+				p2, err := testApp.GetById(ctxAdmin, p1.Id)
+				require.NoError(tt, err)
+				assert.Equal(tt, p2.Gender, "male")
+				assert.Equal(tt, p1.Gender, "male")
+				repo.TestPerson(tt, *p2, *p1, 10)
 			},
 		},
 	}

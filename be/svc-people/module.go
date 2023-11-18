@@ -23,7 +23,7 @@ func Root(ctx context.Context, s *system.System) error {
 
 	repoDb, err := mongodb.New(ctx, s.Config().Mongo)
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("db")
+		logger.Error(err).Msg("db")
 		return err
 	}
 
@@ -37,7 +37,7 @@ func Root(ctx context.Context, s *system.System) error {
 		app.WithPeopleRepo(appRepo),
 	)
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("app error")
+		logger.Error(err).Msg("app error")
 		return err
 	}
 	restApp := rest.New(a)
@@ -49,7 +49,7 @@ func Root(ctx context.Context, s *system.System) error {
 
 	grpc.RegisterServer(a, s.RPC())
 
-	logger.Log().Info().Msg("starting...")
+	logger.Info().Msg("starting...")
 	if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8081"); err != nil {
 		return err
 	}

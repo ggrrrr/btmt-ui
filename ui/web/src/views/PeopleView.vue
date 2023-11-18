@@ -16,8 +16,9 @@
                     </v-row>
                 </v-container>
             </v-card-title>
-            <v-data-table :headers="headers.headers" :items="list.list" multi-sort class="elevation-1">
-            </v-data-table>
+            <v-data-table-server :headers="data.headers" :items="list.list" :loading="data.loading" multi-sort
+                class="elevation-1">
+            </v-data-table-server>
         </v-card> </v-main>
 </template>
 <script setup>
@@ -27,24 +28,25 @@ import { ref } from 'vue'
 
 const list = ref({ list: [] })
 
-const headers = ref({
+const data = ref({
+    itemsPerPage: 5,
+    serverItems: [],
+    loading: true,
+    totalItems: 0,
     headers: [
+        // { title: 'Id', key: 'id', align: 'end' },
         {
-            text: "Names",
-            align: "start",
-            sortable: true,
-            value: "Name",
+            title: 'Name',
+            align: 'start',
+            sortable: false,
+            key: 'name',
         },
-        { text: "Email", value: "Email", sortable: true },
-        { text: "Labels", value: "Labels" },
-        { text: "Phones", value: "Phones" },
-        { text: "PIN", value: "Pin" },
-        { text: "Date of birth", value: "Dob" },
-        { text: "Age", value: "Age" },
-        { text: "Actions", value: "actions", sortable: false },
+        { title: 'PIN', key: 'pin', align: 'end' },
+        { title: 'Names', key: 'full_name', align: 'end' },
+        { title: 'Phones', key: 'phones', align: 'end' },
+        { title: 'Labels', key: 'labels', align: 'end' },
     ]
 })
-
 
 function loadData() {
     const requestOptions = {
@@ -52,6 +54,7 @@ function loadData() {
         method: "POST",
         body: JSON.stringify({}),
     };
+    data.value.loading = true;
 
     fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", requestOptions)
         .then((result) => {
@@ -62,6 +65,8 @@ function loadData() {
                     list.value.list.push(i)
                 }
             )
+        }).finally(() => {
+            data.value.loading = false;
         });
 }
 

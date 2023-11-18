@@ -17,7 +17,7 @@ func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (a
 	}
 	auth, err := ap.findEmail(ctx, email)
 	if err != nil {
-		logger.Log().Debug().Err(err).Msg("failed to fetch email")
+		logger.Error(err).Msg("failed to fetch email")
 		return app.Result[AuthToken]{}, app.ErrorSystem("failed to fetch email", err)
 	}
 
@@ -47,7 +47,7 @@ func (ap *application) Validate(ctx context.Context) error {
 	}
 	auth, err := ap.findEmail(ctx, authInfo.User)
 	if err != nil {
-		logger.Log().Debug().Err(err).Msg("failed to fetch email")
+		logger.Error(err).Msg("Validate")
 		return app.ErrorSystem("failed to fetch email", err)
 	}
 	if auth == nil {

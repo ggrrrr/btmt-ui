@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -15,14 +16,14 @@ type (
 var _ (Verifier) = (*verifier_mock)(nil)
 
 func NewVerifierMock() *verifier_mock {
-	logger.Log().Warn().Msg("NewVerifierMock")
+	logger.Warn().Msg("NewVerifierMock")
 	return &verifier_mock{}
 }
 
 func (*verifier_mock) Verify(auth roles.Authorization) (roles.AuthInfo, error) {
-	logger.Log().Warn().Any("token", auth).Msg("NewVerifierMock.Verify")
+	logger.Warn().Any("token", auth).Msg("NewVerifierMock.Verify")
 	if auth.AuthScheme != "mock" {
-		logger.Log().Error().Any("token", auth).Str("AuthScheme", auth.AuthScheme).Msg("NewVerifierMock.Verify")
+		logger.Error(fmt.Errorf("AuthScheme is not mock")).Any("token", auth).Str("AuthScheme", auth.AuthScheme).Msg("NewVerifierMock.Verify")
 		return roles.AuthInfo{}, ErrJwtBadScheme
 	}
 

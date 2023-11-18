@@ -6,6 +6,11 @@ import (
 )
 
 type (
+	PinValidation struct {
+		Dob    Dob
+		Gender string
+	}
+
 	Dob struct {
 		Year  int
 		Month int
@@ -14,11 +19,12 @@ type (
 	Person struct {
 		Id          string
 		PIN         string
-		Email       string
+		LoginEmail  string
 		Name        string
 		FullName    string
-		DateOfBirth *Dob
+		DOB         *Dob
 		Gender      string
+		Emails      map[string]string
 		Phones      map[string]string
 		Labels      []string
 		Attr        map[string]string

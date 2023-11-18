@@ -29,13 +29,13 @@ func Root(ctx context.Context, s *system.System) error {
 	repo, err := dynamodb.New(s.Aws(), s.Config().Aws.Database)
 
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("awsdyno aws error")
+		logger.Error(err).Msg("awsdyno aws error")
 		return err
 	}
 
 	tokemSigner, err := token.NewSigner(s.Config().Jwt.TTL, s.Config().Jwt.KeyFile)
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("NewSigner")
+		logger.Error(err).Msg("NewSigner")
 		return err
 	}
 
@@ -44,7 +44,7 @@ func Root(ctx context.Context, s *system.System) error {
 		app.WithTokenSigner(tokemSigner),
 	)
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("app error")
+		logger.Error(err).Msg("app error")
 		return err
 	}
 	restApp := rest.New(a)
@@ -61,6 +61,6 @@ func Root(ctx context.Context, s *system.System) error {
 		}
 	}
 
-	logger.Log().Info().Msg("starting...")
+	logger.Info().Msg("starting...")
 	return nil
 }

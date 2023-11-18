@@ -29,9 +29,9 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Authorization")
 
 		if r.Method == http.MethodOptions {
-			logger.Log().Info().
-				Any("headers", r.Header).
-				Msg("OPTIONS")
+			// logger.Info().
+			// Any("headers", r.Header).
+			// Msg("OPTIONS")
 			// infoLog.Any("headers-r", r.Header.Get("Access-Control-Request-Headers"))
 			// origin := r.Header.Get("Origin")
 			// if len(origin) > 0 {
@@ -51,9 +51,9 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 
 		var infoLog *zerolog.Event
 		if s.cfg.Jwt.UseMock == "" {
-			infoLog = logger.Log().Info()
+			infoLog = logger.Debug()
 		} else {
-			infoLog = logger.Log().Warn().Str("VERIFICATION", "mock")
+			infoLog = logger.Warn().Str("VERIFICATION", "mock")
 		}
 		defer infoLog.Msg("httpMiddleware")
 
@@ -122,7 +122,7 @@ func (s *System) WaitForWeb(ctx context.Context) error {
 	s.mux.Mount("/v1", s.gateway)
 	group, gCtx := errgroup.WithContext(ctx)
 	group.Go(func() error {
-		logger.Log().Info().Str("address", addr).Msg("rest started")
+		logger.Info().Str("address", addr).Msg("rest started")
 		defer fmt.Println("web server shutdown")
 		if err := webServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			return err
@@ -131,7 +131,7 @@ func (s *System) WaitForWeb(ctx context.Context) error {
 	})
 	group.Go(func() error {
 		<-gCtx.Done()
-		logger.Log().Info().Str("address", addr).Msg("rest server to be shutdown")
+		logger.Info().Str("address", addr).Msg("rest server to be shutdown")
 		ctx, cancel := context.WithTimeout(context.Background(), s.cfg.ShutdownTimeout)
 		defer cancel()
 		if err := webServer.Shutdown(ctx); err != nil {

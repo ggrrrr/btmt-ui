@@ -19,20 +19,20 @@ import (
 
 func (s *System) WaitForGRPC(ctx context.Context) error {
 	if s.cfg.Grpc.Address == "" {
-		logger.Log().Debug().Msg("initGRPC skip")
+		logger.Info().Msg("Address is empty, initGRPC skip")
 		return nil
 	}
 
 	addr := s.cfg.Grpc.Address
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		logger.Log().Error().Err(err).Str("address", addr).Msg("Failed to listen")
+		logger.Error(err).Str("address", addr).Msg("Failed to listen")
 		return err
 	}
 
 	group, gCtx := errgroup.WithContext(ctx)
 	group.Go(func() error {
-		logger.Log().Info().Str("address", addr).Msg("grpc started")
+		logger.Info().Str("address", addr).Msg("grpc started")
 		defer fmt.Println("rpc server shutdown")
 		if err := s.RPC().Serve(listener); err != nil && err != grpc.ErrServerStopped {
 			return err
@@ -41,7 +41,7 @@ func (s *System) WaitForGRPC(ctx context.Context) error {
 	})
 	group.Go(func() error {
 		<-gCtx.Done()
-		logger.Log().Info().Str("address", addr).Msg("grpc server to be shutdown")
+		logger.Info().Str("address", addr).Msg("grpc server to be shutdown")
 		stopped := make(chan struct{})
 		go func() {
 			s.RPC().GracefulStop()
@@ -63,7 +63,7 @@ func (s *System) WaitForGRPC(ctx context.Context) error {
 
 func (s *System) initGRPC() {
 	if s.cfg.Grpc.Address == "" {
-		logger.Log().Debug().Msg("initGRPC skip")
+		logger.Debug().Msg("initGRPC skip")
 		return
 	}
 	s.grpc = grpc.NewServer(
@@ -87,7 +87,7 @@ func (s *System) unaryInterceptor(
 	peerInfo, _ = peer.FromContext(ctx)
 
 	startTs := time.Now()
-	infoLog := logger.Log().Info()
+	infoLog := logger.Info()
 	defer func() {
 		infoLog.TimeDiff("ts", time.Now(), startTs).Msg("unaryInterceptor")
 	}()

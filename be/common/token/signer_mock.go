@@ -12,7 +12,7 @@ type (
 var _ (Signer) = (*mocker)(nil)
 
 func NewSignerMock() *mocker {
-	logger.Log().Warn().Msg("NewSignerMock")
+	logger.Warn().Msg("NewSignerMock")
 	return &mocker{}
 }
 

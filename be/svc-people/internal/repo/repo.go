@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/stackus/errors"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -35,6 +36,20 @@ func New(collection string, db mongodb.Repo) *repo {
 	}
 }
 
+func (r *repo) CreateIndex(ctx context.Context) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	c := r.db.Collection(r.collection)
+	mod := mongo.IndexModel{
+		Keys: bson.M{
+			"full_name": "text",
+		},
+		Options: nil,
+	}
+	c.Indexes().CreateOne(ctx, mod)
+}
+
 func (r *repo) Save(ctx context.Context, p *ddd.Person) error {
 	newPerson, err := fromPerson(p)
 	if err != nil {
@@ -63,8 +78,8 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	if len(newPerson.PIN) > 0 {
 		setReq[FieldPIN] = newPerson.PIN
 	}
-	if len(newPerson.Email) > 0 {
-		setReq[FieldEmail] = newPerson.Email
+	if len(newPerson.Emails) > 0 {
+		setReq[FieldEmails] = newPerson.Emails
 	}
 	if len(newPerson.Name) > 0 {
 		setReq[FieldName] = newPerson.Name
@@ -72,7 +87,7 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	if len(newPerson.FullName) > 0 {
 		setReq[FieldFullName] = newPerson.FullName
 	}
-	if newPerson.DateOfBirth != nil && !newPerson.DateOfBirth.isZero() {
+	if newPerson.DOB != nil && !newPerson.DOB.isZero() {
 		setReq[FieldFullName] = newPerson.FullName
 	}
 	if len(newPerson.Gender) > 0 {
@@ -104,10 +119,10 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 		return err
 	}
 
-	logger.Log().Info().
+	logger.InfoCtx(ctx).
 		Any("id", newPerson.Id).
 		Any("matchedCount", resp.MatchedCount).
-		Any("trace", logger.LogTraceData(ctx)).Msg("update")
+		Msg("update")
 
 	return nil
 }

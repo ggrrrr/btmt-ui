@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	FieldPIN      string = "pin"
-	FieldEmail    string = "email"
-	FieldName     string = "name"
-	FieldFullName string = "full_name"
-	FieldDoB      string = "dob"
-	FieldGender   string = "gender"
-	FieldPhones   string = "phones"
-	FieldLabels   string = "labels"
-	FieldAttr     string = "attr"
+	FieldPIN        string = "pin"
+	FieldLoginEmail string = "loginEmail"
+	FieldEmails     string = "emails"
+	FieldName       string = "name"
+	FieldFullName   string = "full_name"
+	FieldDoB        string = "dob"
+	FieldGender     string = "gender"
+	FieldPhones     string = "phones"
+	FieldLabels     string = "labels"
+	FieldAttr       string = "attr"
 )
 
 type (
@@ -31,10 +32,11 @@ type (
 	person struct {
 		Id          primitive.ObjectID `bson:"_id"`
 		PIN         string             `bson:"pin"`
-		Email       string             `bson:"email"`
+		LoginEmail  string             `bson:"login_email"`
+		Emails      []string           `bson:"emails"`
 		Name        string             `bson:"name"`
 		FullName    string             `bson:"full_name"`
-		DateOfBirth *dob               `bson:"dob"`
+		DOB         *dob               `bson:"dob"`
 		Gender      string             `bson:"gender"`
 		Phones      []string           `bson:"phones"`
 		Labels      []string           `bson:"labels"`
@@ -106,10 +108,11 @@ func fromPerson(p *ddd.Person) (*person, error) {
 	out := person{
 		Id:          id,
 		PIN:         p.PIN,
-		Email:       p.Email,
+		LoginEmail:  p.LoginEmail,
+		Emails:      toSlice(p.Emails),
 		Name:        p.Name,
 		FullName:    p.FullName,
-		DateOfBirth: fromDob(p.DateOfBirth),
+		DOB:         fromDob(p.DOB),
 		Gender:      p.Gender,
 		Phones:      toSlice(p.Phones),
 		Labels:      p.Labels,
@@ -135,19 +138,20 @@ func (p person) toPerson() ddd.Person {
 	out := ddd.Person{
 		Id:          p.Id.Hex(),
 		PIN:         p.PIN,
-		Email:       p.Email,
+		LoginEmail:  p.LoginEmail,
+		Emails:      toMap(p.Emails),
 		Name:        p.Name,
 		FullName:    p.FullName,
 		Gender:      p.Gender,
-		DateOfBirth: toDob(p.DateOfBirth),
+		DOB:         toDob(p.DOB),
 		Phones:      toMap(p.Phones),
 		Labels:      p.Labels,
 		Attr:        toMap(p.Attr),
 		CreatedTime: ts,
 	}
-	if p.DateOfBirth != nil {
-		if p.DateOfBirth.Year > 0 {
-			age := time.Now().Year() - p.DateOfBirth.Year
+	if p.DOB != nil {
+		if p.DOB.Year > 0 {
+			age := time.Now().Year() - p.DOB.Year
 			out.Age = &age
 		}
 	}

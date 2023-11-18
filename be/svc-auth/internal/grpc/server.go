@@ -14,7 +14,7 @@ type server struct {
 }
 
 func RegisterServer(app app.App, registrar grpc.ServiceRegistrar) {
-	logger.Log().Info().Msg("grpc.RegisterServer")
+	logger.Info().Msg("grpc.RegisterServer")
 	authpb.RegisterAuthSvcServer(registrar, &server{
 		app: app,
 	})

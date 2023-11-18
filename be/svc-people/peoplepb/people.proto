@@ -32,6 +32,21 @@ service PeopleSvc {
       body: "*";
     };
   };
+  rpc PinParse(ListRequest) returns (PinRequest) {
+    option (google.api.http) = {
+      post: "/v1/people/pin";
+      body: "*";
+    };
+  };
+}
+
+message PinRequest {
+  string pin = 1;
+}
+
+message PinResponse {
+  Dob dob = 1;
+  string dob = 2;
 }
 
 
@@ -79,14 +94,15 @@ message Dob {
 message Person{
   string id = 1;
   string pin = 2;
-  string email = 3;
+  string login_email = 3;
   string name = 4;
   string full_name = 5;
   Dob dob = 6;
   string gender = 7;
-  map<string,string> phones = 8;
-  repeated string labels = 9;
-  map<string,string> attr = 10;
-  google.protobuf.Timestamp created_at = 11;
-  string age = 12;
+  map<string,string> emails = 8;
+  map<string,string> phones = 9;
+  repeated string labels = 10;
+  map<string,string> attr = 11;
+  google.protobuf.Timestamp created_at = 12;
+  string age = 13;
 }

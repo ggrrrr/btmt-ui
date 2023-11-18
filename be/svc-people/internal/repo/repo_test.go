@@ -55,7 +55,7 @@ func TestSave(t *testing.T) {
 				p1 := &ddd.Person{
 					PIN:      "sasd",
 					Name:     "ggrrrr",
-					Email:    "asdasd@asd",
+					Emails:   map[string]string{"": "asdasd@asd"},
 					FullName: "varban krushev",
 					Labels:   []string{"tours:bike", "tours:hike", "kids"},
 					Phones:   map[string]string{"mobile": "123123123"},
@@ -80,7 +80,7 @@ func TestSave(t *testing.T) {
 			run: func(t *testing.T) {
 				p1 := &ddd.Person{
 					Name:     "ggrrrr",
-					Email:    "asdasd@asd",
+					Emails:   map[string]string{"": "asdasd@asd"},
 					FullName: "not varban krushev",
 				}
 				err = testRepo.Save(ctx, p1)
@@ -102,7 +102,7 @@ func TestSave(t *testing.T) {
 				require.NoError(t, err)
 				p3.CreatedTime = p1.CreatedTime
 				assert.Equal(t, p3.Name, p1.Name)
-				assert.Equal(t, p3.Email, p1.Email)
+				assert.Equal(t, p3.Emails, p1.Emails)
 				assert.Equal(t, p3.FullName, p1.FullName)
 				assert.Equal(t, p3.PIN, p2.PIN)
 				assert.Equal(t, p3.Labels, p2.Labels)
@@ -141,11 +141,14 @@ func TestList(t *testing.T) {
 	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
 	require.NoError(t, err)
 
+	testRepo.CreateIndex(ctx)
+
 	newData := map[string]*ddd.Person{
 		"ggrrrr": {
-			PIN:      "ggrrrrpin",
-			Name:     "ggrrrr",
-			Email:    "ggrrrr@gmail.com",
+			PIN:    "ggrrrrpin",
+			Name:   "ggrrrr",
+			Emails: map[string]string{"default": "ggrrrr@gmail.com"},
+			// Emails:    [str]"ggrrrr@gmail.com",
 			FullName: "ggrrrr varban krushev",
 			// DateOfBirth: time.Date(1978, 2, 13, 0, 0, 0, 0, time.Local),
 			Labels: []string{"tours:snow", "instructor:kids"},
@@ -156,12 +159,23 @@ func TestList(t *testing.T) {
 		"mandajiev": {
 			PIN:      "mandajievpin",
 			Name:     "mandajiev",
-			Email:    "mandajiev@yahoo.com",
+			Emails:   map[string]string{"default": "mandajiev@yahoo.com"},
 			FullName: "mandajiev asdasd asdasd",
 			// DateOfBirth: time.Date(1990, 4, 23, 0, 0, 0, 0, time.Local),
 			Labels: []string{"tours:bike", "volunteer:mtb", "bike:mtb"},
 			Phones: map[string]string{"mobile": "223123123"},
 			Attr:   map[string]string{"sleep": "no-tent"},
+			Gender: "male",
+		},
+		"uniq": {
+			PIN:      "NONONONO",
+			Name:     "uniq",
+			Emails:   map[string]string{"default": "pesho@yahoo.com"},
+			FullName: "NONONO DDDD",
+			// DateOfBirth: time.Date(1990, 4, 23, 0, 0, 0, 0, time.Local),
+			Labels: []string{"shit"},
+			Phones: map[string]string{"mobile": "somephone"},
+			Attr:   map[string]string{"other": "noother"},
 			Gender: "male",
 		},
 	}
@@ -177,164 +191,179 @@ func TestList(t *testing.T) {
 
 	tests := []testCase{
 		{
-			test: "happy list all two records",
-			run: (func(t *testing.T) {
+			test: "happy list emails 1rc",
+			run: (func(tt *testing.T) {
+				filter, err := NewFilter(AddTexts("NONONO"))
+				require.NoError(tt, err)
+				list, err = testRepo.List(ctx, filter)
+				require.NoError(tt, err)
+				require.Equal(tt, 1, len(list), "records")
+				for _, p := range list {
+					fmt.Printf("%+v \n", p)
+					newData[p.Name].Id = p.Id
+					TestPerson(tt, p, *newData[p.Name], 0)
+				}
+				printList("LIST", list)
+			}),
+		}, {
+			test: "happy list all 3 records",
+			run: (func(tt *testing.T) {
 				list, err = testRepo.List(ctx, nil)
-				require.NoError(t, err)
-				assert.Equal(t, 2, len(list), "records")
+				require.NoError(tt, err)
+				assert.Equal(tt, 3, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		}, {
 			test: "happy list all two empty filter",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				filter, err := NewFilter()
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, 2, len(list), "records")
+				require.NoError(tt, err)
+				assert.Equal(tt, 3, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test regexpr for label add or  labels filter 1 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				filter, err := NewFilter(AddLabels("instructor"), AddLabels("mtb"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, 1, len(list), "records")
+				require.NoError(tt, err)
+				assert.Equal(tt, 1, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test regexpr for label add or  labels filter 2 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddLabels("instructor"), AddLabels("bike:mtb"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 2)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test text search 0 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddTexts("ggrrrrpin"), AddTexts("pin"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 0)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 0)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test text search 2 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddTexts("ggrrrr"), AddTexts("asdasd"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 2)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test phone and label 1 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddLabels("volunteer"), AddPhones("223123123"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 1)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test phones and labels 2 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddLabels("volunteer", "tours"), AddPhones("223123123", "99009900"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 2)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "test text and phone 1 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddTexts("asdasd"), AddPhones("223123123", "99009900"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 1)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
 		},
 		{
 			test: "pin 1 rec",
-			run: (func(t *testing.T) {
+			run: (func(tt *testing.T) {
 				// t.Skip("1")
 				filter, err := NewFilter(AddPINs("mandajievpin"))
-				require.NoError(t, err)
+				require.NoError(tt, err)
 
 				list, err = testRepo.List(ctx, filter)
-				require.NoError(t, err)
-				assert.Equal(t, len(list), 1)
+				require.NoError(tt, err)
+				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(t, p, *newData[p.Name], 0)
+					TestPerson(tt, p, *newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -382,7 +411,7 @@ func TestUpdate(t *testing.T) {
 				p1 := &ddd.Person{
 					PIN:      "sasd",
 					Name:     "ggrrrr",
-					Email:    "asdasd@asd",
+					Emails:   map[string]string{"": "asdasd@asd"},
 					FullName: "varban krushev",
 					Labels:   []string{"tours:bike", "tours:hike", "kids"},
 					Phones:   map[string]string{"mobile": "123123123"},
@@ -407,7 +436,7 @@ func TestUpdate(t *testing.T) {
 			run: func(t *testing.T) {
 				p1 := &ddd.Person{
 					Name:     "ggrrrr",
-					Email:    "asdasd@asd",
+					Emails:   map[string]string{"": "asdasd@asd"},
 					FullName: "not varban krushev",
 				}
 				err = testRepo.Save(ctx, p1)
@@ -429,7 +458,7 @@ func TestUpdate(t *testing.T) {
 				require.NoError(t, err)
 				p3.CreatedTime = p1.CreatedTime
 				assert.Equal(t, p3.Name, p1.Name)
-				assert.Equal(t, p3.Email, p1.Email)
+				assert.Equal(t, p3.Emails, p1.Emails)
 				assert.Equal(t, p3.FullName, p1.FullName)
 				assert.Equal(t, p3.PIN, p2.PIN)
 				assert.Equal(t, p3.Labels, p2.Labels)

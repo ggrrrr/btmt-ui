@@ -22,23 +22,23 @@ func (f *ListRequest) ToFilter() map[string][]string {
 
 func FromPerson(p *ddd.Person) *Person {
 	out := Person{
-		Id:       p.Id,
-		Pin:      p.PIN,
-		Email:    p.Email,
-		Name:     p.Name,
-		FullName: p.FullName,
-		// Dob:      p.DateOfBirth,
-		Gender:    p.Gender,
-		Phones:    p.Phones,
-		Labels:    p.Labels,
-		Attr:      p.Attr,
-		CreatedAt: timestamppb.New(p.CreatedTime),
-		Age:       fmt.Sprintf("%d", p.Age),
+		Id:         p.Id,
+		Pin:        p.PIN,
+		LoginEmail: p.LoginEmail,
+		Emails:     p.Emails,
+		Name:       p.Name,
+		FullName:   p.FullName,
+		Gender:     p.Gender,
+		Phones:     p.Phones,
+		Labels:     p.Labels,
+		Attr:       p.Attr,
+		CreatedAt:  timestamppb.New(p.CreatedTime),
+		Age:        fmt.Sprintf("%d", p.Age),
 	}
-	if p.DateOfBirth != nil {
-		out.Dob.Year = uint32(p.DateOfBirth.Year)
-		out.Dob.Month = uint32(p.DateOfBirth.Month)
-		out.Dob.Day = uint32(p.DateOfBirth.Day)
+	if p.DOB != nil {
+		out.Dob.Year = uint32(p.DOB.Year)
+		out.Dob.Month = uint32(p.DOB.Month)
+		out.Dob.Day = uint32(p.DOB.Day)
 	}
 	return &out
 }
@@ -47,7 +47,8 @@ func (p *Person) ToPerson() *ddd.Person {
 	out := ddd.Person{
 		Id:          p.Id,
 		PIN:         p.Pin,
-		Email:       p.Email,
+		LoginEmail:  p.LoginEmail,
+		Emails:      p.Emails,
 		Name:        p.Name,
 		FullName:    p.FullName,
 		Gender:      p.Gender,
@@ -57,9 +58,9 @@ func (p *Person) ToPerson() *ddd.Person {
 		CreatedTime: p.CreatedAt.AsTime(),
 	}
 	if p.Dob != nil {
-		out.DateOfBirth.Year = int(p.Dob.Year)
-		out.DateOfBirth.Month = int(p.Dob.Month)
-		out.DateOfBirth.Day = int(p.Dob.Day)
+		out.DOB.Year = int(p.Dob.Year)
+		out.DOB.Month = int(p.Dob.Month)
+		out.DOB.Day = int(p.Dob.Day)
 	}
 	return &out
 }

@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -11,10 +12,10 @@ import (
 var _ authpb.AuthSvcServer = (*server)(nil)
 
 func (s *server) LoginPasswd(ctx context.Context, req *authpb.LoginPasswdRequest) (*authpb.LoginPasswdResponse, error) {
-	logger.Log().Info().Str("email", req.Email).Any("info", logger.LogTraceData(ctx)).Msg("LoginPasswd")
+	logger.InfoCtx(ctx).Str("email", req.Email).Msg("LoginPasswd")
 	res, err := s.app.LoginPasswd(ctx, req.Email, req.Password)
 	if err != nil {
-		logger.Log().Error().Errs("LoginPasswd", []error{err}).Send()
+		logger.ErrorCtx(ctx, err).Msg("LoginPasswd")
 		return nil, app.ToGrpcError(err)
 	}
 	return &authpb.LoginPasswdResponse{
@@ -24,10 +25,10 @@ func (s *server) LoginPasswd(ctx context.Context, req *authpb.LoginPasswdRequest
 }
 
 func (s *server) UpdatePasswd(ctx context.Context, req *authpb.UpdatePasswdRequest) (*authpb.UpdatePasswdResponse, error) {
-	logger.Log().Info().Any("info", logger.LogTraceData(ctx)).Msg("UpdatePasswd")
+	logger.InfoCtx(ctx).Msg("UpdatePasswd")
 	err := s.app.UpdatePasswd(ctx, req.Email, req.Password, req.NewPassword)
 	if err != nil {
-		logger.Log().Error().Errs("UpdatePasswd", []error{err}).Send()
+		logger.ErrorCtx(ctx, err).Msg("UpdatePasswd")
 		return nil, app.ToGrpcError(err)
 	}
 
@@ -35,16 +36,17 @@ func (s *server) UpdatePasswd(ctx context.Context, req *authpb.UpdatePasswdReque
 }
 
 func (s *server) ValidateToken(ctx context.Context, _ *authpb.ValidateTokenRequest) (*authpb.ValidateTokenResponse, error) {
-	logger.Log().Info().Any("info", logger.LogTraceData(ctx)).Msg("ValidateToken")
+	logger.InfoCtx(ctx).Msg("ValidateToken")
 	err := s.app.Validate(ctx)
 	if err != nil {
-		logger.Log().Error().Errs("Validate", []error{err}).Send()
+		logger.ErrorCtx(ctx, err).Msg("ValidateToken")
 		return nil, app.ToGrpcError(err)
 	}
 
 	return &authpb.ValidateTokenResponse{}, nil
 }
 
-func (s *server) LoginOauth2(context.Context, *authpb.LoginOauth2Request) (*authpb.LoginOauth2Response, error) {
+func (s *server) LoginOauth2(ctx context.Context, _ *authpb.LoginOauth2Request) (*authpb.LoginOauth2Response, error) {
+	logger.ErrorCtx(ctx, fmt.Errorf("ErrTeepot")).Msg("LoginOauth2")
 	return nil, app.ToGrpcError(app.ErrTeepot)
 }

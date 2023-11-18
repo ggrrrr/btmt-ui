@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -47,7 +48,7 @@ func New(cfgs ...AppCfgFunc) (*application, error) {
 		}
 	}
 	if a.appPolices == nil {
-		logger.Log().Warn().Msg("use mock AppPolices")
+		logger.Warn().Msg("use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
 	return a, nil
@@ -96,7 +97,7 @@ func (ap *application) findEmail(ctx context.Context, email string) (*ddd.AuthPa
 		return nil, nil
 	}
 	if len(auths) > 1 {
-		logger.Log().Error().Str("email", string(email)).Msg("multiple result")
+		logger.Error(fmt.Errorf("multiple result")).Str("email", string(email)).Msg("findEmail")
 		return nil, ErrAuthMultipleEmail
 	}
 	return &auths[0], nil

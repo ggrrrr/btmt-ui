@@ -21,7 +21,7 @@ func (a *application) CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error
 	if auth.Passwd == "" {
 		return app.ErrorBadRequest("passord empty", nil)
 	}
-	logger.Log().Info().Any("email", auth.Email).Any("user", logger.LogTraceData(ctx)).Msg("CreateAuth")
+	logger.InfoCtx(ctx).Any("email", auth.Email).Msg("CreateAuth")
 	if auth.Passwd != "" {
 		cryptPasswd, err := hashPassword(string(auth.Passwd))
 		if err != nil {

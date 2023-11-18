@@ -26,7 +26,7 @@ func (r *repo) List(ctx context.Context) (out []ddd.AuthPasswd, err error) {
 	}
 	defer func() {
 		if err != nil {
-			logger.Log().Error().Err(err).Msg("ops")
+			logger.Error(err).Msg("ops")
 		}
 	}()
 
@@ -40,7 +40,7 @@ func (r *repo) List(ctx context.Context) (out []ddd.AuthPasswd, err error) {
 
 		err = dynamodbattribute.UnmarshalMap(item, &auth)
 		if err != nil {
-			logger.Log().Error().Err(err).Any("item", item).Msg("UnmarshalMap")
+			logger.Error(err).Any("item", item).Msg("UnmarshalMap")
 			continue
 		}
 		out = append(out, auth)
@@ -49,10 +49,10 @@ func (r *repo) List(ctx context.Context) (out []ddd.AuthPasswd, err error) {
 }
 
 func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	logger.Log().Debug().Str("auth", auth.Email).Msg("Save")
+	logger.DebugCtx(ctx).Str("auth", auth.Email).Msg("Save")
 	defer func() {
 		if err != nil {
-			logger.Log().Error().Str("email", auth.Email).Err(err).Msg("ops")
+			logger.Error(err).Str("email", auth.Email).Err(err).Msg("ops")
 		}
 	}()
 	auth.CreatedAt = time.Now()
@@ -64,7 +64,7 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 }
 
 func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err error) {
-	logger.Log().Debug().Str("email", email).Str("table", r.table()).Msg("Find")
+	logger.DebugCtx(ctx).Str("email", email).Str("table", r.table()).Msg("Find")
 	input := &dynamodb.QueryInput{
 		TableName: aws.String(r.table()),
 	}
@@ -77,7 +77,7 @@ func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err
 	result, err := r.svc.Query(input)
 	if err != nil {
 		r.errorIsNotFound(err)
-		logger.Log().Error().Err(err).Msg("Get.Query")
+		logger.Error(err).Msg("Get.Query")
 		return
 	}
 	for _, item := range result.Items {
@@ -85,7 +85,7 @@ func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err
 
 		err = dynamodbattribute.UnmarshalMap(item, &auth)
 		if err != nil {
-			logger.Log().Error().Err(err).Any("item", item).Msg("UnmarshalMap")
+			logger.ErrorCtx(ctx, err).Any("item", item).Msg("UnmarshalMap")
 			continue
 		}
 		out = append(out, auth)
@@ -94,7 +94,7 @@ func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err
 }
 
 func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) error {
-	logger.Log().Debug().Str("email", email).Msg("UpdatePassword")
+	logger.DebugCtx(ctx).Str("email", email).Msg("UpdatePassword")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":passwd": {
@@ -116,12 +116,12 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) 
 	if err != nil {
 		return err
 	}
-	logger.Log().Debug().Any("res", res).Msg("result")
+	logger.DebugCtx(ctx).Any("res", res).Msg("result")
 	return err
 }
 
 func (r *repo) EnableEmail(ctx context.Context, email string) error {
-	logger.Log().Debug().Str("email", email).Msg("EnableEmail")
+	logger.DebugCtx(ctx).Str("email", email).Msg("EnableEmail")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":enabled": {
@@ -143,12 +143,12 @@ func (r *repo) EnableEmail(ctx context.Context, email string) error {
 	if err != nil {
 		return err
 	}
-	logger.Log().Debug().Any("res", res).Msg("result")
+	logger.DebugCtx(ctx).Any("res", res).Msg("result")
 	return err
 }
 
 func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.StatusType) error {
-	logger.Log().Debug().Str("email", email).Str("status", string(status)).Msg("UpdateStatus")
+	logger.DebugCtx(ctx).Str("email", email).Str("status", string(status)).Msg("UpdateStatus")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":status": {
@@ -170,7 +170,7 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 	if err != nil {
 		return err
 	}
-	logger.Log().Debug().Any("res", res).Msg("result")
+	logger.DebugCtx(ctx).Any("res", res).Msg("result")
 	return err
 }
 
@@ -196,10 +196,10 @@ func (r *repo) createTableAuth() error {
 	}
 
 	if _, err := r.svc.CreateTable(input); err != nil {
-		logger.Log().Error().Err(err).Msg("createTableAuth")
+		logger.Error(err).Msg("createTableAuth")
 		return err
 	}
-	logger.Log().Warn().Str("table", r.table()).Msg("createTableAuth")
+	logger.Warn().Str("table", r.table()).Msg("createTableAuth")
 	return nil
 }
 

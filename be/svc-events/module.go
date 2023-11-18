@@ -28,6 +28,6 @@ func Root(ctx context.Context, s *system.System) error {
 		return fmt.Errorf("system.Mux is nil")
 	}
 
-	logger.Log().Info().Msg("starting...")
+	logger.Info().Msg("starting...")
 	return nil
 }

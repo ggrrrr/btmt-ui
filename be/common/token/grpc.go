@@ -30,7 +30,7 @@ func (s *verifier) UnaryInterceptor(
 	peerInfo, _ = peer.FromContext(ctx)
 
 	startTs := time.Now()
-	infoLog := logger.Log().Info()
+	infoLog := logger.Info()
 	defer func() {
 		infoLog.TimeDiff("ts", time.Now(), startTs).Msg("UunaryInterceptor")
 	}()

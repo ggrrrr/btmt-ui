@@ -72,7 +72,7 @@ func DecodeJsonRequest(r *http.Request, payload any) error {
 	}
 	err = json.NewDecoder(bytes.NewReader(b)).Decode(&payload)
 	if err != nil {
-		logger.Log().Error().Str("body", string(b)).Err(err).Send()
+		logger.Error(err).Str("body", string(b)).Send()
 		return app.ErrorBadRequest("bad json", err)
 	}
 	return nil

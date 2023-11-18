@@ -30,7 +30,7 @@ func TestSignTTL(t *testing.T) {
 			AuthScheme:      "",
 			AuthCredentials: roles.AuthCredentials(jwt),
 		})
-	logger.Log().Info().Any("err", err).Msg("v")
+	logger.Info().Any("err", err).Msg("v")
 	assert.Error(t, err)
 }
 
@@ -68,6 +68,6 @@ func TestSignVerify(t *testing.T) {
 		},
 	)
 	assert.NoError(t, err)
-	logger.Log().Info().Any("c", c).Msg("v")
+	logger.Info().Any("c", c).Msg("v")
 	assert.Equal(t, expClaims, c)
 }

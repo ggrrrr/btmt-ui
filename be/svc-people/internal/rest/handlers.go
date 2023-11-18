@@ -36,36 +36,42 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.ListRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Msg("List")
 		web.SendError(w, err)
 		return
 	}
-	logger.Log().Info().Any("filter", req.String()).Any("trace", logger.LogTraceData(r.Context())).Msg("List")
+	logger.InfoCtx(r.Context()).Any("filter", req.String()).Msg("List")
 	out, err := s.app.List(r.Context(), req.ToFilter())
 	if err != nil {
+		logger.ErrorCtx(r.Context(), err).Msg("List")
 		web.SendError(w, err)
 		return
 	}
-	web.SendPayload(w, "ok", out)
+	people := []*peoplepb.Person{}
+	for _, p := range out {
+		people = append(people, peoplepb.FromPerson(&p))
+	}
+	web.SendPayload(w, "ok", people)
 }
 
 func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.GetRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Msg("Get")
 		web.SendError(w, err)
 		return
 
 	}
 	if req.Id == "" {
+		logger.ErrorCtx(r.Context(), err).Str("error", "empty id").Msg("Get")
 		web.SendErrorBadRequest(w, "empty id", nil)
 		return
 	}
-	logger.Log().Info().Any("id", &req.Id).Any("trace", logger.LogTraceData(r.Context())).Msg("Get")
+	logger.InfoCtx(r.Context()).Any("id", &req.Id).Msg("Get")
 	p, err := s.app.GetById(r.Context(), req.Id)
 	if err != nil {
-		logger.Log().Info().Any("id", &req.Id).Err(err).Any("trace", logger.LogTraceData(r.Context())).Msg("Get")
+		logger.ErrorCtx(r.Context(), err).Msg("Get")
 		web.SendError(w, err)
 		return
 	}
@@ -76,15 +82,15 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.SaveRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Msg("Save")
 		web.SendError(w, err)
 		return
 	}
 	p := req.ToPerson()
-	logger.Log().Info().Any("person", &req).Any("trace", logger.LogTraceData(r.Context())).Msg("Save")
+	logger.InfoCtx(r.Context()).Any("person", &req).Msg("Save")
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Msg("Save")
 		web.SendError(w, err)
 		return
 	}
@@ -95,15 +101,15 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.UpdateRequest
 	err := web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
 		web.SendError(w, err)
 		return
 	}
 	p := req.ToPerson()
-	logger.Log().Info().Any("person", &req).Any("", logger.LogTraceData(r.Context())).Msg("Save")
+	logger.InfoCtx(r.Context()).Any("person", &req).Msg("Update")
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
-		logger.Log().Error().Err(err).Send()
+		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
 		web.SendError(w, err)
 		return
 	}

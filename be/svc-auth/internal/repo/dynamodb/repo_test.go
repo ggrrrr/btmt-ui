@@ -36,7 +36,7 @@ func Test_List(t *testing.T) {
 
 	list, err := r.List(ctx)
 	assert.NoError(t, err)
-	logger.Log().Info().Any("asd", list)
+	logger.Info().Any("asd", list)
 }
 
 func TestSave(t *testing.T) {
@@ -74,7 +74,7 @@ func TestSave(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
 	assert.Equal(t, passwd1, items[0].Passwd, "expected email")
-	logger.Log().Debug().Any("items", items).Msg("data")
+	logger.Debug().Any("items", items).Msg("data")
 
 	err = r.UpdateStatus(ctx, email1, ddd.StatusEnabled)
 	assert.NoError(t, err, err)

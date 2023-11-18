@@ -12,14 +12,15 @@ import (
 )
 
 func TestToPersion(t *testing.T) {
-	req := `{"data":{"pin":"asdads","email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}`
+	req := `{"data":{"login_email":"asd@asd","pin":"asdads","emails":{"default":"asd@asd123"},"name":"vesko","phones":{"mobile":"0889430425"}}}`
 	var from SaveRequest
 	err := json.NewDecoder(bytes.NewReader([]byte(req))).Decode(&from)
 	require.NoError(t, err)
 
 	to := &ddd.Person{
 		PIN:         "asdads",
-		Email:       "asd@asd123",
+		Emails:      map[string]string{"default": "asd@asd123"},
+		LoginEmail:  "asd@asd",
 		Name:        "vesko",
 		Phones:      map[string]string{"mobile": "0889430425"},
 		CreatedTime: from.ToPerson().CreatedTime,

@@ -40,10 +40,10 @@ func Test_FromPerson(t *testing.T) {
 	p1 := ddd.Person{
 		Id:       id1.Hex(),
 		PIN:      "123",
-		Email:    "asd@asd",
+		Emails:   map[string]string{"default": "asd@asd"},
 		Name:     "asd",
 		FullName: "ewrcxf asd",
-		DateOfBirth: &ddd.Dob{
+		DOB: &ddd.Dob{
 			Year:  2001,
 			Month: 3,
 			Day:   13,
@@ -56,9 +56,10 @@ func Test_FromPerson(t *testing.T) {
 	}
 
 	out1, err := fromPerson(&p1)
+	assert.Equal(t, out1.Emails, []string{"default:asd@asd"})
 	require.NoError(t, err)
 	p11 := out1.toPerson()
-	age := (time.Now().Year() - p1.DateOfBirth.Year)
+	age := (time.Now().Year() - p1.DOB.Year)
 	p1.Age = &age
 	TestPerson(t, p11, p1, 10)
 	// assert.Equal(t, p1.DateOfBirth, p11.DateOfBirth)

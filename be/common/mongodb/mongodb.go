@@ -29,6 +29,8 @@ type (
 
 		InsertOne(ctx context.Context, collection string, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 		UpdateByID(ctx context.Context, collection string, id interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+
+		Collection(c string) *mongo.Collection
 	}
 
 	repo struct {
@@ -42,7 +44,7 @@ type (
 var _ (Repo) = (*repo)(nil)
 
 func New(ctx context.Context, cfg Config) (*repo, error) {
-	logger.Log().Info().
+	logger.Info().
 		Str("user", cfg.User).
 		Str("database", cfg.Database).
 		Str("uri", cfg.Url).
@@ -91,7 +93,7 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 	}
 	fmt.Printf("ListCollectionNames: %v, \n", cc)
 
-	logger.Log().Info().Msg("ok")
+	logger.Info().Msg("ok")
 	return &repo{
 		cfg:    cfg,
 		client: client,
@@ -106,9 +108,13 @@ func (r *repo) Close(ctx context.Context) {
 
 	err := r.db.Client().Disconnect(ctx)
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("db.Close")
+		logger.Error(err).Msg("db.Close")
 	}
-	logger.Log().Info().Msg("db.Closed")
+	logger.Info().Msg("db.Closed")
+}
+
+func (r *repo) Collection(c string) *mongo.Collection {
+	return r.db.Collection(c)
 }
 
 func (r *repo) Find(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {

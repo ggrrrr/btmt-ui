@@ -53,7 +53,7 @@ func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
 		return nil, err
 	}
 
-	logger.Log().Info().
+	logger.Info().
 		Str("key_file", keyFile).
 		Str("ttl", ttl.String()).Send()
 	return &signer{

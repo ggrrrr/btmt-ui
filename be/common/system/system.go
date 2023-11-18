@@ -22,7 +22,7 @@ func NewCli(cfg config.AppConfig) (*System, error) {
 	}
 	s.initAws()
 	s.waiter = waiter.New(waiter.CatchSignals())
-	logger.Log().Info().Msg("system init.")
+	logger.Info().Msg("system init.")
 	return &s, nil
 }
 
@@ -38,7 +38,7 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	s.initGRPC()
 	s.initAws()
 	s.waiter = waiter.New(waiter.CatchSignals())
-	logger.Log().Info().Msg("system init.")
+	logger.Info().Msg("system init.")
 	return &s, nil
 }
 
@@ -52,7 +52,7 @@ func (s *System) initJwt() error {
 	}
 	ver, err := token.NewVerifier(s.cfg.Jwt.CrtFile)
 	if err != nil {
-		logger.Log().Error().Str("crt_file", s.cfg.Jwt.CrtFile).AnErr("error", err).Send()
+		logger.Error(err).Str("crt_file", s.cfg.Jwt.CrtFile).Send()
 		return err
 	}
 	s.verifier = ver
@@ -70,9 +70,9 @@ func (s *System) initAws() {
 		Endpoint: aws.String(endpoint),
 	})
 	if err != nil {
-		logger.Log().Error().Err(err).Msg("initAws")
+		logger.Error(err).Msg("initAws")
 		return
 	}
-	logger.Log().Info().Str("region", region).Str("endpoint", endpoint).Msg("initAws")
+	logger.Info().Str("region", region).Str("endpoint", endpoint).Msg("initAws")
 	s.aws = sess
 }

@@ -62,7 +62,7 @@ func (a *auth2) CodeExchange(ctx context.Context, req LoginRequest) (*http.Clien
 
 	token, err := conf.Exchange(ctx, req.Code)
 	if err != nil {
-		logger.Log().Error().AnErr("error", err).Msg("conf.Exchange")
+		logger.Error(err).Msg("conf.Exchange")
 		return nil, err
 	}
 

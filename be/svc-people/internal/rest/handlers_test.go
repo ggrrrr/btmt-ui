@@ -2,6 +2,8 @@ package rest
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -49,4 +51,9 @@ func Test_Asd(t *testing.T) {
 	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateAdminUser("asd", roles.Device{})))
 	testServer.Save(w, httpReq)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
+
+	asd, err := io.ReadAll(w.Body)
+	require.NoError(t, err)
+	fmt.Printf("asd %v", string(asd))
+
 }

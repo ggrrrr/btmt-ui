@@ -76,7 +76,7 @@ func (f *filter) Create() any {
 	if len(f.texts) > 0 {
 		filter = append(filter, f.allTexts())
 	}
-	logger.Log().Debug().Any("filters", filter).Msg("Create")
+	logger.Debug().Any("filters", filter).Msg("Create")
 	if len(filter) > 0 {
 		filter1 := bson.M{
 			"$and": filter,
@@ -103,7 +103,7 @@ func (f *filter) allTexts() primitive.M {
 		})
 		fields = append(fields, bson.D{
 			{
-				Key:   FieldEmail,
+				Key:   FieldEmails,
 				Value: primitive.Regex{Pattern: txt, Options: "i"},
 			},
 		})
