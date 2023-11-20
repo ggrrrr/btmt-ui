@@ -41,9 +41,11 @@ export const useLoginStore = defineStore({
         method: "POST",
         body: JSON.stringify({}),
       };
-      const result = await fetchAPIFunc(url, requestOptions);
-      if (!result.ok) {
+      const { result, ok, error } = await fetchAPIFunc(url, requestOptions);
+      if (!ok) {
         console.log(result);
+      } else {
+        console.log("error:", error);
       }
     },
     async loginRequest(email, passwd) {

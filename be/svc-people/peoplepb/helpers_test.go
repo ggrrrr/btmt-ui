@@ -4,12 +4,31 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func Test_FromPerson(t *testing.T) {
+	to := &ddd.Person{
+		PIN:         "asdads",
+		Emails:      map[string]string{"default": "asd@asd123"},
+		LoginEmail:  "asd@asd",
+		Name:        "vesko",
+		Phones:      map[string]string{"mobile": "0889430425"},
+		CreatedTime: time.Now(),
+	}
+	pbPerson := FromPerson(to)
+	t.Logf("%+v \n", to)
+	t.Logf("%+v \n", pbPerson)
+
+	b, err := json.Marshal(pbPerson)
+	require.NoError(t, err)
+	t.Logf("%s ", string(b))
+}
 
 func TestToPersion(t *testing.T) {
 	req := `{"data":{"login_email":"asd@asd","pin":"asdads","emails":{"default":"asd@asd123"},"name":"vesko","phones":{"mobile":"0889430425"}}}`

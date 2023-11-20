@@ -51,6 +51,7 @@ func (r *repo) CreateIndex(ctx context.Context) {
 }
 
 func (r *repo) Save(ctx context.Context, p *ddd.Person) error {
+	p.CreatedTime = time.Now()
 	newPerson, err := fromPerson(p)
 	if err != nil {
 		return err
@@ -60,7 +61,6 @@ func (r *repo) Save(ctx context.Context, p *ddd.Person) error {
 		return err
 	}
 	p.Id = newPerson.Id.Hex()
-	p.CreatedTime = newPerson.CreatedTime.Time()
 
 	return nil
 }

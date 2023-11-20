@@ -91,7 +91,6 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 	if p.Attr == nil {
 		p.Attr = map[string]string{}
 	}
-
 	parsePin(p)
 
 	err = a.repoPeople.Save(ctx, p)

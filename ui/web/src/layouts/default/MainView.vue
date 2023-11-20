@@ -1,7 +1,14 @@
 <template>
-  <default-view />
+  <v-app>
+    <main-toolbar />
+    <error-dialog />
+    <router-view />
+    <main-footer />
+  </v-app>
 </template>
 
 <script setup>
-import DefaultView from './DefaultView.vue'
+import ErrorDialog from "@/components/ErrorDialog";
+import MainToolbar from "@/components/MainToolbar"
+import MainFooter from '@/components/MainFooter'
 </script>

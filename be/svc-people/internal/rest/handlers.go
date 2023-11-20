@@ -49,7 +49,10 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	}
 	people := []*peoplepb.Person{}
 	for _, p := range out {
-		people = append(people, peoplepb.FromPerson(&p))
+		person := peoplepb.FromPerson(&p)
+		logger.DebugCtx(r.Context()).Any("person from", p).Msg("ListResult")
+		logger.DebugCtx(r.Context()).Any("person to", person).Msg("ListResult")
+		people = append(people, person)
 	}
 	web.SendPayload(w, "ok", people)
 }

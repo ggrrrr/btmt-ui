@@ -62,13 +62,20 @@ func TestSave(t *testing.T) {
 					Attr:     map[string]string{"food": "veg"},
 					Gender:   "male",
 				}
+				ts := time.Now()
+
 				err = testRepo.Save(ctx, p1)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, p1.Id != "")
 				assert.True(t, !p1.CreatedTime.IsZero(), "Created Time must be set")
+				assert.WithinDuration(t, ts, p1.CreatedTime, 1*time.Second)
 
 				p2, err := testRepo.GetById(ctx, p1.Id)
-				assert.NoError(t, err)
+				require.NoError(t, err)
+				t.Logf("%+v \n", p1)
+				t.Logf("%+v \n", p2)
+				assert.WithinDuration(t, ts, p2.CreatedTime, 1*time.Second)
+
 				assert.True(t, !p2.CreatedTime.IsZero())
 				p1.CreatedTime = p2.CreatedTime
 				TestPerson(t, *p2, *p1, 10)

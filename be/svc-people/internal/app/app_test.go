@@ -34,7 +34,7 @@ func TestSave(t *testing.T) {
 		Passwd:     "pass",
 		Database:   "people",
 		Url:        "mongodb://localhost:27017/",
-		Debug:      "console",
+		// Debug:      "console",
 	}
 	testDb, err := mongodb.New(rootCtx, cfg)
 	require.NoError(t, err)
@@ -85,11 +85,22 @@ func TestSave(t *testing.T) {
 					// Attr:     make(map[string]string),
 					// Labels: []string{},
 				}
+				ts := time.Now()
+
 				err := testApp.Save(ctxAdmin, p1)
 				require.NoError(tt, err)
 				p2, err := testApp.GetById(ctxAdmin, p1.Id)
 				require.NoError(tt, err)
+				assert.WithinDuration(tt, ts, p1.CreatedTime, 1+time.Second)
+				tt.Logf("p1: %v \n", p1)
 				repo.TestPerson(tt, *p2, *p1, 10)
+				list, err := testApp.List(ctxAdmin, nil)
+				require.NoError(tt, err)
+				require.True(tt, len(list) > 0)
+				tt.Logf("list: %v \n", len(list))
+				// require.True(tt, list[0].CreatedTime == 1)
+				tt.Logf("list: %v \n", list[0].CreatedTime)
+
 			},
 		},
 		{

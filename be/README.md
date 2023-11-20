@@ -71,7 +71,7 @@ curl -v -H"Authorization: Bearer $T" -XPOST \
 
 curl -v -H"Authorization: Bearer $T" -XPOST -d"{}" ${REST_URL}/rest/v1/people/list
 
-curl -v -H"Authorization: Bearer $T" -XPOST -d'{"filters":{"phones":{"list":["430425"]}}}' \
+curl -v -H"Authorization: Bearer $T" -XPOST -d'{"filters":{"phones":{"list":["0889430425"]}}}' \
   ${REST_URL}/rest/v1/people/list | jq
 
 
