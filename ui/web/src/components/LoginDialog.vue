@@ -1,11 +1,8 @@
 <template>
     <v-dialog v-model="loginStore.showLogin" width="500">
-        <v-card>
-            <v-card-title>Login</v-card-title>
-            <LoginForm :enabled="enabled" @submit="handleLogin"></LoginForm>
-            <v-progress-linear :active="enabled == false" color="deep-purple-accent-4" indeterminate rounded
-                height="6"></v-progress-linear>
-        </v-card>
+        <LoginForm :enabled="enabled" @submit="handleLogin"></LoginForm>
+        <v-progress-linear :active="enabled == false" color="deep-purple-accent-4" indeterminate rounded
+            height="6"></v-progress-linear>
     </v-dialog>
 </template>
 

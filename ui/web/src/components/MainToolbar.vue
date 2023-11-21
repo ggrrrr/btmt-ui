@@ -4,22 +4,21 @@
             <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
         </template>
         <template v-slot:append>
+            <login-dialog />
             <v-chip color="primary">{{ loginStore.email }}</v-chip>
             <v-btn color="warning" dense v-show="loginStore.email" icon="mdi-logout" @click="loginStore.resetLogin"></v-btn>
             <v-btn color="secondary" dense v-show="!loginStore.email" icon="mdi-login" @click="showLogin"></v-btn>
             <v-btn color="secondary" dense v-show="loginStore.email" icon="mdi-refresh" @click="validateClick"></v-btn>
         </template>
-        <v-toolbar-title small><router-link to="/"><v-icon>mdi-home``</v-icon></router-link>
+        <v-toolbar-title small>
             <!-- <v-spacer flat></v-spacer> -->
-            <login-dialog />
         </v-toolbar-title>
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" temporary>
-        <v-list-item title="My Application" subtitle="Vuetify"></v-list-item>
+        <v-list-item color="primary" prepend-icon="mdi-home" title="Home" link to="/"></v-list-item>
         <v-divider></v-divider>
-        <v-list-item link title="people" to="/people"></v-list-item>
-        <v-list-item link title="List Item 2"></v-list-item>
-        <v-list-item link title="List Item 3"></v-list-item>
+        <v-list-item color="primary" prepend-icon="mdi-account-group" link title="people" to="/people"></v-list-item>
+        <v-list-item color="primary" prepend-icon="mdi-glass-mug-variant" link title="todo" to="/todo"></v-list-item>
     </v-navigation-drawer>
 </template>
 
