@@ -6,28 +6,50 @@
                     <BtnLoadData @click="loadData" text="Load people"></BtnLoadData>
                 </v-col>
             </v-card-title>
-            <v-data-table-server :no-data-text="data.loadingText" :items-length="data.totalItems" :headers="data.headers"
-                :items="list.list" :loading="data.loading" multi-sort class="elevation-1">
+            <v-card-text>
+                <v-container no-gutters>
+                    <v-row justify="start">
+                        <v-col cols="3" class="justify-center">
+                            <InputTextsList :list="searchTextFields.list" @click="loadData" label="Names"
+                                hint="Email or names">
+                            </InputTextsList>
+                            <InputTextsList :list="searchPhonesFields.list" @click="loadData" label="Phones" hint="Phones">
+                            </InputTextsList>
+                            <InputTextsList :list="searchPINFields.list" @click="loadData" label="PIN" hint="ЕГН">
+                            </InputTextsList>
+                        </v-col>
+                        <v-col cols="1" class="text-right">
+                            Filters
+                        </v-col>
+                        <v-col class="text-left">
+                            <ChipsList :list="searchTextFields" @click="delInputTexts"></ChipsList>
+                            <ChipsList :list="searchPhonesFields" @click="delInputPhones"></ChipsList>
+                            <ChipsList :list="searchPINFields" @click="delInputPIN"></ChipsList>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-card-text>
+            <v-data-table-server :items-length="data.totalItems" :headers="data.headers" :items="list.list" multi-sort
+                class="elevation-1">
+                <template v-slot:top>
+                </template>
                 <template v-slot:no-data>
                     <BtnLoadData v-if="!data.loadingText" @click="loadData" text="Load people"></BtnLoadData>
                     <div v-else>{{ data.loadingText }}</div>
                 </template>
                 <template v-slot:[`header.full_name`]="{ column }">
                     <div class="justify">
-
-                        <v-text-field density="compact" v-model="searchTextField" @keydown.enter="addSearchField"
-                            @click:append-inner="addSearchField" append-inner-icon="mdi-plus" :label="column.title"
-                            type="text" hint="Email or name"></v-text-field>
-                        <v-chip size="small" append-icon="mdi-close" v-for="(name, index) in searchTextFields.list"
-                            :key="index" @click="delSearchField(index)"> {{ name }}</v-chip>
+                        {{ column.title }}
                     </div>
-
                 </template>
                 <template v-slot:[`item.full_name`]="{ item }">
                     {{ formatFullName(item) }}
                 </template>
                 <template v-slot:[`item.created_at`]="{ item }">
                     <field-time-stamp :timeStamp="item.created_at"></field-time-stamp>
+                </template>
+                <template v-slot:[`item.dob`]="{ item }">
+                    <FieldDOB :dob="item.dob"></FieldDOB>
                 </template>
                 <template v-slot:[`item.emails`]="{ item }">
                     <field-email-maps :emails="item.emails"></field-email-maps>
@@ -44,7 +66,10 @@
 <script setup>
 
 import { fetchAPI } from "@/store/auth";
+import ChipsList from '@/components/ChipsList'
 import BtnLoadData from '@/components/BtnLoadData';
+import InputTextsList from '@/components/InputTextsList';
+import FieldDOB from '@/components/FieldDOB';
 import FieldTimeStamp from '@/components/FieldTimeStamp';
 import FieldEmailMaps from '@/components/FieldEmailMaps';
 import FieldPhonesMaps from '@/components/FieldPhonesMaps';
@@ -54,6 +79,33 @@ import { ref } from 'vue'
 
 const list = ref({ list: [] })
 
+function delInputTexts(index) {
+    console.log("delInputTexts", index)
+    searchTextFields.value.list = pop(searchTextFields.value.list, index)
+    loadData()
+}
+
+function delInputPhones(index) {
+    console.log("delInputPhones", index)
+    searchPhonesFields.value.list = pop(searchPhonesFields.value.list, index)
+    loadData()
+}
+function delInputPIN(index) {
+    console.log("delInputPhones", index)
+    searchPINFields.value.list = pop(searchPINFields.value.list, index)
+    loadData()
+}
+
+function pop(list, index) {
+    let out = []
+    list.forEach((v, i) => {
+        if (i != index) {
+            out.push(v)
+        }
+    })
+    return out
+}
+
 function formatFullName(item) {
     if (item.name.length > 0) {
         return `(${item.name}) ${item.full_name}`
@@ -61,42 +113,10 @@ function formatFullName(item) {
     return item.full_name
 }
 
-const searchTextField = ref("")
-
 const searchTextFields = ref({ list: [] })
+const searchPhonesFields = ref({ list: [] })
+const searchPINFields = ref({ list: [] })
 
-function delSearchField(index) {
-    let out = []
-    searchTextFields.value.list.forEach((v, i) => {
-        if (i != index) {
-            out.push(v)
-        }
-    })
-    searchTextFields.value.list = out
-    console.log("searchTextFields", index, searchTextFields.value)
-    // searchTextFields.value.pop(index)
-    loadData()
-}
-
-function addSearchField() {
-    console.log("addSearchField", searchTextField.value, searchTextField.value.length)
-    if (searchTextField.value.length > 1) {
-        let ok = true
-        searchTextFields.value.list.forEach((v, index) => {
-            console.log("addSearchField", v, index, searchTextField.value)
-            if (v == searchTextField.value) {
-                ok = false
-            }
-        })
-        if (ok) {
-            searchTextFields.value.list.push(searchTextField.value)
-        }
-        // searchTextFields.value.list.push(searchTextField.value)
-        console.log("searchTextFields", searchTextFields.value)
-        searchTextField.value = ""
-        loadData()
-    }
-}
 const data = ref({
     filters: {
         phones: [],
@@ -115,6 +135,9 @@ const data = ref({
             key: 'name',
         },
         { title: 'PIN', key: 'pin', align: 'end' },
+        { title: 'Birthday', key: 'dob', align: 'end' },
+        { title: 'Gender', key: 'gender', align: 'end' },
+        { title: 'Age', key: 'age', align: 'end' },
         { title: 'Emails', key: 'emails', align: 'end' },
         { title: 'Names', key: 'full_name', align: 'end' },
         { title: 'Phones', key: 'phones', align: 'end' },
@@ -130,6 +153,12 @@ function loadData() {
     }
     if (searchTextFields.value.list.length > 0) {
         filter.filters.texts = searchTextFields.value
+    }
+    if (searchPhonesFields.value.list.length > 0) {
+        filter.filters.phones = searchPhonesFields.value
+    }
+    if (searchPINFields.value.list.length > 0) {
+        filter.filters.pins = searchPINFields.value
     }
     console.log("filter", filter)
     const requestOptions = {

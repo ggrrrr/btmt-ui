@@ -32,7 +32,7 @@ service PeopleSvc {
       body: "*";
     };
   };
-  rpc PinParse(ListRequest) returns (PinRequest) {
+  rpc PinParse(PinParseRequest) returns (PinParseResponse) {
     option (google.api.http) = {
       post: "/v1/people/pin";
       body: "*";
@@ -40,13 +40,13 @@ service PeopleSvc {
   };
 }
 
-message PinRequest {
+message PinParseRequest {
   string pin = 1;
 }
 
-message PinResponse {
+message PinParseResponse {
   Dob dob = 1;
-  string dob = 2;
+  string gender = 2;
 }
 
 

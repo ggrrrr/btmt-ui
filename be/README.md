@@ -66,7 +66,7 @@ curl -v -H"Authorization: Bearer $T" -XPOST \
   ${REST_URL}/v1/auth/update/passwd
 
 curl -v -H"Authorization: Bearer $T" -XPOST \
-   -d'{"data":{"pin":"EGN1213123","emails":{"main":"asd@asd123"},"full_name":"Varban Krushev","name":"vesko","phones":{"mobile":"0889430425"},"labels":["bike:mtb"]}}' \
+   -d'{"data":{"pin":"asdasdasd","emails":{"main":"asd@asd123"},"full_name":"Varban Krushev","name":"vesko","phones":{"mobile":"0889430425"},"labels":["hike:snow"]}}' \
   ${REST_URL}/rest/v1/people/save
 
 curl -v -H"Authorization: Bearer $T" -XPOST -d"{}" ${REST_URL}/rest/v1/people/list

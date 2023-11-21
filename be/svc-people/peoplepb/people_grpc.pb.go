@@ -21,10 +21,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PeopleSvc_Update_FullMethodName = "/peoplepb.PeopleSvc/Update"
-	PeopleSvc_Save_FullMethodName   = "/peoplepb.PeopleSvc/Save"
-	PeopleSvc_Get_FullMethodName    = "/peoplepb.PeopleSvc/Get"
-	PeopleSvc_List_FullMethodName   = "/peoplepb.PeopleSvc/List"
+	PeopleSvc_Update_FullMethodName   = "/peoplepb.PeopleSvc/Update"
+	PeopleSvc_Save_FullMethodName     = "/peoplepb.PeopleSvc/Save"
+	PeopleSvc_Get_FullMethodName      = "/peoplepb.PeopleSvc/Get"
+	PeopleSvc_List_FullMethodName     = "/peoplepb.PeopleSvc/List"
+	PeopleSvc_PinParse_FullMethodName = "/peoplepb.PeopleSvc/PinParse"
 )
 
 // PeopleSvcClient is the client API for PeopleSvc service.
@@ -35,6 +36,7 @@ type PeopleSvcClient interface {
 	Save(ctx context.Context, in *SaveRequest, opts ...grpc.CallOption) (*SaveResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	PinParse(ctx context.Context, in *PinParseRequest, opts ...grpc.CallOption) (*PinParseResponse, error)
 }
 
 type peopleSvcClient struct {
@@ -81,6 +83,15 @@ func (c *peopleSvcClient) List(ctx context.Context, in *ListRequest, opts ...grp
 	return out, nil
 }
 
+func (c *peopleSvcClient) PinParse(ctx context.Context, in *PinParseRequest, opts ...grpc.CallOption) (*PinParseResponse, error) {
+	out := new(PinParseResponse)
+	err := c.cc.Invoke(ctx, PeopleSvc_PinParse_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PeopleSvcServer is the server API for PeopleSvc service.
 // All implementations must embed UnimplementedPeopleSvcServer
 // for forward compatibility
@@ -89,6 +100,7 @@ type PeopleSvcServer interface {
 	Save(context.Context, *SaveRequest) (*SaveResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
+	PinParse(context.Context, *PinParseRequest) (*PinParseResponse, error)
 	mustEmbedUnimplementedPeopleSvcServer()
 }
 
@@ -107,6 +119,9 @@ func (UnimplementedPeopleSvcServer) Get(context.Context, *GetRequest) (*GetRespo
 }
 func (UnimplementedPeopleSvcServer) List(context.Context, *ListRequest) (*ListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedPeopleSvcServer) PinParse(context.Context, *PinParseRequest) (*PinParseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PinParse not implemented")
 }
 func (UnimplementedPeopleSvcServer) mustEmbedUnimplementedPeopleSvcServer() {}
 
@@ -193,6 +208,24 @@ func _PeopleSvc_List_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PeopleSvc_PinParse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PinParseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PeopleSvcServer).PinParse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PeopleSvc_PinParse_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PeopleSvcServer).PinParse(ctx, req.(*PinParseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PeopleSvc_ServiceDesc is the grpc.ServiceDesc for PeopleSvc service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -215,6 +248,10 @@ var PeopleSvc_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "List",
 			Handler:    _PeopleSvc_List_Handler,
+		},
+		{
+			MethodName: "PinParse",
+			Handler:    _PeopleSvc_PinParse_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

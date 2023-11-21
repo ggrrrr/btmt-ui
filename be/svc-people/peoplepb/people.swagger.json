@@ -80,6 +80,38 @@
         ]
       }
     },
+    "/v1/people/pin": {
+      "post": {
+        "operationId": "PeopleSvc_PinParse",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/peoplepbPinParseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/peoplepbPinParseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PeopleSvc"
+        ]
+      }
+    },
     "/v1/people/save": {
       "post": {
         "operationId": "PeopleSvc_Save",
@@ -266,6 +298,25 @@
           "format": "date-time"
         },
         "age": {
+          "type": "string"
+        }
+      }
+    },
+    "peoplepbPinParseRequest": {
+      "type": "object",
+      "properties": {
+        "pin": {
+          "type": "string"
+        }
+      }
+    },
+    "peoplepbPinParseResponse": {
+      "type": "object",
+      "properties": {
+        "dob": {
+          "$ref": "#/definitions/peoplepbDob"
+        },
+        "gender": {
           "type": "string"
         }
       }

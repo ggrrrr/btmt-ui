@@ -33,9 +33,12 @@ func FromPerson(p *ddd.Person) *Person {
 		Labels:     p.Labels,
 		Attr:       p.Attr,
 		CreatedAt:  timestamppb.New(p.CreatedTime),
-		Age:        fmt.Sprintf("%d", p.Age),
+	}
+	if p.Age != nil {
+		out.Age = fmt.Sprintf("%d", *p.Age)
 	}
 	if p.DOB != nil {
+		out.Dob = &Dob{}
 		out.Dob.Year = uint32(p.DOB.Year)
 		out.Dob.Month = uint32(p.DOB.Month)
 		out.Dob.Day = uint32(p.DOB.Day)
@@ -58,6 +61,7 @@ func (p *Person) ToPerson() *ddd.Person {
 		CreatedTime: p.CreatedAt.AsTime(),
 	}
 	if p.Dob != nil {
+		out.DOB = &ddd.Dob{}
 		out.DOB.Year = int(p.Dob.Year)
 		out.DOB.Month = int(p.Dob.Month)
 		out.DOB.Day = int(p.Dob.Day)

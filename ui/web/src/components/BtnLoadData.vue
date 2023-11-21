@@ -1,11 +1,11 @@
 <template>
-    <v-btn variant="tonal" rounded="xl" color="#5865f2" @click="emits('click')">
+    <v-btn variant="tonal" rounded="xl" color="primary" @click="emits('click')">
         {{ props['text'] }}
     </v-btn>
 </template>
 
 <script setup>
-import { defineEmits, defineProps } from 'vue'
+// import { } from 'vue'
 const props = defineProps(["text"])
 const emits = defineEmits(['click'])
 </script>

@@ -10,9 +10,11 @@
 </template>
 
 <script setup>
-import { useLoginStore } from "@/store/auth";
 import LoginForm from '@/components/LoginForm'
+
+import { useLoginStore } from "@/store/auth";
 import { ref } from "vue";
+
 // import { LoginForm } from "./LoginForm.vue";
 
 const enabled = ref(true)

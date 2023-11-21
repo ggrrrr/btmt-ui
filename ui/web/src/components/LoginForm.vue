@@ -4,7 +4,7 @@
             <v-text-field :disabled="!props.enabled" class="mr-2" autocomplete="current-username" v-model="email"
                 label="Email" type="email" prepend-icon="mdi-account-circle" required hide-details></v-text-field>
             <v-text-field :disabled="!props.enabled" class="mr-2" autocomplete="current-password" v-model="password"
-                label="Password" hide-details prepend-icon="mdi-lock"
+                label="Password" hide-details prepend-icon="mdi-lock" @keydown.enter="handleSubmit"
                 :append-inner-icon="!showPassword ? 'mdi-eye-off' : 'mdi-eye'" :type="showPassword ? 'text' : 'password'"
                 @click:append-inner="showPassword = !showPassword" required></v-text-field>
             <v-card-actions justify="center">
@@ -15,7 +15,6 @@
 </template>
 
 <script setup>
-import { defineEmits, defineProps } from 'vue'
 import { ref } from "vue";
 
 const email = ref("")
