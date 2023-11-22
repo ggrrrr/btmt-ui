@@ -1,6 +1,6 @@
 <template>
-    <v-chip v-for="(name, index) in props.list.list" :key="index" @click="delSearchField(index)" size="large"
-        :color="props.color" append-icon="mdi-close">
+    <v-chip v-for="(name, index) in props.list.list" :key="index" @click="delSearchField(index)" class="ga-2 ma-2" rounded
+        density="comfortable" size="large" variant="tonal" :color="props.color">
         <template v-slot>
             {{ name }}
         </template>

@@ -5,7 +5,7 @@
         </template>
         <template v-slot:append>
             <login-dialog />
-            <v-chip color="primary">{{ loginStore.email }}</v-chip>
+            <v-chip v-if="loginStore.email" rounded color="primary">{{ loginStore.email }}</v-chip>
             <v-btn color="warning" dense v-show="loginStore.email" icon="mdi-logout" @click="loginStore.resetLogin"></v-btn>
             <v-btn color="secondary" dense v-show="!loginStore.email" icon="mdi-login" @click="showLogin"></v-btn>
             <v-btn color="secondary" dense v-show="loginStore.email" icon="mdi-refresh" @click="validateClick"></v-btn>

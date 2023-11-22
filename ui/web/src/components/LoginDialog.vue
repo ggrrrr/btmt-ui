@@ -1,8 +1,7 @@
 <template>
     <v-dialog v-model="loginStore.showLogin" width="500">
         <LoginForm :enabled="enabled" @submit="handleLogin"></LoginForm>
-        <v-progress-linear :active="enabled == false" color="deep-purple-accent-4" indeterminate rounded
-            height="6"></v-progress-linear>
+        <v-progress-linear :active="enabled == false" color="warning" indeterminate rounded height="10"></v-progress-linear>
     </v-dialog>
 </template>
 
@@ -18,9 +17,13 @@ const enabled = ref(true)
 
 const loginStore = useLoginStore()
 
-function handleLogin(email, password) {
+// function sleep(ms) {
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
+async function handleLogin(email, password) {
     enabled.value = false
-    loginStore.loginRequest(email, password).then(() => {
+    // await sleep(2000);
+    await loginStore.loginRequest(email, password).then(() => {
     }).finally(() => {
         enabled.value = true
     })

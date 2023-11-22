@@ -25,6 +25,14 @@ const routes = [
         // which is lazy-loaded when the route is visited.
         component: () => import("@/views/PeopleView.vue"),
       },
+      {
+        path: "/todo",
+        name: "Todo",
+        // route level code-splitting
+        // this generates a separate chunk (Home-[hash].js) for this route
+        // which is lazy-loaded when the route is visited.
+        component: () => import("@/views/ToDo.vue"),
+      },
     ],
   },
 ];

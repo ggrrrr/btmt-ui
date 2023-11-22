@@ -1,15 +1,19 @@
 <template>
     <v-main>
         <v-card outlined justify="right">
-            <v-card-title>
-                <v-col cols="12" sm="6" md="4">
-                    <BtnLoadData @click="loadData" text="Load people"></BtnLoadData>
-                </v-col>
-            </v-card-title>
             <v-card-text>
-                <v-container no-gutters>
+                <v-container fill-height no-gutters class="ma-0 mp-0">
+                    <v-row>
+                        <v-col no-gutters cols="4" sm="6" md="4">
+                            <BtnLoadData @click="loadData" text="Load people"></BtnLoadData>
+                        </v-col>
+                        <v-col no-gutters cols="1" sm="6" md="4">
+                            <BtnLoadData @click="store.showEdit = !store.showEdit" text="Add"></BtnLoadData>
+                            <PersonDialog v-model="store.showEdit" />
+                        </v-col>
+                    </v-row>
                     <v-row justify="start">
-                        <v-col cols="3" class="justify-center">
+                        <v-col no-gutters cols="4" class="justify-center">
                             <InputTextsList :list="searchTextFields.list" @click="loadData" label="Names"
                                 hint="Email or names">
                             </InputTextsList>
@@ -18,9 +22,8 @@
                             <InputTextsList :list="searchPINFields.list" @click="loadData" label="PIN" hint="ЕГН">
                             </InputTextsList>
                         </v-col>
-                        <v-col cols="1" class="text-right">
-                            Filters
-                        </v-col>
+                    </v-row>
+                    <v-row justify="start" no-gutters>
                         <v-col class="text-left">
                             <ChipsList :list="searchTextFields" @click="delInputTexts"></ChipsList>
                             <ChipsList :list="searchPhonesFields" @click="delInputPhones"></ChipsList>
@@ -35,7 +38,7 @@
                 </template>
                 <template v-slot:no-data>
                     <BtnLoadData v-if="!data.loadingText" @click="loadData" text="Load people"></BtnLoadData>
-                    <div v-else>{{ data.loadingText }}</div>
+                    <v-chip color="primary" veriant="text" v-else>{{ data.loadingText }}</v-chip>
                 </template>
                 <template v-slot:[`header.full_name`]="{ column }">
                     <div class="justify">
@@ -74,8 +77,12 @@ import FieldTimeStamp from '@/components/FieldTimeStamp';
 import FieldEmailMaps from '@/components/FieldEmailMaps';
 import FieldPhonesMaps from '@/components/FieldPhonesMaps';
 import FieldLabelsList from '@/components/FieldLabelsList';
+import PersonDialog from '@/components/PersonDialog'
 
 import { ref } from 'vue'
+import { usePeopleStore } from "@/store/people";
+
+const store = usePeopleStore()
 
 const list = ref({ list: [] })
 
@@ -146,7 +153,11 @@ const data = ref({
     ]
 })
 
-function loadData() {
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function loadData() {
     let filter = {
         filters: {
         }
@@ -167,8 +178,8 @@ function loadData() {
         body: JSON.stringify(filter),
     };
     data.value.loading = true;
-
-    fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", requestOptions)
+    await sleep(2000)
+    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", requestOptions)
         .then((result) => {
             console.log("people.result", result)
             data.value.totalItems = 0;
