@@ -114,10 +114,12 @@ function pop(list, index) {
 }
 
 function formatFullName(item) {
-    if (item.name.length > 0) {
-        return `(${item.name}) ${item.full_name}`
+    if (item.name && item.full_name) {
+        if (item.name.length > 0) {
+            return `(${item.name}) ${item.full_name}`
+        }
+        return item.full_name
     }
-    return item.full_name
 }
 
 const searchTextFields = ref({ list: [] })
@@ -187,12 +189,29 @@ async function loadData() {
             result.result.forEach(
                 (i) => {
                     console.log(i)
+                    if (i.name === undefined) {
+                        i.name = ""
+                    }
+                    if (i.full_name === undefined) {
+                        i.full_name = ""
+                    }
+                    if (i.labels === undefined) {
+                        i.labels = []
+                    }
+                    if (i.phones === undefined) {
+                        i.phones = {}
+                    }
+                    if (i.emails === undefined) {
+                        i.emails = {}
+                    }
+                    console.log("row", i)
+
                     list.value.list.push(i)
                     data.value.totalItems++;
                 }
             )
             if (data.value.totalItems == 0) {
-                data.value.loadingText = "no data, please reduce filter"
+                data.value.loadingText = "no data, check filters"
             }
         }).finally(() => {
             data.value.loading = false;

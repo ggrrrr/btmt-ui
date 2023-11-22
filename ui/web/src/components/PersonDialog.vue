@@ -6,19 +6,20 @@
                     <v-card-title>
                         <v-row no-gutters>
                             <v-col class="d-flex justify-start"><v-chip color="primary">Person</v-chip></v-col>
-                            <v-col class="d-flex justify-end"><v-btn rounded>Add</v-btn></v-col>
+                            <v-col class="d-flex justify-end"><v-btn rounded @click="saveData">Add</v-btn></v-col>
                         </v-row>
                     </v-card-title>
                     <v-container>
                         <v-row no-gutters>
                             <v-col class="mr-0 pr-1" cols="3">
-                                <v-text-field label="PIN" hint="ЕГН"></v-text-field>
+                                <v-text-field v-model="staticData.pin" label="PIN" hint="ЕГН"></v-text-field>
                             </v-col>
                             <v-col class="mr-0 pr-1" cols="3">
-                                <v-text-field label="Name" hint="Joro"></v-text-field>
+                                <v-text-field v-model="staticData.name" label="Name" hint="Joro"></v-text-field>
                             </v-col>
                             <v-col class="ml-0 pl-1" cols="">
-                                <v-text-field label="Full names" hint="Varban Krushev"></v-text-field>
+                                <v-text-field v-model="staticData.full_name" label="Full names"
+                                    hint="Varban Krushev"></v-text-field>
                             </v-col>
                         </v-row>
                         <v-row no-gutters>
@@ -63,6 +64,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useDisplay } from 'vuetify'
+import { fetchAPI } from "@/store/auth";
+
 import InputTypeValue from './InputTypeValue.vue';
 
 onMounted(() => {
@@ -97,4 +100,28 @@ const emailRules = [
 
 const show = ref(true)
 
+
+async function saveData() {
+    let data = {
+        data: {
+            pin: staticData.value.pin,
+            name: staticData.value.name,
+            full_name: staticData.value.full_name,
+            emails: staticData.value.emails,
+            phones: staticData.value.phones
+        }
+    }
+    console.log("data", data)
+    const request = {
+        // mode: "no-cors",
+        method: "POST",
+        body: JSON.stringify(data),
+    };
+    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/save", request)
+        .then((result) => {
+            console.log("people.result", result)
+        }).finally(() => {
+        });
+
+}
 </script>
