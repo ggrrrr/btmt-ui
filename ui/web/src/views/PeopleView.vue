@@ -5,13 +5,19 @@
                 <v-container fill-height no-gutters class="ma-0 mp-0">
                     <v-row>
                         <v-col no-gutters cols="4" sm="6" md="4">
-                            <BtnLoadData @click="loadData" text="Load people"></BtnLoadData>
+                            <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load people"></BtnLoadData>
                         </v-col>
                         <v-col no-gutters cols="1" sm="6" md="4">
                             <BtnLoadData @click="showNewPersonn" text="Add"></BtnLoadData>
                             <v-dialog v-model="refs.edit.show" max-width="900">
                                 <PersonEditForm v-model="refs.edit" @add="addPerson" @save="savePerson" />
                             </v-dialog>
+                            <!-- <div class="d-flex justify-center ma-4">
+                                <div class="d-flex justify-space-between" style="width: 60%">
+                                    <v-progress-circular></v-progress-circular>
+                                </div>
+                            </div>
+ -->
                         </v-col>
                     </v-row>
                     <v-row>
@@ -34,8 +40,8 @@
                     </v-row>
                 </v-container>
             </v-card-text>
-            <v-data-table-server :items-length="refs.totalItems" :headers="refs.headers" :items="list.list" multi-sort
-                class="elevation-1">
+            <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
+                :items="list.list" multi-sort class="elevation-1">
                 <template v-slot:top>
                 </template>
                 <template v-slot:no-data>
@@ -66,10 +72,10 @@
                     <FieldLabelsList :labels="item.labels"></FieldLabelsList>
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
-                    <v-icon size="small" color="primary" class="me-2" @click="editItem(item)">
+                    <v-icon size="large" color="primary" class="me-2" @click="editItem(item)">
                         mdi-pencil
                     </v-icon>
-                    <v-icon size="small" color="warning" @click="deleteItem(item)">
+                    <v-icon size="large" color="warning" @click="deleteItem(item)">
                         mdi-delete
                     </v-icon>
                 </template>
@@ -90,9 +96,9 @@ import FieldLabelsList from '@/components/FieldLabelsList';
 import PersonEditForm from '@/components/PersonEditForm'
 
 import { ref } from 'vue'
-import { usePeopleStore, Person, EditPerson } from "@/store/people";
+import { Person, Dob, EditPerson } from "@/store/people";
 
-const store = usePeopleStore()
+// const store = usePeopleStore()
 
 const list = ref({ list: [] })
 
@@ -167,10 +173,6 @@ const refs = ref({
     ]
 })
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 function addPerson(person) {
     console.log("addPerson", person, refs.value.edit)
     refs.value.edit.show = false
@@ -190,6 +192,10 @@ function editItem(person) {
 function showNewPersonn() {
     refs.value.edit.person = new Person()
     refs.value.edit.show = true
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function loadData() {
@@ -213,7 +219,7 @@ async function loadData() {
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    // await sleep(2000)
+    await sleep(2000)
     await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", requestOptions)
         .then((result) => {
             console.log("people.result", result)
@@ -222,6 +228,10 @@ async function loadData() {
             result.result.forEach(
                 (j) => {
                     let i = Object.assign(new Person(), j);
+                    if (i.dob !== undefined) {
+                        let dob = Object.assign(new Dob(), i.dob)
+                        i.dob = dob
+                    }
                     console.log(i)
                     list.value.list.push(i)
                     refs.value.totalItems++;

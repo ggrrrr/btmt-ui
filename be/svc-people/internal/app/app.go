@@ -151,7 +151,7 @@ func (a *application) Update(ctx context.Context, p *ddd.Person) error {
 	if err := a.appPolices.CanDo(peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return err
 	}
-	logger.DebugCtx(ctx).Msg("Update")
+	logger.DebugCtx(ctx).Any("person", p).Msg("Update")
 	err := a.repoPeople.Update(ctx, p)
 	return err
 }

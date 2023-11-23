@@ -12,7 +12,7 @@ import (
 
 const (
 	FieldPIN        string = "pin"
-	FieldLoginEmail string = "loginEmail"
+	FieldLoginEmail string = "login_email"
 	FieldEmails     string = "emails"
 	FieldName       string = "name"
 	FieldFullName   string = "full_name"
@@ -161,13 +161,13 @@ func (p person) toPerson() ddd.Person {
 // if at least one of the DOB fields set then return true
 func (d dob) isZero() bool {
 	if d.Year > 0 {
-		return true
+		return false
 	}
 	if d.Month > 0 {
-		return true
+		return false
 	}
 	if d.Day > 0 {
-		return true
+		return false
 	}
-	return false
+	return true
 }

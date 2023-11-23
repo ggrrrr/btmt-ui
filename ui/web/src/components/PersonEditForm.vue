@@ -3,7 +3,6 @@
         <v-card-title>
             <v-row no-gutters>
                 <v-col class="d-flex justify-start">
-
                     <v-chip color="primary">Person </v-chip>
                     <v-chip v-if="refs.person.id.length > 0" color="">{{ refs.person.id.substring(0, 10) }} </v-chip>
                 </v-col>
@@ -44,7 +43,12 @@
                 </v-col>
             </v-row>
             <v-row>
-                <InputGender v-model="refs.person.gender" />
+                <v-col>
+                    <InputDOB v-model="refs.person.dob" />
+                </v-col>
+                <v-col>
+                    <InputGender v-model="refs.person.gender" />
+                </v-col>
             </v-row>
         </v-container>
     </v-card>
@@ -54,11 +58,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 // import { useDisplay } from 'vuetify'
-// import { fetchAPI } from "@/store/auth";
+import { fetchAPI } from "@/store/auth";
 import { Person, EditPerson } from "@/store/people.js";
 
-import InputTypeValue from './InputTypeValue.vue';
-import InputGender from './InputGender.vue';
+import InputTypeValue from './InputTypeValue';
+import InputGender from './InputGender';
+import InputDOB from './InputDOB';
 
 onMounted(() => {
     console.log("onMounted.", props.modelValue.person.id)
@@ -102,11 +107,57 @@ const emailRules = [
     },
 ]
 
+async function addPerson(person) {
+    console.log("savePerson", person)
+    const data = {
+        data: person
+    }
+    const request = {
+        // mode: "no-cors",
+        method: "POST",
+        body: JSON.stringify(data),
+    };
+    refs.value.loading = true;
+    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/save", request)
+        .then((result) => {
+            console.log("people.result", result)
+        }).catch((err) => {
+            console.log("err", err)
+        }).finally(() => {
+            refs.value.loading = false;
+        });
+}
+
+async function updatePerson(person) {
+    console.log("updatePerson", person)
+    const data = {
+        data: person
+    }
+    const request = {
+        // mode: "no-cors",
+        method: "POST",
+        body: JSON.stringify(data),
+    };
+    refs.value.loading = true;
+    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/update", request)
+        .then((result) => {
+            console.log("people.result", result)
+        }).catch((err) => {
+            console.log("err", err)
+        }).finally(() => {
+            refs.value.loading = false;
+        });
+}
+
+
 
 async function submit() {
     let emit = "add"
-    if (refs.value.person.id.length > 0) {
+    if (refs.value.person.id.length == 0) {
+        addPerson(refs.value.person)
         emit = "save"
+    } else {
+        updatePerson(refs.value.person)
     }
     let temp = props.modelValue
     temp.person = refs.value.person

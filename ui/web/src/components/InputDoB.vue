@@ -1,30 +1,36 @@
 <template>
-    <div>
-        <v-text-field class="input-day" v-model="value.d" @update:focused="onFocusDay" @keydown.enter="handleDay"
-            density="compact" variant="underlined"></v-text-field>
-    </div>
-    <div>
-        /
-    </div>
-    <div>
-        <v-text-field class="input-month" v-model="value.m" @update:focused="onFocusMonth" @keydown.enter="handleMonth"
-            density="compact" variant="underlined"></v-text-field>
-    </div>
-    <div>
-        /
-    </div>
-    <div>
-        <v-text-field class="input-year" v-model="value.y" @update:focused="onFocusYear" @keydown.enter="handleYear"
-            density="compact" variant="underlined"></v-text-field>
-    </div>
+    <v-row class="ma-0 pa-0">
+        <div class="ma-0 pa-0">
+            <v-text-field style="width: 2ch;" @update:model-value="updateDay" :value="modelValue.day" density="compact"
+                variant="underlined"></v-text-field>
+        </div>
+        <div class="ma-0 pa-0" style="width: 1ch; height: 1ch; text-align: center;">
+            /
+        </div>
+        <div class="ma-0 pa-0">
+            <v-text-field style="width: 2ch;" @update:model-value="updateMonth" :value="modelValue.month" density="compact"
+                variant="underlined"></v-text-field>
+        </div>
+        <div style="width: 1ch; text-align: center;">
+            /
+        </div>
+        <div class="ma-0 pa-0">
+            <v-text-field style="width: 4ch;" @update:model-value="updateYear" :value="modelValue.year" density="compact"
+                variant="underlined"></v-text-field>
+        </div>
+    </v-row>
 </template>
-    <!--  https://webmound.com/use-v-model-custom-components-vue-3/ -->
+
+<!--  https://webmound.com/use-v-model-custom-components-vue-3/ -->
+
 <script setup>
 
-import { ref, onMounted } from 'vue'
+import { Dob } from '@/store/people'
+
+const emits = defineEmits(['update:modelValue'])
 
 const props = defineProps({
-    modelValue: Object,
+    modelValue: Dob,
     hint: {
         type: String,
         default: "Date of birth"
@@ -35,72 +41,50 @@ const props = defineProps({
     }
 })
 
-const value = ref({
-    d: "",
-    m: "",
-    y: ""
-})
-const emits = defineEmits(['update:modelValue'])
-
-onMounted(() => {
-    if (props) {
-        if (props.modelValue) {
-            if (props.modelValue == "") {
-                console.log("onMounted", props.modelValue)
+function updateDay(val) {
+    let out = props.modelValue
+    if (val == "") {
+        delete out.day
+    } else {
+        const n = Number(val)
+        if (!isNaN(n)) {
+            if (n < 32) {
+                out.day = n
             }
         }
     }
-})
-
-function onFocusDay(asd) {
-    if (asd == false) {
-        handleDay()
+    console.log("updateDay", out)
+    emits('update:modelValue', out)
+}
+function updateMonth(val) {
+    let out = props.modelValue
+    console.log("updateMonth", val)
+    if (val == "") {
+        delete out.month
+    } else {
+        const n = Number(val)
+        if (!isNaN(n)) {
+            if (n < 13) {
+                out.month = n
+            }
+        }
     }
+    console.log("updateDay", out)
+    emits('update:modelValue', out)
 }
-function handleDay(val) {
-    console.log("handleDay", val)
-    handleAll()
-}
-
-function onFocusMonth(asd) {
-    if (asd == false) {
-        handleMonth()
+function updateYear(val) {
+    console.log("updateYear", val)
+    let out = props.modelValue
+    if (val == "") {
+        delete out.year
+    } else {
+        const n = Number(val)
+        if (!isNaN(n)) {
+            out.year = n
+        }
     }
-}
-function handleMonth(val) {
-    console.log("handleMonth", val)
-    handleAll()
-}
-
-function onFocusYear(asd) {
-    if (asd == false) {
-        handleMonth()
-    }
-}
-function handleYear(val) {
-    console.log("handleYear", val)
-    handleAll()
-}
-
-function handleAll() {
-    emits('update:modelValue', value.value.d)
+    console.log("updateDay", out)
+    emits('update:modelValue', out)
 }
 
 </script>
-
-<style scoped>
-.input-day {
-    width: 20px !important;
-    max-width: 20px;
-}
-
-.input-month {
-    width: 20px !important;
-    max-width: 20px;
-}
-
-.input-year {
-    width: 40px !important;
-    max-width: 40px;
-}
-</style>

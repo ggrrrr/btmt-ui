@@ -151,6 +151,39 @@ func TestSave(t *testing.T) {
 				repo.TestPerson(tt, *p2, *p1, 10)
 			},
 		},
+		{
+			test: "update",
+			testFunc: func(tt *testing.T) {
+				p1 := &ddd.Person{}
+				p2 := &ddd.Person{
+					PIN:        "123123",
+					LoginEmail: "loginemail",
+					Name:       "name1",
+					FullName:   "full name",
+					DOB: &ddd.Dob{
+						Year:  1978,
+						Month: 2,
+						Day:   13,
+					},
+					Gender: "male",
+					Emails: map[string]string{"main": "main@mail"},
+					Phones: map[string]string{"main": "phone1"},
+					Labels: []string{"atttre"},
+					Attr:   map[string]string{"attr": "atttrvalue"},
+				}
+				p2.CreatedTime = time.Now()
+				err := testApp.Save(ctxAdmin, p1)
+				require.NoError(tt, err)
+				tt.Logf("%+v \n", p1)
+				p2.Id = p1.Id
+				err = testApp.Update(ctxAdmin, p2)
+				require.NoError(tt, err)
+				p3, err := testApp.GetById(ctxAdmin, p2.Id)
+				p3.Age = nil
+				require.NoError(tt, err)
+				repo.TestPerson(tt, *p3, *p2, 5)
+			},
+		},
 	}
 
 	for _, tc := range tests {

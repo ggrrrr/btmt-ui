@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
@@ -83,39 +84,44 @@ func TestSave(t *testing.T) {
 			},
 		},
 		{
-			test: "update",
+			test: "update all",
 			run: func(t *testing.T) {
-				p1 := &ddd.Person{
-					Name:     "ggrrrr",
-					Emails:   map[string]string{"": "asdasd@asd"},
-					FullName: "not varban krushev",
-				}
+				p1 := &ddd.Person{}
 				err = testRepo.Save(ctx, p1)
 				assert.NoError(t, err)
 				assert.True(t, p1.Id != "")
 				assert.True(t, !p1.CreatedTime.IsZero())
 
 				p2 := &ddd.Person{
-					Id:     p1.Id,
-					PIN:    "newpin",
-					Labels: []string{"tours:bike", "tours:hike", "kids"},
-					Phones: map[string]string{"mobile": "123123123"},
-					Attr:   map[string]string{"food": "veg"},
-					Gender: "male",
+					Id:         p1.Id,
+					LoginEmail: "login@Email",
+					Name:       "ggrrrr",
+					Emails:     map[string]string{"": "asdasd@asd"},
+					FullName:   "not varban krushev",
+					PIN:        "newpin",
+					Labels:     []string{"tours:bike", "tours:hike", "kids"},
+					Phones:     map[string]string{"mobile": "123123123"},
+					Attr:       map[string]string{"food": "veg"},
+					Gender:     "male",
+					DOB:        &ddd.Dob{Year: 1978, Month: 2, Day: 2},
 				}
 
 				err = testRepo.Update(ctx, p2)
 				p3, err := testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
+				logger.Info().Any("got", p3).Msg("Asd")
+
 				p3.CreatedTime = p1.CreatedTime
-				assert.Equal(t, p3.Name, p1.Name)
-				assert.Equal(t, p3.Emails, p1.Emails)
-				assert.Equal(t, p3.FullName, p1.FullName)
 				assert.Equal(t, p3.PIN, p2.PIN)
-				assert.Equal(t, p3.Labels, p2.Labels)
-				assert.Equal(t, p3.Phones, p2.Phones)
-				assert.Equal(t, p3.Attr, p2.Attr)
+				assert.Equal(t, p3.LoginEmail, p2.LoginEmail)
+				assert.Equal(t, p3.Emails, p2.Emails)
+				assert.Equal(t, p3.Name, p2.Name)
+				assert.Equal(t, p3.FullName, p2.FullName)
+				assert.Equal(t, p3.DOB, p2.DOB)
 				assert.Equal(t, p3.Gender, p2.Gender)
+				assert.Equal(t, p3.Phones, p2.Phones)
+				assert.Equal(t, p3.Labels, p2.Labels)
+				assert.Equal(t, p3.Attr, p2.Attr)
 			},
 		},
 	}

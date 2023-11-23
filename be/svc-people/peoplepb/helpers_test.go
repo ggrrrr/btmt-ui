@@ -30,14 +30,19 @@ func Test_FromPerson(t *testing.T) {
 	t.Logf("%s ", string(b))
 }
 
-func TestToPersion(t *testing.T) {
-	req := `{"data":{"login_email":"asd@asd","pin":"asdads","emails":{"default":"asd@asd123"},"name":"vesko","phones":{"mobile":"0889430425"}}}`
+func TestToPerson(t *testing.T) {
+	req := `{"data":{"dob":{"year":1978,"day":22,"month":2},"login_email":"asd@asd","pin":"asdads","emails":{"default":"asd@asd123"},"name":"vesko","phones":{"mobile":"0889430425"}}}`
 	var from SaveRequest
 	err := json.NewDecoder(bytes.NewReader([]byte(req))).Decode(&from)
 	require.NoError(t, err)
 
 	to := &ddd.Person{
-		PIN:         "asdads",
+		PIN: "asdads",
+		DOB: &ddd.Dob{
+			Year:  1978,
+			Month: 2,
+			Day:   22,
+		},
 		Emails:      map[string]string{"default": "asd@asd123"},
 		LoginEmail:  "asd@asd",
 		Name:        "vesko",

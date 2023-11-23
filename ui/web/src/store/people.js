@@ -1,14 +1,17 @@
 import { defineStore } from "pinia";
 
+export class Dob {
+  constructor() {}
+}
+
 export class Person {
   constructor() {
     this.id = "";
     this.pin = "";
     this.name = "";
     this.full_name = "";
-    // this.dob ;
     this.gender = "";
-
+    this.dob = new Dob();
     this.emails = {};
     this.phones = {};
     this.attr = {};

@@ -78,6 +78,9 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	if len(newPerson.PIN) > 0 {
 		setReq[FieldPIN] = newPerson.PIN
 	}
+	if len(newPerson.LoginEmail) > 0 {
+		setReq[FieldLoginEmail] = newPerson.LoginEmail
+	}
 	if len(newPerson.Emails) > 0 {
 		setReq[FieldEmails] = newPerson.Emails
 	}
@@ -87,8 +90,10 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	if len(newPerson.FullName) > 0 {
 		setReq[FieldFullName] = newPerson.FullName
 	}
-	if newPerson.DOB != nil && !newPerson.DOB.isZero() {
-		setReq[FieldFullName] = newPerson.FullName
+	if newPerson.DOB != nil {
+		if !newPerson.DOB.isZero() {
+			setReq[FieldDoB] = newPerson.DOB
+		}
 	}
 	if len(newPerson.Gender) > 0 {
 		setReq[FieldGender] = newPerson.Gender
@@ -103,17 +108,13 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 		setReq[FieldAttr] = newPerson.Attr
 	}
 
-	if len(newPerson.Attr) > 0 {
-		setReq[FieldAttr] = newPerson.Attr
-	}
-
 	if len(setReq) == 0 {
 		return app.ErrorBadRequest("empty person", nil)
 	}
 	updateReq := bson.M{
 		"$set": setReq,
 	}
-
+	logger.DebugCtx(ctx).Any("updateReq", updateReq).Msg("UpdateByID")
 	resp, err := r.db.UpdateByID(ctx, r.collection, newPerson.Id, updateReq)
 	if err != nil {
 		return err

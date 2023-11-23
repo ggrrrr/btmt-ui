@@ -110,7 +110,7 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	p := req.ToPerson()
 	logger.InfoCtx(r.Context()).Any("person", &req).Msg("Update")
-	err = s.app.Save(r.Context(), p)
+	err = s.app.Update(r.Context(), p)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
 		web.SendError(w, err)

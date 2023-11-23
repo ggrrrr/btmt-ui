@@ -7,14 +7,30 @@
 </template>
 
 <script setup>
-const props = defineProps(['dob'])
+import { Dob } from '@/store/people';
+
+const props = defineProps(
+    {
+        dob: {
+            type: Dob
+        }
+    }
+)
 
 function formatDoB() {
-    const ts = props['dob']
-    if (ts) {
-        return `${ts.day} / ${ts.month} / ${ts.year}`
+    let year = "____"
+    let day = "__"
+    let month = "__"
+    if (props.dob.day != undefined && props.dob.day !== "") {
+        day = props.dob.day
     }
-    return ''
+    if (props.dob.month != undefined && props.dob.month !== "") {
+        month = props.dob.month
+    }
+    if (props.dob.year != undefined && props.dob.year !== "") {
+        year = props.dob.year
+    }
+    return `${day} / ${month} / ${year}`
 }
 
 </script>
