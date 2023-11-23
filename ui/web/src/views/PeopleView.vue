@@ -40,7 +40,7 @@
                     </v-row>
                 </v-container>
             </v-card-text>
-            <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
+            <v-data-table-server show-expand :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
                 :items="list.list" multi-sort class="elevation-1">
                 <template v-slot:top>
                 </template>
@@ -78,6 +78,16 @@
                     <v-icon size="large" color="warning" @click="deleteItem(item)">
                         mdi-delete
                     </v-icon>
+                </template>
+                <template v-slot:expanded-row="{ columns, item }">
+                    <tr>
+                        <td :colspan="columns.length">
+                            <FieldDOB :dob="item.dob"></FieldDOB>
+                        </td>
+                        <td :colspan="columns.length">
+                            PIN {{ item.pin }}
+                        </td>
+                    </tr>
                 </template>
             </v-data-table-server>
         </v-card> </v-main>
@@ -134,8 +144,12 @@ function formatFullName(item) {
         if (item.name.length > 0) {
             return `(${item.name}) ${item.full_name}`
         }
-        return item.full_name
     }
+    if (item.full_name.length == 0) {
+        return "----"
+
+    }
+    return item.full_name
 }
 
 const searchTextFields = ref({ list: [] })
@@ -154,22 +168,23 @@ const refs = ref({
     loading: false,
     totalItems: 0,
     headers: [
-        // { title: 'Id', key: 'id', align: 'end' },
-        {
-            title: 'Name',
-            align: ' d-none',
-            key: 'name',
-        },
-        { title: 'PIN', key: 'pin', align: 'end', sortable: false },
-        { title: 'Birthday', key: 'dob', align: 'end' },
-        { title: 'Gender', key: 'gender', align: 'end', sortable: false },
-        { title: 'Age', key: 'age', align: 'end', sortable: false },
+        { title: 'Id', key: 'id', align: ' d-none' },
         { title: 'Emails', key: 'emails', align: 'end', sortable: false },
         { title: 'Names', key: 'full_name', align: 'end' },
         { title: 'Phones', key: 'phones', align: 'end' },
         { title: 'Labels', key: 'labels', align: 'end' },
+        { title: 'Attributes', key: 'attrs', align: 'end' },
+
+        { title: 'Gender', key: 'gender', align: 'end' },
+        { title: 'PIN', key: 'pin', align: 'end' },
+        { title: 'Age', key: 'age', align: 'end' },
+        { title: 'Birthday', key: 'dob', align: 'end' },
+
         { title: 'Created', key: 'created_at', align: 'end', sortable: false },
         { title: 'Actions', key: 'actions', sortable: false },
+
+        { title: 'Name', key: 'name', align: ' d-none' },
+
     ]
 })
 
@@ -194,9 +209,9 @@ function showNewPersonn() {
     refs.value.edit.show = true
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+// async function sleep(ms) {
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
 
 async function loadData() {
     let filter = {
@@ -213,14 +228,14 @@ async function loadData() {
         filter.filters.pins = searchPINFields.value
     }
     console.log("filter", filter)
-    const requestOptions = {
+    const request = {
         // mode: "no-cors",
         method: "POST",
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    await sleep(2000)
-    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", requestOptions)
+    // await sleep(2000)
+    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", request)
         .then((result) => {
             console.log("people.result", result)
             refs.value.totalItems = 0;

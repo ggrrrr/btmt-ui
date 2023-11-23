@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/stackus/errors"
@@ -76,19 +77,19 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	setReq := bson.M{}
 
 	if len(newPerson.PIN) > 0 {
-		setReq[FieldPIN] = newPerson.PIN
+		setReq[FieldPIN] = strings.Trim(newPerson.PIN, " ")
 	}
 	if len(newPerson.LoginEmail) > 0 {
-		setReq[FieldLoginEmail] = newPerson.LoginEmail
+		setReq[FieldLoginEmail] = strings.Trim(newPerson.LoginEmail, " ")
 	}
 	if len(newPerson.Emails) > 0 {
 		setReq[FieldEmails] = newPerson.Emails
 	}
 	if len(newPerson.Name) > 0 {
-		setReq[FieldName] = newPerson.Name
+		setReq[FieldName] = strings.Trim(newPerson.Name, " ")
 	}
 	if len(newPerson.FullName) > 0 {
-		setReq[FieldFullName] = newPerson.FullName
+		setReq[FieldFullName] = strings.Trim(newPerson.FullName, " ")
 	}
 	if newPerson.DOB != nil {
 		if !newPerson.DOB.isZero() {
@@ -96,7 +97,7 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 		}
 	}
 	if len(newPerson.Gender) > 0 {
-		setReq[FieldGender] = newPerson.Gender
+		setReq[FieldGender] = strings.Trim(newPerson.Gender, " ")
 	}
 	if len(newPerson.Phones) > 0 {
 		setReq[FieldPhones] = newPerson.Phones

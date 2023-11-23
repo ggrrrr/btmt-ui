@@ -21,6 +21,10 @@ const props = defineProps({
 })
 
 function update(val) {
+    if (val === "") {
+        // Hack to delete a field
+        val = " "
+    }
     emits('update:modelValue', val)
 }
 
