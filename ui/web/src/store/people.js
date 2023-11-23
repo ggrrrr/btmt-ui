@@ -1,5 +1,30 @@
 import { defineStore } from "pinia";
 
+export class Person {
+  constructor() {
+    this.id = "";
+    this.pin = "";
+    this.name = "";
+    this.full_name = "";
+    // this.dob ;
+    this.gender = "";
+
+    this.emails = {};
+    this.phones = {};
+    this.attr = {};
+    this.labels = [];
+  }
+}
+
+export class EditPerson {
+  constructor() {
+    this.show = false;
+    this.person = new Person();
+  }
+}
+
+// export default class Person;
+
 export const usePeopleStore = defineStore({
   id: "people",
   state: () => ({

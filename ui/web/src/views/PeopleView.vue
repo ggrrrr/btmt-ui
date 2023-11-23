@@ -8,12 +8,14 @@
                             <BtnLoadData @click="loadData" text="Load people"></BtnLoadData>
                         </v-col>
                         <v-col no-gutters cols="1" sm="6" md="4">
-                            <BtnLoadData @click="store.showEdit = !store.showEdit" text="Add"></BtnLoadData>
-                            <PersonDialog v-model="store.showEdit" />
+                            <BtnLoadData @click="showNewPersonn" text="Add"></BtnLoadData>
+                            <v-dialog v-model="refs.edit.show" max-width="900">
+                                <PersonEditForm v-model="refs.edit" @add="addPerson" @save="savePerson" />
+                            </v-dialog>
                         </v-col>
                     </v-row>
-                    <v-row justify="start">
-                        <v-col no-gutters cols="4" class="justify-center">
+                    <v-row>
+                        <v-col no-gutters cols="4" class="">
                             <InputTextsList :list="searchTextFields.list" @click="loadData" label="Names"
                                 hint="Email or names">
                             </InputTextsList>
@@ -23,7 +25,7 @@
                             </InputTextsList>
                         </v-col>
                     </v-row>
-                    <v-row justify="start" no-gutters>
+                    <v-row no-gutters>
                         <v-col class="text-left">
                             <ChipsList :list="searchTextFields" @click="delInputTexts"></ChipsList>
                             <ChipsList :list="searchPhonesFields" @click="delInputPhones"></ChipsList>
@@ -32,16 +34,16 @@
                     </v-row>
                 </v-container>
             </v-card-text>
-            <v-data-table-server :items-length="data.totalItems" :headers="data.headers" :items="list.list" multi-sort
+            <v-data-table-server :items-length="refs.totalItems" :headers="refs.headers" :items="list.list" multi-sort
                 class="elevation-1">
                 <template v-slot:top>
                 </template>
                 <template v-slot:no-data>
-                    <BtnLoadData v-if="!data.loadingText" @click="loadData" text="Load people"></BtnLoadData>
-                    <v-chip color="primary" veriant="text" v-else>{{ data.loadingText }}</v-chip>
+                    <BtnLoadData v-if="!refs.loadingText" @click="loadData" text="Load people"></BtnLoadData>
+                    <v-chip color="primary" veriant="text" v-else>{{ refs.loadingText }}</v-chip>
                 </template>
                 <template v-slot:[`header.full_name`]="{ column }">
-                    <div class="justify">
+                    <div>
                         {{ column.title }}
                     </div>
                 </template>
@@ -63,6 +65,14 @@
                 <template v-slot:[`item.labels`]="{ item }">
                     <FieldLabelsList :labels="item.labels"></FieldLabelsList>
                 </template>
+                <template v-slot:[`item.actions`]="{ item }">
+                    <v-icon size="small" color="primary" class="me-2" @click="editItem(item)">
+                        mdi-pencil
+                    </v-icon>
+                    <v-icon size="small" color="warning" @click="deleteItem(item)">
+                        mdi-delete
+                    </v-icon>
+                </template>
             </v-data-table-server>
         </v-card> </v-main>
 </template>
@@ -77,10 +87,10 @@ import FieldTimeStamp from '@/components/FieldTimeStamp';
 import FieldEmailMaps from '@/components/FieldEmailMaps';
 import FieldPhonesMaps from '@/components/FieldPhonesMaps';
 import FieldLabelsList from '@/components/FieldLabelsList';
-import PersonDialog from '@/components/PersonDialog'
+import PersonEditForm from '@/components/PersonEditForm'
 
 import { ref } from 'vue'
-import { usePeopleStore } from "@/store/people";
+import { usePeopleStore, Person, EditPerson } from "@/store/people";
 
 const store = usePeopleStore()
 
@@ -126,7 +136,8 @@ const searchTextFields = ref({ list: [] })
 const searchPhonesFields = ref({ list: [] })
 const searchPINFields = ref({ list: [] })
 
-const data = ref({
+const refs = ref({
+    edit: new EditPerson(),
     filters: {
         phones: [],
         texts: [],
@@ -143,20 +154,42 @@ const data = ref({
             align: ' d-none',
             key: 'name',
         },
-        { title: 'PIN', key: 'pin', align: 'end' },
+        { title: 'PIN', key: 'pin', align: 'end', sortable: false },
         { title: 'Birthday', key: 'dob', align: 'end' },
-        { title: 'Gender', key: 'gender', align: 'end' },
-        { title: 'Age', key: 'age', align: 'end' },
-        { title: 'Emails', key: 'emails', align: 'end' },
+        { title: 'Gender', key: 'gender', align: 'end', sortable: false },
+        { title: 'Age', key: 'age', align: 'end', sortable: false },
+        { title: 'Emails', key: 'emails', align: 'end', sortable: false },
         { title: 'Names', key: 'full_name', align: 'end' },
         { title: 'Phones', key: 'phones', align: 'end' },
         { title: 'Labels', key: 'labels', align: 'end' },
-        { title: 'Created', key: 'created_at', align: 'end' },
+        { title: 'Created', key: 'created_at', align: 'end', sortable: false },
+        { title: 'Actions', key: 'actions', sortable: false },
     ]
 })
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function addPerson(person) {
+    console.log("addPerson", person, refs.value.edit)
+    refs.value.edit.show = false
+}
+
+function savePerson(person) {
+    console.log("savePerson", person, refs.value.edit)
+    refs.value.edit.show = false
+}
+
+function editItem(person) {
+    console.log("editItem", person)
+    refs.value.edit.person = person
+    refs.value.edit.show = true
+}
+
+function showNewPersonn() {
+    refs.value.edit.person = new Person()
+    refs.value.edit.show = true
 }
 
 async function loadData() {
@@ -179,42 +212,26 @@ async function loadData() {
         method: "POST",
         body: JSON.stringify(filter),
     };
-    data.value.loading = true;
-    await sleep(2000)
+    refs.value.loading = true;
+    // await sleep(2000)
     await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", requestOptions)
         .then((result) => {
             console.log("people.result", result)
-            data.value.totalItems = 0;
+            refs.value.totalItems = 0;
             list.value.list = []
             result.result.forEach(
-                (i) => {
+                (j) => {
+                    let i = Object.assign(new Person(), j);
                     console.log(i)
-                    if (i.name === undefined) {
-                        i.name = ""
-                    }
-                    if (i.full_name === undefined) {
-                        i.full_name = ""
-                    }
-                    if (i.labels === undefined) {
-                        i.labels = []
-                    }
-                    if (i.phones === undefined) {
-                        i.phones = {}
-                    }
-                    if (i.emails === undefined) {
-                        i.emails = {}
-                    }
-                    console.log("row", i)
-
                     list.value.list.push(i)
-                    data.value.totalItems++;
+                    refs.value.totalItems++;
                 }
             )
-            if (data.value.totalItems == 0) {
-                data.value.loadingText = "no data, check filters"
+            if (refs.value.totalItems == 0) {
+                refs.value.loadingText = "no data, check filters"
             }
         }).finally(() => {
-            data.value.loading = false;
+            refs.value.loading = false;
         });
 }
 
