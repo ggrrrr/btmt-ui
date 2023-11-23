@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	FieldPIN        string = "pin"
+	FieldIdNumbers  string = "id_numbers"
 	FieldLoginEmail string = "login_email"
 	FieldEmails     string = "emails"
 	FieldName       string = "name"
@@ -31,6 +31,7 @@ type (
 	}
 	person struct {
 		Id          primitive.ObjectID `bson:"_id"`
+		IdNumbers   []string           `bson:"id_numbers"`
 		PIN         string             `bson:"pin"`
 		LoginEmail  string             `bson:"login_email"`
 		Emails      []string           `bson:"emails"`
@@ -49,7 +50,10 @@ type (
 
 func toSlice(in map[string]string) []string {
 	out := []string{}
-	for k, v := range in {
+	for kk, vv := range in {
+		k := strings.Trim(kk, " ")
+		v := strings.Trim(vv, " ")
+
 		out = append(out, fmt.Sprintf("%s:%s", k, v))
 	}
 	return out
@@ -59,11 +63,11 @@ func toMap(in []string) map[string]string {
 	out := map[string]string{}
 	for _, vv := range in {
 		kv := strings.Split(vv, ":")
-		k := kv[0]
-		v := kv[0]
+		k := strings.Trim(kv[0], " ")
+		v := strings.Trim(kv[0], " ")
 		if len(kv) > 1 {
-			k = kv[0]
-			v = kv[1]
+			k = strings.Trim(kv[0], " ")
+			v = strings.Trim(kv[1], " ")
 		}
 		out[k] = v
 	}
@@ -107,7 +111,7 @@ func fromPerson(p *ddd.Person) (*person, error) {
 
 	out := person{
 		Id:          id,
-		PIN:         p.PIN,
+		IdNumbers:   toSlice(p.IdNumbers),
 		LoginEmail:  p.LoginEmail,
 		Emails:      toSlice(p.Emails),
 		Name:        p.Name,
@@ -137,7 +141,7 @@ func (p person) toPerson() ddd.Person {
 
 	out := ddd.Person{
 		Id:          p.Id.Hex(),
-		PIN:         p.PIN,
+		IdNumbers:   toMap(p.IdNumbers),
 		LoginEmail:  p.LoginEmail,
 		Emails:      toMap(p.Emails),
 		Name:        p.Name,

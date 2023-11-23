@@ -23,7 +23,7 @@ func (f *ListRequest) ToFilter() map[string][]string {
 func FromPerson(p *ddd.Person) *Person {
 	out := Person{
 		Id:         p.Id,
-		Pin:        p.PIN,
+		IdNumbers:  p.IdNumbers,
 		LoginEmail: p.LoginEmail,
 		Emails:     p.Emails,
 		Name:       p.Name,
@@ -49,7 +49,7 @@ func FromPerson(p *ddd.Person) *Person {
 func (p *Person) ToPerson() *ddd.Person {
 	out := ddd.Person{
 		Id:          p.Id,
-		PIN:         p.Pin,
+		IdNumbers:   p.IdNumbers,
 		LoginEmail:  p.LoginEmail,
 		Emails:      p.Emails,
 		Name:        p.Name,

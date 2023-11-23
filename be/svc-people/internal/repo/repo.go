@@ -76,8 +76,8 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	}
 	setReq := bson.M{}
 
-	if len(newPerson.PIN) > 0 {
-		setReq[FieldPIN] = strings.Trim(newPerson.PIN, " ")
+	if len(newPerson.IdNumbers) > 0 {
+		setReq[FieldIdNumbers] = newPerson.IdNumbers
 	}
 	if len(newPerson.LoginEmail) > 0 {
 		setReq[FieldLoginEmail] = strings.Trim(newPerson.LoginEmail, " ")

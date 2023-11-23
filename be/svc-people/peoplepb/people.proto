@@ -93,7 +93,7 @@ message Dob {
 
 message Person{
   string id = 1;
-  string pin = 2;
+  map<string,string> id_numbers = 2;
   string login_email = 3;
   string name = 4;
   string full_name = 5;

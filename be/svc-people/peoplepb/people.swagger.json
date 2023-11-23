@@ -251,8 +251,11 @@
         "id": {
           "type": "string"
         },
-        "pin": {
-          "type": "string"
+        "idNumbers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "loginEmail": {
           "type": "string"

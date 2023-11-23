@@ -60,11 +60,11 @@ func Test_FromPerson(t *testing.T) {
 	id1 := primitive.NewObjectID()
 
 	p1 := ddd.Person{
-		Id:       id1.Hex(),
-		PIN:      "123",
-		Emails:   map[string]string{"default": "asd@asd"},
-		Name:     "asd",
-		FullName: "ewrcxf asd",
+		Id:        id1.Hex(),
+		IdNumbers: map[string]string{"pin": "pin1"},
+		Emails:    map[string]string{"default": "asd@asd"},
+		Name:      "asd",
+		FullName:  "ewrcxf asd",
 		DOB: &ddd.Dob{
 			Year:  2001,
 			Month: 3,

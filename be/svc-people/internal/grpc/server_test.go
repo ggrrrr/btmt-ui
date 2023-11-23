@@ -71,9 +71,9 @@ func TestTelephoneServer_GetContact(t *testing.T) {
 			testFunc: func(tt *testing.T) {
 				res, err := client.Save(ctx, &peoplepb.SaveRequest{
 					Data: &peoplepb.Person{
-						Pin:    "asdasd",
-						Name:   "save ok test",
-						Phones: map[string]string{"mobile": "123123123"},
+						IdNumbers: map[string]string{"pin": "pin1"},
+						Name:      "save ok test",
+						Phones:    map[string]string{"mobile": "123123123"},
 					},
 				})
 				require.NoError(tt, err)

@@ -55,7 +55,7 @@ func TestSave(t *testing.T) {
 				_, err = testApp.GetById(rootCtx, "asd")
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
 				err := testApp.Save(ctxNormal, &ddd.Person{
-					PIN:        "123123",
+					IdNumbers:  map[string]string{"pin": "pin1"},
 					LoginEmail: "new@asd",
 					Emails:     map[string]string{"g": "new@asd"},
 					Name:       "new",
@@ -76,7 +76,7 @@ func TestSave(t *testing.T) {
 			test: "save",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
-					PIN:        "pin1",
+					IdNumbers:  map[string]string{"pin": "pin1"},
 					Name:       "name 1",
 					LoginEmail: "email 1",
 					Emails:     map[string]string{"g": "asd@asd"},
@@ -107,7 +107,7 @@ func TestSave(t *testing.T) {
 			test: "forbiden",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
-					PIN:        "pin1",
+					IdNumbers:  map[string]string{"pin": "pin1"},
 					Name:       "name 1",
 					LoginEmail: "email 1",
 					Emails:     map[string]string{"g1": "asd@asd1"},
@@ -128,7 +128,7 @@ func TestSave(t *testing.T) {
 			test: "pin validateor",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
-					PIN:        os.Getenv("PIN2"),
+					IdNumbers:  map[string]string{"EGN": os.Getenv("PIN2")},
 					Name:       "name 1",
 					LoginEmail: "email 1",
 					Emails:     map[string]string{"g1": "asd@asd1"},
@@ -156,7 +156,7 @@ func TestSave(t *testing.T) {
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{}
 				p2 := &ddd.Person{
-					PIN:        "123123",
+					IdNumbers:  map[string]string{"pin": "pin1"},
 					LoginEmail: "loginemail",
 					Name:       "name1",
 					FullName:   "full name",

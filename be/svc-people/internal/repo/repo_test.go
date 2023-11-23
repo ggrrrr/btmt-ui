@@ -54,14 +54,14 @@ func TestSave(t *testing.T) {
 			test: "happy save get",
 			run: func(t *testing.T) {
 				p1 := &ddd.Person{
-					PIN:      "sasd",
-					Name:     "ggrrrr",
-					Emails:   map[string]string{"": "asdasd@asd"},
-					FullName: "varban krushev",
-					Labels:   []string{"tours:bike", "tours:hike", "kids"},
-					Phones:   map[string]string{"mobile": "123123123"},
-					Attr:     map[string]string{"food": "veg"},
-					Gender:   "male",
+					IdNumbers: map[string]string{"pin": "pin1"},
+					Name:      "ggrrrr",
+					Emails:    map[string]string{"": "asdasd@asd"},
+					FullName:  "varban krushev",
+					Labels:    []string{"tours:bike", "tours:hike", "kids"},
+					Phones:    map[string]string{"mobile": "123123123"},
+					Attr:      map[string]string{"food": "veg"},
+					Gender:    "male",
 				}
 				ts := time.Now()
 
@@ -98,7 +98,7 @@ func TestSave(t *testing.T) {
 					Name:       "ggrrrr",
 					Emails:     map[string]string{"": "asdasd@asd"},
 					FullName:   "not varban krushev",
-					PIN:        "newpin",
+					IdNumbers:  map[string]string{"pin": "pin1"},
 					Labels:     []string{"tours:bike", "tours:hike", "kids"},
 					Phones:     map[string]string{"mobile": "123123123"},
 					Attr:       map[string]string{"food": "veg"},
@@ -113,7 +113,7 @@ func TestSave(t *testing.T) {
 				logger.Info().Any("got", p3).Msg("Asd")
 
 				p3.CreatedTime = p1.CreatedTime
-				assert.Equal(t, p3.PIN, p2.PIN)
+				assert.Equal(t, p3.IdNumbers, p2.IdNumbers)
 				assert.Equal(t, p3.LoginEmail, p2.LoginEmail)
 				assert.Equal(t, p3.Emails, p2.Emails)
 				assert.Equal(t, p3.Name, p2.Name)
@@ -130,7 +130,7 @@ func TestSave(t *testing.T) {
 					Name:       " ",
 					Emails:     map[string]string{"": "asdasd@asd"},
 					FullName:   " ",
-					PIN:        " ",
+					IdNumbers:  map[string]string{"pin ": "pin1 "},
 					Labels:     []string{"tours:bike", "tours:hike", "kids"},
 					Phones:     map[string]string{"mobile": "123123123"},
 					Attr:       map[string]string{"food": "veg"},
@@ -141,7 +141,7 @@ func TestSave(t *testing.T) {
 				require.NoError(t, err)
 				p3, err = testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
-				assert.Equal(t, p3.PIN, "")
+				assert.Equal(t, p3.IdNumbers, map[string]string{"pin": "pin1"})
 				assert.Equal(t, p3.LoginEmail, "")
 				assert.Equal(t, p3.Name, "")
 				assert.Equal(t, p3.FullName, "")
@@ -183,9 +183,9 @@ func TestList(t *testing.T) {
 
 	newData := map[string]*ddd.Person{
 		"ggrrrr": {
-			PIN:    "ggrrrrpin",
-			Name:   "ggrrrr",
-			Emails: map[string]string{"default": "ggrrrr@gmail.com"},
+			IdNumbers: map[string]string{"pin": "ggrrrrpin"},
+			Name:      "ggrrrr",
+			Emails:    map[string]string{"default": "ggrrrr@gmail.com"},
 			// Emails:    [str]"ggrrrr@gmail.com",
 			FullName: "ggrrrr varban krushev",
 			// DateOfBirth: time.Date(1978, 2, 13, 0, 0, 0, 0, time.Local),
@@ -195,10 +195,10 @@ func TestList(t *testing.T) {
 			Gender: "male",
 		},
 		"mandajiev": {
-			PIN:      "mandajievpin",
-			Name:     "mandajiev",
-			Emails:   map[string]string{"default": "mandajiev@yahoo.com"},
-			FullName: "mandajiev asdasd asdasd",
+			IdNumbers: map[string]string{"pin": "mandajievpin"},
+			Name:      "mandajiev",
+			Emails:    map[string]string{"default": "mandajiev@yahoo.com"},
+			FullName:  "mandajiev asdasd asdasd",
 			// DateOfBirth: time.Date(1990, 4, 23, 0, 0, 0, 0, time.Local),
 			Labels: []string{"tours:bike", "volunteer:mtb", "bike:mtb"},
 			Phones: map[string]string{"mobile": "223123123"},
@@ -206,10 +206,10 @@ func TestList(t *testing.T) {
 			Gender: "male",
 		},
 		"uniq": {
-			PIN:      "NONONONO",
-			Name:     "uniq",
-			Emails:   map[string]string{"default": "pesho@yahoo.com"},
-			FullName: "NONONO DDDD",
+			IdNumbers: map[string]string{"pin": "NOPIN"},
+			Name:      "uniq",
+			Emails:    map[string]string{"default": "pesho@yahoo.com"},
+			FullName:  "NONONO DDDD",
 			// DateOfBirth: time.Date(1990, 4, 23, 0, 0, 0, 0, time.Local),
 			Labels: []string{"shit"},
 			Phones: map[string]string{"mobile": "somephone"},
@@ -447,14 +447,14 @@ func TestUpdate(t *testing.T) {
 			test: "happy save get",
 			run: func(t *testing.T) {
 				p1 := &ddd.Person{
-					PIN:      "sasd",
-					Name:     "ggrrrr",
-					Emails:   map[string]string{"": "asdasd@asd"},
-					FullName: "varban krushev",
-					Labels:   []string{"tours:bike", "tours:hike", "kids"},
-					Phones:   map[string]string{"mobile": "123123123"},
-					Attr:     map[string]string{"food": "veg"},
-					Gender:   "male",
+					IdNumbers: map[string]string{"pin": "pin1"},
+					Name:      "ggrrrr",
+					Emails:    map[string]string{"": "asdasd@asd"},
+					FullName:  "varban krushev",
+					Labels:    []string{"tours:bike", "tours:hike", "kids"},
+					Phones:    map[string]string{"mobile": "123123123"},
+					Attr:      map[string]string{"food": "veg"},
+					Gender:    "male",
 				}
 				err = testRepo.Save(ctx, p1)
 				require.NoError(t, err)
@@ -483,12 +483,12 @@ func TestUpdate(t *testing.T) {
 				assert.True(t, !p1.CreatedTime.IsZero())
 
 				p2 := &ddd.Person{
-					Id:     p1.Id,
-					PIN:    "newpin",
-					Labels: []string{"tours:bike", "tours:hike", "kids"},
-					Phones: map[string]string{"mobile": "123123123"},
-					Attr:   map[string]string{"food": "veg"},
-					Gender: "male",
+					Id:        p1.Id,
+					IdNumbers: map[string]string{"pin": "pin1"},
+					Labels:    []string{"tours:bike", "tours:hike", "kids"},
+					Phones:    map[string]string{"mobile": "123123123"},
+					Attr:      map[string]string{"food": "veg"},
+					Gender:    "male",
 				}
 
 				err = testRepo.Update(ctx, p2)
@@ -498,7 +498,7 @@ func TestUpdate(t *testing.T) {
 				assert.Equal(t, p3.Name, p1.Name)
 				assert.Equal(t, p3.Emails, p1.Emails)
 				assert.Equal(t, p3.FullName, p1.FullName)
-				assert.Equal(t, p3.PIN, p2.PIN)
+				assert.Equal(t, p3.IdNumbers, p2.IdNumbers)
 				assert.Equal(t, p3.Labels, p2.Labels)
 				assert.Equal(t, p3.Phones, p2.Phones)
 				assert.Equal(t, p3.Attr, p2.Attr)

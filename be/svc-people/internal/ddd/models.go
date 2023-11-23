@@ -18,7 +18,7 @@ type (
 	}
 	Person struct {
 		Id          string
-		PIN         string
+		IdNumbers   map[string]string
 		LoginEmail  string
 		Name        string
 		FullName    string

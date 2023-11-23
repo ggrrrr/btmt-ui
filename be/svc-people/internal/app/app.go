@@ -91,7 +91,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 	if p.Attr == nil {
 		p.Attr = map[string]string{}
 	}
-	parsePin(p)
+	parseEGN(p)
 
 	err = a.repoPeople.Save(ctx, p)
 	if err != nil {
@@ -167,10 +167,10 @@ func (*application) PinParse(ctx context.Context, number string) (*ddd.PinValida
 	}, nil
 }
 
-func parsePin(person *ddd.Person) {
-	res, err := pin.Parse(person.PIN)
+func parseEGN(person *ddd.Person) {
+	res, err := pin.Parse(person.IdNumbers["EGN"])
 	if err != nil {
-		logger.Error(err).Any("pin", person)
+		logger.Error(err).Any("EGN", person)
 		return
 	}
 	if person.DOB == nil {

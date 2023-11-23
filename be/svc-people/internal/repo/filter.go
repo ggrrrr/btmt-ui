@@ -121,7 +121,7 @@ func (f *filter) allPins() primitive.M {
 	for _, pin := range f.pins {
 		fields = append(fields, bson.D{
 			{
-				Key:   FieldPIN,
+				Key:   FieldIdNumbers,
 				Value: primitive.Regex{Pattern: fmt.Sprintf("%v", pin), Options: ""},
 			},
 		})
