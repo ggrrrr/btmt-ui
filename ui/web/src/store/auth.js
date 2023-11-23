@@ -170,4 +170,8 @@ const fetchAPIFunc = function (url, opts = {}) {
     });
 };
 
+export async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export const fetchAPI = fetchAPIFunc;

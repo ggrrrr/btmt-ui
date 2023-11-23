@@ -212,9 +212,6 @@ function showNewPersonn() {
     refs.value.edit.show = true
 }
 
-async function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 async function loadData() {
     let filter = {
@@ -237,7 +234,6 @@ async function loadData() {
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    await sleep(200)
     await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", request)
         .then((result) => {
             console.log("people.result", result)
