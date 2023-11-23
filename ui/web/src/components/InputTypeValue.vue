@@ -1,14 +1,10 @@
 <template>
-    <v-row width="300">
-        <v-col class="pr-1" cols="3">
-            <v-select v-model="type" :label="props.typeLabel" :items="props.typeItems" density="compact"
-                variant="underlined"></v-select>
-        </v-col>
-        <v-col class="pl-0" cols="6">
-            <v-text-field :rules="props.rules" v-model="value" @update:focused="onFocus" :label="props.label"
-                :hint="props.hint" @keydown.enter="handleAdd" density="compact" variant="underlined"></v-text-field>
-        </v-col>
-    </v-row>
+    <div class="d-flex">
+        <v-select v-model="type" :label="props.typeLabel" :items="props.typeItems" density="compact"
+            variant="underlined"></v-select>
+        <v-text-field :rules="props.rules" v-model="value" @update:focused="onFocus" :label="props.label" :hint="props.hint"
+            @keydown.enter="handleAdd" density="compact" variant="underlined"></v-text-field>
+    </div>
 </template>
 <!--  https://webmound.com/use-v-model-custom-components-vue-3/ -->
 <script setup>

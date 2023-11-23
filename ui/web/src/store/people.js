@@ -7,7 +7,7 @@ export class Dob {
 export class Person {
   constructor() {
     this.id = "";
-    this.pin = "";
+    this.id_numbers = {};
     this.name = "";
     this.full_name = "";
     this.gender = "";

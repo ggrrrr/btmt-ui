@@ -13,9 +13,6 @@
         <v-container>
             <v-row no-gutters>
                 <v-col class="mr-0 pr-1" cols="3">
-                    <v-text-field v-model="refs.person.pin" label="PIN" hint="ЕГН"></v-text-field>
-                </v-col>
-                <v-col class="mr-0 pr-1" cols="3">
                     <v-text-field v-model="refs.person.name" label="Name" hint="Joro"></v-text-field>
                 </v-col>
                 <v-col class="ml-0 pl-1" cols="">
@@ -23,8 +20,23 @@
                 </v-col>
             </v-row>
             <v-row no-gutters>
-                <InputTypeValue :rules="phoneRules" v-model="refs.person.phones" label="Phone" :typeItems="refs.phoneTypes">
-                </InputTypeValue>
+                <v-col>
+                    <InputTypeValue v-model="refs.person.id_numbers" label="Number" :typeItems="refs.idTypes">
+                    </InputTypeValue>
+                </v-col>
+                <v-col>
+                    <v-chip size="x-small" rounded v-for="(val, index) in refs.person.id_numbers" :key="index">
+                        {{ index }}
+                        {{ val }}
+                    </v-chip>
+                </v-col>
+            </v-row>
+            <v-row no-gutters>
+                <v-col>
+                    <InputTypeValue :rules="phoneRules" v-model="refs.person.phones" label="Phone"
+                        :typeItems="refs.phoneTypes">
+                    </InputTypeValue>
+                </v-col>
                 <v-col>
                     <v-chip size="x-small" rounded v-for="(val, index) in refs.person.phones" :key="index">
                         {{ index }}
@@ -32,9 +44,12 @@
                     </v-chip>
                 </v-col>
             </v-row>
-            <v-row class="pt-2" no-gutters>
-                <InputTypeValue :rules="emailRules" v-model="refs.person.emails" label="Email" :typeItems="refs.emailTypes">
-                </InputTypeValue>
+            <v-row no-gutters>
+                <v-col>
+                    <InputTypeValue :rules="emailRules" v-model="refs.person.emails" label="Email"
+                        :typeItems="refs.emailTypes">
+                    </InputTypeValue>
+                </v-col>
                 <v-col>
                     <v-chip size="x-small" rounded v-for="(val, index) in refs.person.emails" :key="index">
                         {{ index }}
@@ -87,6 +102,10 @@ const refs = ref({
     phoneTypes: [
         "main",
         "home",
+    ],
+    idTypes: [
+        "EGN",
+        "Passport",
     ],
     emailTypes: [
         "main",

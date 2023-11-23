@@ -62,6 +62,9 @@
                 <template v-slot:[`item.dob`]="{ item }">
                     <FieldDOB :dob="item.dob"></FieldDOB>
                 </template>
+                <template v-slot:[`item.id_numbers`]="{ item }">
+                    <field-email-maps :emails="item.id_numbers"></field-email-maps>
+                </template>
                 <template v-slot:[`item.emails`]="{ item }">
                     <field-email-maps :emails="item.emails"></field-email-maps>
                 </template>
@@ -176,7 +179,7 @@ const refs = ref({
         { title: 'Attributes', key: 'attrs', align: 'end' },
 
         { title: 'Gender', key: 'gender', align: 'end' },
-        { title: 'PIN', key: 'pin', align: 'end' },
+        { title: 'IDs', key: 'id_numbers', align: 'end' },
         { title: 'Age', key: 'age', align: 'end' },
         { title: 'Birthday', key: 'dob', align: 'end' },
 
@@ -209,9 +212,9 @@ function showNewPersonn() {
     refs.value.edit.show = true
 }
 
-// async function sleep(ms) {
-//     return new Promise(resolve => setTimeout(resolve, ms));
-// }
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function loadData() {
     let filter = {
@@ -234,7 +237,7 @@ async function loadData() {
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    // await sleep(2000)
+    await sleep(200)
     await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", request)
         .then((result) => {
             console.log("people.result", result)
