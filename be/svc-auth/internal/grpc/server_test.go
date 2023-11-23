@@ -6,8 +6,6 @@ import (
 	"net"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -29,17 +27,22 @@ type (
 	}
 )
 
+func cfg() awsdb.AwsConfig {
+	return awsdb.AwsConfig{
+		Region:   "us-east-1",
+		Endpoint: "http://localhost:4566",
+		Database: awsdb.DynamodbConfig{
+			Database: "",
+			Prefix:   "test",
+		},
+	}
+}
+
 func TestServer(t *testing.T) {
 	ctx := context.Background()
 	ctxAdmin := roles.CtxWithAuthInfo(ctx, roles.CreateAdminUser("admin", roles.Device{}))
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	})
-	require.NoError(t, err)
-
-	store, err := dynamodb.New(sess, awsdb.DynamodbConfig{Prefix: "test"})
+	store, err := dynamodb.New(cfg())
 	require.NoError(t, err)
 
 	testApp, err := app.New(app.WithAuthRepo(store), app.WithTokenSigner(token.NewSignerMock()))

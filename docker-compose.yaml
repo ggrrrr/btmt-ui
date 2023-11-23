@@ -100,10 +100,25 @@ services:
       - JWT_CRTFILE=/app/jwt.crt
       - JWT_KEYFILE=/app/jwt.key
     volumes:
-      - ./be/.deploy/svc-auth/config.yaml:/app/config.yaml
+      - ./be/.deploy/svc-auth/config.pg.yaml:/app/config.yaml
+      # - ./be/.deploy/svc-auth/config.yaml:/app/config.yaml
       - ./be/jwt.crt:/app/jwt.crt
       - ./be/jwt.key:/app/jwt.key
       - ~/.aws:/root/.aws/
+
+  postgres:
+    hostname: postgres
+    container_name: postgres
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=initexample
+      - POSTGRES_USER=initexample
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=test
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./be/postgres:/docker-entrypoint-initdb.d
 
   mongo:
     hostname: mongo

@@ -11,10 +11,10 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/common/system"
+	"github.com/ggrrrr/btmt-ui/be/common/waiter"
+	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
 )
 
 var AdminCmd = &cobra.Command{
@@ -23,6 +23,7 @@ var AdminCmd = &cobra.Command{
 	Short: "admin ",
 	// Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		w = waiter.New()
 		err := runNewEmail()
 		if err != nil {
 			fmt.Printf("error %v\n", err)
@@ -36,6 +37,8 @@ var ListCmd = &cobra.Command{
 	Short: "list all email ",
 	// Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		w = waiter.New()
+
 		err := runListEmail()
 		if err != nil {
 			fmt.Printf("error %v\n", err)
@@ -47,6 +50,7 @@ var ListCmd = &cobra.Command{
 var (
 	newEmail  string
 	newPasswd string
+	w         waiter.Waiter
 )
 
 func init() {
@@ -55,6 +59,15 @@ func init() {
 }
 
 func runNewEmail() error {
+	defer func() {
+		w.Wait()
+		fmt.Println("Wait")
+	}()
+	defer func() {
+		f := w.CancelFunc()
+		f()
+		fmt.Println("Cancel")
+	}()
 	ctx, app, err := prepCli()
 	if err != nil {
 		return err
@@ -65,6 +78,23 @@ func runNewEmail() error {
 		SystemRoles: []string{"admin"},
 		Status:      ddd.StatusEnabled,
 	})
+	return err
+}
+func runUpdateEmail() error {
+	defer func() {
+		w.Wait()
+		fmt.Println("Wait")
+	}()
+	defer func() {
+		f := w.CancelFunc()
+		f()
+		fmt.Println("Cancel")
+	}()
+	ctx, app, err := prepCli()
+	if err != nil {
+		return err
+	}
+	err = app.UpdatePasswd(ctx, newEmail, newPasswd, newPasswd)
 	return err
 }
 
@@ -86,16 +116,8 @@ func prepCli() (context.Context, app.App, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	s, err := system.NewCli(cfg)
-	if err != nil {
-		return nil, nil, err
-	}
-	// err = auth.Root(s.Waiter().Context(), s)
-	aws, err := dynamodb.New(s.Aws(), cfg.Aws.Database)
-	if err != nil {
-		return nil, nil, err
-	}
-	app, err := app.New(app.WithAuthRepo(aws))
+	// InitApp/
+	app, err := auth.InitApp(ctx, w, cfg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -103,6 +125,16 @@ func prepCli() (context.Context, app.App, error) {
 }
 
 func runListEmail() error {
+	defer func() {
+		w.Wait()
+		fmt.Println("Wait")
+	}()
+	defer func() {
+		f := w.CancelFunc()
+		f()
+		fmt.Println("Cancel")
+	}()
+
 	ctx, app, err := prepCli()
 	if err != nil {
 		return err

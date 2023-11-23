@@ -3,6 +3,7 @@ package dynamodb
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
 
@@ -22,15 +23,23 @@ type (
 
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
 
-func New(sess *session.Session, cfg awsdb.DynamodbConfig) (*repo, error) {
+func New(cfg awsdb.AwsConfig) (*repo, error) {
+	// sess * session.Session,
+	sess, err := session.NewSession(&aws.Config{
+		Region:   aws.String(cfg.Region),
+		Endpoint: aws.String(cfg.Endpoint),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	svc := awsdynamodb.New(sess)
 
 	logger.Info().
 		Str("table", tableNameName).
-		Str("prefix", cfg.Prefix).Msg("New")
+		Str("prefix", cfg.Database.Prefix).Msg("New")
 	return &repo{
-		prefix: cfg.Prefix,
+		prefix: cfg.Database.Prefix,
 		svc:    svc,
 	}, nil
 }

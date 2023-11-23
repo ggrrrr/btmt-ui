@@ -10,6 +10,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/cmd"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 )
 
 type (
@@ -29,6 +30,7 @@ type (
 	}
 
 	AppConfig struct {
+		Postgres        postgres.Config
 		Aws             awsdb.AwsConfig
 		Grpc            GrpcConfig
 		Jwt             JwtConfig

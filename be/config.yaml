@@ -1,11 +1,19 @@
 log:
   level: debug
   format: console
+postgres:
+  host:     localhost
+  port:     5432
+  username: initexample
+  password: initexample
+  database: test
+  # sslmode:  string
+  preffix:  dev
 aws:
   database:
     prefix: module
-  region: us-east-1
-  endpoint: http://localhost:4566
+  # region: us-east-1
+  # endpoint: http://localhost:4566
 jwt:
   ttl: 1m
   crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt

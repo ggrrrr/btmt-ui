@@ -2,15 +2,19 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
+	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/grpc"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/postgres"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/rest"
 )
 
@@ -25,18 +29,42 @@ func (Module) Startup(ctx context.Context, s *system.System) (err error) {
 	return Root(ctx, s)
 }
 
-func Root(ctx context.Context, s *system.System) error {
-	repo, err := dynamodb.New(s.Aws(), s.Config().Aws.Database)
+func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.App, error) {
+	var err error
+	var repo ddd.AuthPasswdRepo
+	awsCfg := false
+	pgCfg := false
 
-	if err != nil {
-		logger.Error(err).Msg("awsdyno aws error")
-		return err
+	if cfg.Aws.Region != "" {
+		awsCfg = true
 	}
 
-	tokemSigner, err := token.NewSigner(s.Config().Jwt.TTL, s.Config().Jwt.KeyFile)
+	if cfg.Postgres.Host != "" {
+		pgCfg = true
+	}
+
+	if awsCfg == pgCfg {
+		logger.Error(err).Any("pg", cfg.Postgres).Msg("repo init")
+		return nil, errors.New(" postgres and aws dynamodb")
+	}
+	logger.Error(err).Any("aws", awsCfg).Any("pg", pgCfg).Msg("repo init")
+	if awsCfg {
+		repo, err = initAwsRepo(ctx, w, cfg)
+
+	}
+	if pgCfg {
+		repo, err = initPgRepo(ctx, w, cfg)
+
+	}
+	if repo == nil {
+		logger.Error(err).Msg("repo init")
+		return nil, errors.New("shit")
+	}
+
+	tokemSigner, err := token.NewSigner(cfg.Jwt.TTL, cfg.Jwt.KeyFile)
 	if err != nil {
 		logger.Error(err).Msg("NewSigner")
-		return err
+		return nil, err
 	}
 
 	a, err := app.New(
@@ -45,6 +73,38 @@ func Root(ctx context.Context, s *system.System) error {
 	)
 	if err != nil {
 		logger.Error(err).Msg("app error")
+		return nil, err
+	}
+	return a, nil
+}
+
+func initAwsRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
+	repo, err := dynamodb.New(cfg.Aws)
+	if err != nil {
+		logger.Error(err).Msg("awsdyno aws error")
+		return nil, err
+	}
+	// s.Waiter().Cleanup(func() {
+	// 	repoDb.Close(ctx)
+	// })
+	return repo, nil
+}
+
+func initPgRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
+	repo, err := postgres.Connect(cfg.Postgres)
+	if err != nil {
+		logger.Error(err).Msg("awsdyno aws error")
+		return nil, err
+	}
+	w.Cleanup(func() {
+		repo.Close()
+	})
+	return repo, nil
+}
+
+func Root(ctx context.Context, s *system.System) error {
+	a, err := InitApp(ctx, s.Waiter(), s.Config())
+	if err != nil {
 		return err
 	}
 	restApp := rest.New(a)

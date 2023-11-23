@@ -56,6 +56,9 @@ func New(cfgs ...AppCfgFunc) (*application, error) {
 
 func WithAuthRepo(repo ddd.AuthPasswdRepo) AppCfgFunc {
 	return func(a *application) error {
+		if repo == nil {
+			return fmt.Errorf("repo is nil")
+		}
 		a.authRepo = repo
 		return nil
 	}

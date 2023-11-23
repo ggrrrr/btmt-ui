@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -41,18 +39,23 @@ type testCase struct {
 	prep func(*testing.T)
 }
 
+func cfg() awsdb.AwsConfig {
+	return awsdb.AwsConfig{
+		Region:   "us-east-1",
+		Endpoint: "http://localhost:4566",
+		Database: awsdb.DynamodbConfig{
+			Database: "",
+			Prefix:   "test",
+		},
+	}
+}
+
 func TestLogin(t *testing.T) {
 	ctx := context.Background()
 	admin := roles.CreateAdminUser("test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	})
-	require.NoError(t, err)
-
-	store, err := dynamodb.New(sess, awsdb.DynamodbConfig{Prefix: "test"})
+	store, err := dynamodb.New(cfg())
 	require.NoError(t, err)
 
 	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
@@ -131,13 +134,7 @@ func TestValidate(t *testing.T) {
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 	ctxNoEmail := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{})
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	})
-	require.NoError(t, err)
-
-	store, err := dynamodb.New(sess, awsdb.DynamodbConfig{Prefix: "test"})
+	store, err := dynamodb.New(cfg())
 	require.NoError(t, err)
 
 	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
@@ -219,18 +216,8 @@ func TestUpdate(t *testing.T) {
 	admin := roles.CreateAdminUser("test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	store, err := dynamodb.New(sess, awsdb.DynamodbConfig{Prefix: "test"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	store, err := dynamodb.New(cfg())
+	require.NoError(t, err)
 
 	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
 	if err != nil {

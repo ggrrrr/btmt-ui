@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-
 	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
@@ -18,17 +15,21 @@ var (
 	email1 string = "ggrrrr1@gmail.com"
 )
 
+func cfg() awsdb.AwsConfig {
+	return awsdb.AwsConfig{
+		Region:   "us-east-1",
+		Endpoint: "http://localhost:4566",
+		Database: awsdb.DynamodbConfig{
+			Database: "",
+			Prefix:   "test",
+		},
+	}
+}
+
 func Test_List(t *testing.T) {
 	ctx := context.Background()
-	sess, err := session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	})
-	require.NoError(t, err)
 
-	r, err := New(sess, awsdb.DynamodbConfig{
-		Prefix: "test",
-	})
+	r, err := New(cfg())
 	require.NoError(t, err)
 	r.List(ctx)
 
@@ -47,17 +48,8 @@ func TestSave(t *testing.T) {
 	passwd1 := "asd1asd"
 
 	ctx := context.Background()
-	sess, err := session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	})
-	require.NoError(t, err)
 
-	// svc := dynamodb.New(sess)
-
-	r, err := New(sess, awsdb.DynamodbConfig{
-		Prefix: "test",
-	})
+	r, err := New(cfg())
 	require.NoError(t, err)
 
 	_ = r.createTableAuth()
