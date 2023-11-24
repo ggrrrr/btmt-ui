@@ -5,6 +5,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "create-env": "printenv > .env",
     "lint": "eslint . --fix --ignore-path .gitignore"
   },
   "dependencies": {
