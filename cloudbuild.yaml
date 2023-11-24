@@ -1,26 +1,29 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build',
-          '-f',
+    args: [
+        'build',
+        '-f',
           './be/.deploy/Dockerfile',
-          '--build-arg',
+        '--build-arg',
           'MAIN_FILE=svc-auth/cmd/main.go',
-          '-t',
-           'europe-central2-docker.pkg.dev/bikeareaui/btmt/auth:$SHORT_SHA',
-          './be']
+        '-t',
+        'europe-central2-docker.pkg.dev/bikeareaui/btmt/auth:$SHORT_SHA',
+        './be']
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'push',
-      'europe-central2-docker.pkg.dev/bikeareaui/btmt/auth:$SHORT_SHA',
+        'europe-central2-docker.pkg.dev/bikeareaui/btmt/auth:$SHORT_SHA',
       ]
 
-
-  # # Docker push to Google Artifact Registry
-  # - name: 'gcr.io/cloud-builders/docker'
-  #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/myimage:$SHORT_SHA']
-
   # # Deploy to Cloud Run
-  # - name: 'gcr.io/cloud-builders/gcloud'
-  #   args: ['run', 'deploy', 'helloworld-${SHORT_SHA}', 
-  #          '--image=us-central1-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/myimage:$SHORT_SHA', 
-  #          '--region', 'us-central1', '--platform', 'managed']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'run',
+      'deploy',
+      'auth-${SHORT_SHA}', 
+      '--image=europe-central2-docker.pkg.dev/bikeareaui/btmt/auth:$SHORT_SHA',
+      '--region',
+      'europe-central2',
+      '--platform',
+      'managed'
+      ]
