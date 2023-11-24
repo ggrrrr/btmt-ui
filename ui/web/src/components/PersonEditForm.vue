@@ -76,9 +76,9 @@ import { ref, onMounted } from 'vue';
 import { fetchAPI } from "@/store/auth";
 import { Person, EditPerson } from "@/store/people.js";
 
-import InputTypeValue from '@/components/InputTypeValue';
-import InputGender from '@/components/InputGender';
-import InputDOB from '@/components/InputDOB';
+import InputTypeValue from '@/components/InputTypeValue.vue';
+import InputGender from '@/components/InputGender.vue';
+import InputDOB from '@/components/InputDOB.vue';
 
 onMounted(() => {
     console.log("onMounted.", props.modelValue.person.id)
