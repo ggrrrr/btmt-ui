@@ -2,7 +2,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build',
           '-f',
-          '.deploy/Dockerfile',
+          './be/.deploy/Dockerfile',
+          '--build-arg',
           'MAIN_FILE=svc-auth/cmd/main.go',
           '-t',
           'gcr.io/$PROJECT_ID/auth',
