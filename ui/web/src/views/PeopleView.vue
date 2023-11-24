@@ -75,20 +75,38 @@
                     <FieldLabelsList :labels="item.labels"></FieldLabelsList>
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
-                    <v-icon size="large" color="primary" class="me-2" @click="editItem(item)">
-                        mdi-pencil
-                    </v-icon>
-                    <v-icon size="large" color="warning" @click="deleteItem(item)">
-                        mdi-delete
-                    </v-icon>
+                    <v-btn title="Edit" @click="editItem(item)" rounded="xl" class="me-2">
+                        <v-icon size="large">
+                            mdi-pencil
+                        </v-icon>
+                    </v-btn>
+                    <v-btn title="Delete" disabled color="warning" @click="editItem(item)" rounded="xl" class="me-2">
+                        <v-icon size="large">
+                            mdi-delete
+                        </v-icon>
+                    </v-btn>
+                    <!-- <v-icon size="large" color="warning" @click="deleteItem(item)">
+                    </v-icon> -->
                 </template>
                 <template v-slot:expanded-row="{ columns, item }">
                     <tr>
                         <td :colspan="columns.length">
-                            <FieldDOB :dob="item.dob"></FieldDOB>
-                        </td>
-                        <td :colspan="columns.length">
-                            PIN {{ item.pin }}
+                            <v-card class="bg-primary-lighten-1">
+                                <v-row>
+                                    <v-col>
+                                        <FieldDOB :dob="item.dob"></FieldDOB>
+                                    </v-col>
+                                    <v-col>
+                                        <field-email-maps :emails="item.id_numbers"></field-email-maps>
+                                    </v-col>
+                                    <v-col>
+                                        {{ item.age }}
+                                    </v-col>
+                                    <v-col>
+                                        {{ item.gender }}
+                                    </v-col>
+                                </v-row>
+                            </v-card>
                         </td>
                     </tr>
                 </template>
@@ -178,10 +196,10 @@ const refs = ref({
         { title: 'Labels', key: 'labels', align: 'end' },
         { title: 'Attributes', key: 'attrs', align: 'end' },
 
-        { title: 'Gender', key: 'gender', align: 'end' },
-        { title: 'IDs', key: 'id_numbers', align: 'end' },
-        { title: 'Age', key: 'age', align: 'end' },
-        { title: 'Birthday', key: 'dob', align: 'end' },
+        { title: 'Gender', key: 'gender', align: ' d-none' },
+        { title: 'IDs', key: 'id_numbers', align: ' d-none' },
+        { title: 'Age', key: 'age', align: ' d-none' },
+        { title: 'Birthday', key: 'dob', align: ' d-none' },
 
         { title: 'Created', key: 'created_at', align: 'end', sortable: false },
         { title: 'Actions', key: 'actions', sortable: false },
