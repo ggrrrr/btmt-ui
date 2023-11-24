@@ -86,8 +86,7 @@ func runUpdateEmail() error {
 		fmt.Println("Wait")
 	}()
 	defer func() {
-		f := w.CancelFunc()
-		f()
+		w.CancelFunc()()
 		fmt.Println("Cancel")
 	}()
 	ctx, app, err := prepCli()
