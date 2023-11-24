@@ -40,6 +40,11 @@ func Connect(cfg postgres.Config) (*repo, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	if cfg.Preffix == "" {
 		cfg.Preffix = "dev"
 	}

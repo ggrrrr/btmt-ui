@@ -50,11 +50,15 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 	logger.Error(err).Any("aws", awsCfg).Any("pg", pgCfg).Msg("repo init")
 	if awsCfg {
 		repo, err = initAwsRepo(ctx, w, cfg)
-
+		if err != nil {
+			return nil, err
+		}
 	}
 	if pgCfg {
 		repo, err = initPgRepo(ctx, w, cfg)
-
+		if err != nil {
+			return nil, err
+		}
 	}
 	if repo == nil {
 		logger.Error(err).Msg("repo init")
@@ -81,7 +85,7 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 func initAwsRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
 	repo, err := dynamodb.New(cfg.Aws)
 	if err != nil {
-		logger.Error(err).Msg("awsdyno aws error")
+		logger.Error(err).Msg("initAwsRepo error")
 		return nil, err
 	}
 	// s.Waiter().Cleanup(func() {
@@ -93,7 +97,7 @@ func initAwsRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (dd
 func initPgRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
 	repo, err := postgres.Connect(cfg.Postgres)
 	if err != nil {
-		logger.Error(err).Msg("awsdyno aws error")
+		logger.Error(err).Msg("initPgRepo error")
 		return nil, err
 	}
 	w.Cleanup(func() {
