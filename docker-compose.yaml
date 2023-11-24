@@ -158,8 +158,8 @@ services:
     container_name: web
     image: svc/web
     labels:
-      - "traefik.http.routers.web.rule=PathPrefix(`/*`,)"
-      - "traefik.frontend.rule=PathPrefixStrip: /rest"
+      - "traefik.http.routers.web.rule=PathPrefix(`/`,`/people`,)"
+      # - "traefik.http.routers.web.rule=PathPrefixStrip: /rest"
       # - "traefik.http.routers.web.rule=PathPrefix(`/people`)"
       # - "traefik.http.routers.web.replacepathregex.regex=^/app/(.*)"
       # - "traefik.http.routers.web.replacepathregex.replacement=/$$1"
@@ -169,6 +169,7 @@ services:
       context: ./ui/web
       dockerfile: .deploy/Dockerfile
     volumes:
+      - ./ui/web/.deploy/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - ./ui/web/.deploy/cfg/config.json:/usr/share/nginx/html/config.json
   #     # - ./ui/web/.deploy/cfg/app.config.json:/usr/share/nginx/html/assets/app.config.json
   #     # - ./be/.deploy/svc-auth/config.pg.yaml:/app/config.yaml
