@@ -52,6 +52,12 @@ bun run build
 
 See [Configuration Reference](https://vitejs.dev/config/).
 
+Colors
+https://dev.vuetifyjs.com/en/styles/colors/#javascript-color-pack
+
+Icons
+https://pictogrammers.com/library/mdi/
+
 https://stackoverflow.com/questions/45306288/vuejs-in-production-prefix-static-path
 
 // GCP
