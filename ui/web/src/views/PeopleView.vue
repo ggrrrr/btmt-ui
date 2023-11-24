@@ -239,18 +239,22 @@ async function loadData() {
             console.log("people.result", result)
             refs.value.totalItems = 0;
             list.value.list = []
-            result.result.forEach(
-                (j) => {
-                    let i = Object.assign(new Person(), j);
-                    if (i.dob !== undefined) {
-                        let dob = Object.assign(new Dob(), i.dob)
-                        i.dob = dob
+            if (result.result !== null) {
+                result.result.forEach(
+                    (j) => {
+                        let i = Object.assign(new Person(), j);
+                        if (i.dob !== undefined) {
+                            let dob = Object.assign(new Dob(), i.dob)
+                            i.dob = dob
+                        }
+                        console.log(i)
+                        list.value.list.push(i)
+                        refs.value.totalItems++;
                     }
-                    console.log(i)
-                    list.value.list.push(i)
-                    refs.value.totalItems++;
-                }
-            )
+                )
+            } else {
+                refs.value.loadingText = "no data, check filters11"
+            }
             if (refs.value.totalItems == 0) {
                 refs.value.loadingText = "no data, check filters"
             }

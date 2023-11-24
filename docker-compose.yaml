@@ -100,8 +100,8 @@ services:
       - JWT_CRTFILE=/app/jwt.crt
       - JWT_KEYFILE=/app/jwt.key
     volumes:
-      - ./be/.deploy/svc-auth/config.pg.yaml:/app/config.yaml
-      # - ./be/.deploy/svc-auth/config.yaml:/app/config.yaml
+      # - ./be/.deploy/svc-auth/config.pg.yaml:/app/config.yaml
+      - ./be/.deploy/svc-auth/config.aws.yaml:/app/config.yaml
       - ./be/jwt.crt:/app/jwt.crt
       - ./be/jwt.key:/app/jwt.key
       - ~/.aws:/root/.aws/
@@ -149,6 +149,30 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./aws:/etc/localstack/init/ready.d/"
       # - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
-# networks:
-# apple:
-# external: true
+  # networks:
+  # apple:
+  # external: true
+
+  web:
+    hostname: web
+    container_name: web
+    image: svc/web
+    labels:
+      - "traefik.http.routers.web.rule=PathPrefix(`/*`,)"
+      - "traefik.frontend.rule=PathPrefixStrip: /rest"
+      # - "traefik.http.routers.web.rule=PathPrefix(`/people`)"
+      # - "traefik.http.routers.web.replacepathregex.regex=^/app/(.*)"
+      # - "traefik.http.routers.web.replacepathregex.replacement=/$$1"
+    ports:
+      - 9000:80
+    build:
+      context: ./ui/web
+      dockerfile: .deploy/Dockerfile
+    volumes:
+      - ./ui/web/.deploy/cfg/config.json:/usr/share/nginx/html/config.json
+  #     # - ./ui/web/.deploy/cfg/app.config.json:/usr/share/nginx/html/assets/app.config.json
+  #     # - ./be/.deploy/svc-auth/config.pg.yaml:/app/config.yaml
+  #     # - ./be/.deploy/svc-auth/config.yaml:/app/config.yaml
+  #     # - ./be/jwt.crt:/app/jwt.crt
+  #     # - ./be/jwt.key:/app/jwt.key
+  #     # - ~/.aws:/root/.aws/
