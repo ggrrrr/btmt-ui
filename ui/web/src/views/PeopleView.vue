@@ -60,7 +60,7 @@
                     <field-time-stamp :timeStamp="item.created_at"></field-time-stamp>
                 </template>
                 <template v-slot:[`item.dob`]="{ item }">
-                    <FieldDOB :dob="item.dob"></FieldDOB>
+                    <FieldBirthday :dob="item.dob"></FieldBirthday>
                 </template>
                 <template v-slot:[`item.id_numbers`]="{ item }">
                     <field-email-maps :emails="item.id_numbers"></field-email-maps>
@@ -94,7 +94,7 @@
                             <v-card class="bg-primary-lighten-1">
                                 <v-row>
                                     <v-col>
-                                        <FieldDOB :dob="item.dob"></FieldDOB>
+                                        <FieldBirthday :dob="item.dob" />
                                     </v-col>
                                     <v-col>
                                         <field-email-maps :emails="item.id_numbers"></field-email-maps>
@@ -119,7 +119,7 @@ import { fetchAPI } from "@/store/auth";
 import ChipsList from '@/components/ChipsList'
 import BtnLoadData from '@/components/BtnLoadData';
 import InputTextsList from '@/components/InputTextsList';
-import FieldDOB from '@/components/FieldDOB';
+import FieldBirthday from '@/components/FieldBirthday';
 import FieldTimeStamp from '@/components/FieldTimeStamp';
 import FieldEmailMaps from '@/components/FieldEmailMaps';
 import FieldPhonesMaps from '@/components/FieldPhonesMaps';

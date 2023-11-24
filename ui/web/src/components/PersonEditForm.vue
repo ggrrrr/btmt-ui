@@ -59,7 +59,7 @@
             </v-row>
             <v-row>
                 <v-col>
-                    <InputDOB v-model="refs.person.dob" />
+                    <InputBirthday v-model="refs.person.dob" />
                 </v-col>
                 <v-col>
                     <InputGender v-model="refs.person.gender" />
@@ -78,7 +78,7 @@ import { Person, EditPerson } from "@/store/people.js";
 
 import InputTypeValue from '@/components/InputTypeValue.vue';
 import InputGender from '@/components/InputGender.vue';
-import InputDOB from '@/components/InputDOB.vue';
+import InputBirthday from '@/components/InputBirthday.vue';
 
 onMounted(() => {
     console.log("onMounted.", props.modelValue.person.id)
