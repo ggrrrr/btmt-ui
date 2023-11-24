@@ -46,6 +46,10 @@ awslocal dynamodb scan --table-name module-auth
 
 ```
 # Create/update admin user
+
+go get -u ./...
+
+
 go run svc-auth/cmd/main.go admin --email asd@asd -p asdasd
 # list users
 go run svc-auth/cmd/main.go list
