@@ -21,8 +21,8 @@ FROM alpine:latest AS runtime
 RUN apk add --no-cache curl
 WORKDIR /app
 COPY --from=builder /app/app /app/app
-COPY --from=builder /app/config.yaml /app/app/config.yaml
-COPY --from=builder /app/jwt.key /app/app/jwt.key
-COPY --from=builder /app/crt /app/app/jwt.crt
+COPY --from=builder /app/config.yaml /app/config.yaml
+COPY --from=builder /app/jwt.key /app/jwt.key
+COPY --from=builder /app/jwt.crt /app/jwt.crt
 
 CMD ["/app/app", "server"]
