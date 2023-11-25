@@ -21,12 +21,12 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     args: [
       'run',
+      'deploy',
+      'auth-${SHORT_SHA}', 
       '--set-env-vars',
       'REST_ADDRESS=:8080',
       '--set-env-vars',
       'GRPC_ADDRESS=:8081',
-      'deploy',
-      'auth-${SHORT_SHA}', 
       '--image=europe-central2-docker.pkg.dev/bikeareaui/btmt/auth:$SHORT_SHA',
       '--region',
       'europe-central2',
