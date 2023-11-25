@@ -14,6 +14,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/grpc"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/postgres"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/rest"
 )
@@ -44,10 +45,17 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 	}
 
 	if awsCfg == pgCfg {
-		logger.Error(err).Any("pg", cfg.Postgres).Msg("repo init")
-		return nil, errors.New(" postgres and aws dynamodb")
+		logger.Warn().Msg("in memory repo")
+		pass, _ := app.HashPassword("asdasd")
+		repo = mem.New()
+		asdUser := ddd.AuthPasswd{
+			Email:       "asd@asd",
+			Status:      ddd.StatusEnabled,
+			SystemRoles: []string{"admin"},
+			Passwd:      pass,
+		}
+		repo.Save(ctx, asdUser)
 	}
-	logger.Error(err).Any("aws", awsCfg).Any("pg", pgCfg).Msg("repo init")
 	if awsCfg {
 		repo, err = initAwsRepo(ctx, w, cfg)
 		if err != nil {

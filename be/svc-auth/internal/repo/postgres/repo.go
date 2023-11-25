@@ -38,10 +38,12 @@ func Connect(cfg postgres.Config) (*repo, error) {
 		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database, cfg.SSLMode)
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
+		logger.Error(err).Msg("Connect")
 		return nil, err
 	}
 	err = db.Ping()
 	if err != nil {
+		logger.Error(err).Msg("Ping")
 		return nil, err
 	}
 

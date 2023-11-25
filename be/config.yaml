@@ -13,11 +13,14 @@ aws:
   database:
     prefix: module
   # region: us-east-1
-  endpoint: http://localhost:4566
+  # endpoint: http://localhost:4566
 jwt:
   ttl: 1m
-  crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt
-  keyFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.key
+  crtFile: jwt.crt
+  keyFile: jwt.key
+  # crtFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt
+  # keyFile: /Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.key
+
   # useMock: mock
 rest:
   address: 0.0.0.0:8010

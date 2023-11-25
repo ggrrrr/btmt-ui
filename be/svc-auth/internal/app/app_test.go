@@ -19,9 +19,9 @@ func TestCheckPassword(t *testing.T) {
 	var ok bool
 	t1 := "newpass"
 	t2 := "newpass"
-	t11, err := hashPassword(t1)
+	t11, err := HashPassword(t1)
 	assert.NoError(t, err)
-	t21, err := hashPassword(t2)
+	t21, err := HashPassword(t2)
 	assert.NoError(t, err)
 
 	ok = checkPasswordHash(t1, t11)

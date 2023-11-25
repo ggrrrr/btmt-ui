@@ -81,7 +81,7 @@ func canLogin(auth *ddd.AuthPasswd) bool {
 	return false
 }
 
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	return string(bytes), err
 }

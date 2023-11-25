@@ -12,7 +12,7 @@ import (
 
 func cfg() postgres.Config {
 	return postgres.Config{
-		Host:     "localhost",
+		Host:     "34.116.252.91",
 		Port:     5432,
 		Username: "initexample",
 		Password: "initexample",

@@ -23,7 +23,7 @@ func (a *application) CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error
 	}
 	logger.InfoCtx(ctx).Any("email", auth.Email).Msg("CreateAuth")
 	if auth.Passwd != "" {
-		cryptPasswd, err := hashPassword(string(auth.Passwd))
+		cryptPasswd, err := HashPassword(string(auth.Passwd))
 		if err != nil {
 			return err
 		}
@@ -51,7 +51,7 @@ func (a *application) UpdatePasswd(ctx context.Context, email, oldPasswd, newPas
 
 	var cryptPasswd string
 	if newPasswd != "" {
-		cryptPasswd, err = hashPassword(newPasswd)
+		cryptPasswd, err = HashPassword(newPasswd)
 		if err != nil {
 			return err
 		}
