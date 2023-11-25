@@ -24,6 +24,8 @@ steps:
       'deploy',
       'auth-${SHORT_SHA}', 
       '--set-env-vars',
+      'LOG_FORMAT=json',
+      '--set-env-vars',
       'REST_ADDRESS=:8080',
       '--set-env-vars',
       'GRPC_ADDRESS=:8081',

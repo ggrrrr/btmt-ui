@@ -35,6 +35,11 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 	var repo ddd.AuthPasswdRepo
 	awsCfg := false
 	pgCfg := false
+	logger.Info().
+		Str("Aws.Region", cfg.Aws.Region).
+		Str("Postgres.Host", cfg.Postgres.Host).
+		Str("Postgres.User", cfg.Postgres.Username).
+		Send()
 
 	if cfg.Aws.Region != "" {
 		awsCfg = true
