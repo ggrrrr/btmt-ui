@@ -22,7 +22,10 @@ steps:
     args: [
       'run',
       'deploy',
-      'auth-${SHORT_SHA}', 
+      'svc-auth',
+      '--allow-unauthenticated',
+      '--ingress',
+      'all', 
       '--set-env-vars',
       'LOG_FORMAT=json',
       '--set-env-vars',
