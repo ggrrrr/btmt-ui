@@ -4,7 +4,7 @@ let appConfig = {
   //   BASE_URL: "http://localhost:8010/rest",
 };
 
-fetch("config.json")
+fetch("config/config.json")
   .then((resp) => {
     resp
       .json()
