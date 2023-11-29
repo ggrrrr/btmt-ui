@@ -30,6 +30,23 @@ func (r *repo) Close() error {
 	return r.db.Close()
 }
 
+func (r *repo) create() error {
+	sql := r.table(`CREATE TABLE IF NOT EXISTS %s (
+		email TEXT,
+		passwd TEXT,
+		"status" TEXT,
+		system_roles TEXT[],
+		created_at TIMESTAMP DEFAULT NOW(),
+		UNIQUE(email)
+	)`)
+	logger.Info().Str("sql", sql).Msg("create table")
+	_, err := r.db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func Connect(cfg postgres.Config) (*repo, error) {
 	if cfg.SSLMode == "" {
 		cfg.SSLMode = "disable"
@@ -46,7 +63,6 @@ func Connect(cfg postgres.Config) (*repo, error) {
 		logger.Error(err).Msg("Ping")
 		return nil, err
 	}
-
 	if cfg.Preffix == "" {
 		cfg.Preffix = "dev"
 	}
@@ -55,18 +71,27 @@ func Connect(cfg postgres.Config) (*repo, error) {
 		Int("port", cfg.Port).
 		Str("User", cfg.Username).
 		Msg("Connected")
-	return &repo{
+	repo := &repo{
 		db:     db,
 		prefix: strings.Trim(cfg.Preffix, " "),
-	}, nil
+	}
+
+	err = repo.create()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	return repo, nil
 }
 
 func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) {
 	sql := r.table(`
-	select "email", "passwd", "status", "system_roles", created_at from %s_auth
+	select "email", "passwd", "status", "system_roles", created_at from %s
 	where email = $1
 	`)
-	logger.DebugCtx(ctx).Str("sql", sql).Send()
+	logger.DebugCtx(ctx).
+		Str("email", email).
+		Str("sql", sql).Msg("Get")
 	rows, err := r.db.QueryContext(ctx, sql, email)
 	if err != err {
 		return []ddd.AuthPasswd{}, err
@@ -91,9 +116,10 @@ func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) 
 
 func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
 	sql := r.table(`
-	select "email", "passwd", "status", "system_roles", created_at from %s_auth
+	select "email", "passwd", "status", "system_roles", created_at from %s
 	`)
-	logger.DebugCtx(ctx).Str("sql", sql).Send()
+	logger.DebugCtx(ctx).
+		Str("sql", sql).Msg("List")
 	rows, err := r.db.QueryContext(ctx, sql)
 	if err != err {
 		return []ddd.AuthPasswd{}, err
@@ -124,10 +150,12 @@ func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
 
 func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
 	sql := r.table(`
-	insert into %s_auth("email", "passwd", "status", "system_roles")
+	insert into %s ("email", "passwd", "status", "system_roles")
 	values($1, $2, $3, $4) 
 	`)
-	logger.DebugCtx(ctx).Str("sql", sql).Send()
+	logger.DebugCtx(ctx).
+		Str("email", auth.Email).
+		Str("sql", sql).Msg("Save")
 	_, err := r.db.ExecContext(ctx, sql,
 		auth.Email,
 		auth.Passwd,
@@ -142,7 +170,9 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, password string
 	update  %s_auth set "passwd" = $1
 	where email = $2
 	`)
-	logger.DebugCtx(ctx).Str("sql", sql).Send()
+	logger.DebugCtx(ctx).
+		Str("email", email).
+		Str("sql", sql).Msg("UpdatePassword")
 	_, err := r.db.ExecContext(ctx, sql,
 		password,
 		email,
@@ -152,10 +182,12 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, password string
 
 func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.StatusType) error {
 	sql := r.table(`
-	update  %s_auth set "status" = $1
+	update  %s set "status" = $1
 	where email = $2
 	`)
-	logger.DebugCtx(ctx).Str("sql", sql).Send()
+	logger.DebugCtx(ctx).
+		Str("email", email).
+		Str("sql", sql).Msg("UpdateStatus")
 	_, err := r.db.ExecContext(ctx, sql,
 		status,
 		email,

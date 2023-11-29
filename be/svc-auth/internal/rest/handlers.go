@@ -51,7 +51,7 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		web.SendError(w, err)
 		return
 	}
-	logger.InfoCtx(r.Context()).Any("asd", &req.Password).Send()
+	logger.InfoCtx(r.Context()).Any("email", &req.Email).Msg("LoginPasswd")
 	res, err := s.app.LoginPasswd(r.Context(), req.Email, req.Password)
 	if err != nil {
 		fmt.Printf("%+v \n", err)

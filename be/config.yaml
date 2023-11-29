@@ -2,13 +2,13 @@ log:
   level: debug
   format: console
 postgres:
-  # host:     postgres
-  port:     5432
-  # username: initexample
-  # password: initexample
-  # database: test
+  host: postgres
+  port: 5432
+  username: initexample
+  password: initexample
+  database: test
   # sslmode:  string
-  preffix:  dev
+  preffix: dev
 aws:
   database:
     prefix: module

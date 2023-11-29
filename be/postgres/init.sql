@@ -1,4 +1,4 @@
-CREATE TABLE dev_auth (
+CREATE TABLE IF NOT EXISTS dev_auth (
     email TEXT,
     passwd TEXT,
     "status" TEXT,

@@ -44,9 +44,9 @@ service AuthSvc {
   };
 }
 
-message CreateAuthRequest {}
+message CreateAuthRequest {
+}
 message CreateAuthResponse {
-    
 }
 
 message ListAuthRequest {}

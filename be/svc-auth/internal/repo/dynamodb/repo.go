@@ -45,11 +45,11 @@ func (r *repo) List(ctx context.Context) (out []ddd.AuthPasswd, err error) {
 		}
 		out = append(out, auth)
 	}
+	logger.DebugCtx(ctx).Msg("List")
 	return
 }
 
 func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	logger.DebugCtx(ctx).Str("auth", auth.Email).Msg("Save")
 	defer func() {
 		if err != nil {
 			logger.Error(err).Str("email", auth.Email).Err(err).Msg("ops")
@@ -60,11 +60,13 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 		r.errorIsNotFound(err)
 		return fmt.Errorf("unable to save(%s.%s): %v", r.table(), auth.Email, err)
 	}
+	logger.DebugCtx(ctx).
+		Str("email", auth.Email).
+		Msg("Save")
 	return nil
 }
 
 func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err error) {
-	logger.DebugCtx(ctx).Str("email", email).Str("table", r.table()).Msg("Find")
 	input := &dynamodb.QueryInput{
 		TableName: aws.String(r.table()),
 	}
@@ -90,6 +92,9 @@ func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err
 		}
 		out = append(out, auth)
 	}
+	logger.DebugCtx(ctx).
+		Str("email", email).
+		Msg("Get")
 	return
 }
 
@@ -116,12 +121,14 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) 
 	if err != nil {
 		return err
 	}
-	logger.DebugCtx(ctx).Any("res", res).Msg("result")
+	logger.DebugCtx(ctx).
+		Any("res", res).
+		Str("email", email).
+		Msg("UpdatePassword")
 	return err
 }
 
 func (r *repo) EnableEmail(ctx context.Context, email string) error {
-	logger.DebugCtx(ctx).Str("email", email).Msg("EnableEmail")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":enabled": {
@@ -143,7 +150,10 @@ func (r *repo) EnableEmail(ctx context.Context, email string) error {
 	if err != nil {
 		return err
 	}
-	logger.DebugCtx(ctx).Any("res", res).Msg("result")
+	logger.DebugCtx(ctx).
+		Any("res", res).
+		Str("email", email).
+		Msg("EnableEmail")
 	return err
 }
 
@@ -170,7 +180,10 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 	if err != nil {
 		return err
 	}
-	logger.DebugCtx(ctx).Any("res", res).Msg("result")
+	logger.DebugCtx(ctx).
+		Any("res", res).
+		Str("email", email).
+		Msg("UpdateStatus")
 	return err
 }
 

@@ -2,6 +2,10 @@
 node_modules
 /dist
 
+.terraform
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
 
 # local env files
 .env.local

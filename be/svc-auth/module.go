@@ -133,7 +133,7 @@ func Root(ctx context.Context, s *system.System) error {
 
 	if s.Config().Grpc.Address != "" {
 		grpc.RegisterServer(a, s.RPC())
-		if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8081"); err != nil {
+		if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8011"); err != nil {
 			return err
 		}
 	}

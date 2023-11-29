@@ -59,7 +59,7 @@ go run svc-auth/cmd/main.go client --email asd@asd -p asdasd
 
 
 curl -v -XPOST -d'{"email":"asd@asd","password":"asdasd"}' \
-  ${REST_URL}/rest/v1/auth/login/passwd | jq -r '.payload.token' | pbcopy
+  ${REST_URL}/v1/auth/login/passwd | jq -r '.payload.token' | pbcopy
 
 export T="<CTRL+V>"
 

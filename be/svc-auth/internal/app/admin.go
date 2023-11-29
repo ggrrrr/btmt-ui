@@ -56,6 +56,7 @@ func (a *application) UpdatePasswd(ctx context.Context, email, oldPasswd, newPas
 			return err
 		}
 	}
+	logger.InfoCtx(ctx).Any("email", email).Msg("UpdatePasswd")
 	err = a.authRepo.UpdatePassword(ctx, email, cryptPasswd)
 	if err != nil {
 		return err
@@ -72,5 +73,6 @@ func (ap *application) ListAuth(ctx context.Context) (app.Result[[]ddd.AuthPassw
 	if err != nil {
 		return app.Result[[]ddd.AuthPasswd]{}, err
 	}
+	logger.InfoCtx(ctx).Msg("ListAuth")
 	return app.ResultPayload[[]ddd.AuthPasswd]("ok", out), err
 }
