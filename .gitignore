@@ -6,6 +6,7 @@ node_modules
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
+*.tfvars
 
 # local env files
 .env.local
