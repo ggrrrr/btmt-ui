@@ -1,0 +1,55 @@
+resource "random_password" "sql_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+}
+
+resource "google_sql_database_instance" "main" {
+  name                = "${var.prefix}-sql"
+  database_version    = "POSTGRES_15"
+  region              = var.region
+  deletion_protection = false
+
+  settings {
+    # Second-generation instance tiers are based on the machine
+    # type. See argument reference below.
+    tier = "db-f1-micro"
+
+    ip_configuration {
+      ipv4_enabled = true
+      authorized_networks {
+        name  = "me"
+        value = "95.42.23.198/32"
+      }
+      # dynamic "authorized_networks" {
+      #   for_each = var.dev_networkds
+      #   content {
+      #     name  = "rule ${each.value}"
+      #     value = each.value
+      #   }
+      # }
+    }
+  }
+}
+
+resource "google_sql_database" "database" {
+  name     = "auth"
+  instance = google_sql_database_instance.main.name
+}
+
+resource "google_sql_user" "user" {
+  name     = "btmt"
+  instance = google_sql_database_instance.main.name
+  password = random_password.sql_password.result
+
+}
+
+output "sql_password" {
+  value     = random_password.sql_password.result
+  sensitive = true
+}
+
+output "sql_public_ip_address" {
+  value = google_sql_database_instance.main.public_ip_address
+}
+
