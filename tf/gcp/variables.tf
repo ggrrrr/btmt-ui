@@ -37,3 +37,7 @@ variable "mgo_username" {
 }
 variable "mgo_password" {
 }
+
+variable "dns_contact_email" {
+
+}

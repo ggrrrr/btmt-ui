@@ -67,7 +67,7 @@ resource "kubernetes_manifest" "test-crd" {
 
     spec = {
       acme = {
-        email = "ggrrrr@gmail.com"
+        email = var.dns_contact_email
         privateKeySecretRef = {
           name = "letsencrypt-dev"
         }
