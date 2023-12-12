@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
@@ -27,16 +27,16 @@ func TestSave(t *testing.T) {
 	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateAdminUser("mock", roles.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 
-	cfg := mongodb.Config{
+	cfg := mgo.Config{
 		TTL:        10 * time.Second,
 		Collection: "app.TestList",
 		User:       "admin",
-		Passwd:     "pass",
+		Password:   "pass",
 		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
+		Uri:        "mongodb://localhost:27017/",
 		// Debug:      "console",
 	}
-	testDb, err := mongodb.New(rootCtx, cfg)
+	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
 

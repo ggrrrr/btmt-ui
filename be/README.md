@@ -73,7 +73,7 @@ curl -v -H"Authorization: Bearer $T" -XPOST \
    -d'{"data":{"id_numbers":{"EGN":"asdasdasd"},"emails":{"main":"asd@asd123"},"full_name":"Varban Krushev","name":"vesko","phones":{"mobile":"0889430425"},"labels":["hike:snow"]}}' \
   ${REST_URL}/rest/v1/people/save
 
-curl -v -H"Authorization: Bearer $T" -XPOST -d"{}" ${REST_URL}/rest/v1/people/list
+curl -v -H"Authorization: Bearer $T" -XPOST -d"{}" ${REST_URL}/v1/people/list
 
 curl -v -H"Authorization: Bearer $T" -XPOST -d'{"filters":{"phones":{"list":["0889430425"]}}}' \
   ${REST_URL}/rest/v1/people/list | jq

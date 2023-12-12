@@ -12,14 +12,14 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
 type (
 	repo struct {
 		collection string
-		db         mongodb.Repo
+		db         mgo.Repo
 	}
 
 	Repo interface {
@@ -30,7 +30,7 @@ type (
 
 var _ (ddd.PeopleRepo) = (*repo)(nil)
 
-func New(collection string, db mongodb.Repo) *repo {
+func New(collection string, db mgo.Repo) *repo {
 	return &repo{
 		collection: collection,
 		db:         db,

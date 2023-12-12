@@ -6,7 +6,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
@@ -23,7 +23,7 @@ func (Module) Startup(ctx context.Context, s *system.System) (err error) {
 
 func InitApp(ctx context.Context, cfg config.AppConfig) (app.App, []waiter.CleanupFunc, error) {
 	closeFns := []waiter.CleanupFunc{}
-	db, err := mongodb.New(ctx, cfg.Mongo)
+	db, err := mgo.New(ctx, cfg.Mgo)
 	if err != nil {
 		logger.Error(err).Msg("db")
 		return nil, closeFns, err
@@ -33,7 +33,7 @@ func InitApp(ctx context.Context, cfg config.AppConfig) (app.App, []waiter.Clean
 	}
 	closeFns = append(closeFns, fn)
 
-	appRepo := repo.New(cfg.Mongo.Collection, db)
+	appRepo := repo.New(cfg.Mgo.Collection, db)
 	a, err := app.New(
 		app.WithPeopleRepo(appRepo),
 	)

@@ -8,6 +8,11 @@ data "google_container_cluster" "gke" {
   #   depends_on = [module.gke]
 }
 
+
+# provider "helm" {
+
+# }
+
 provider "kubernetes" {
   host  = "https://${data.google_container_cluster.gke.endpoint}"
   token = data.google_client_config.provider.access_token
@@ -16,33 +21,27 @@ provider "kubernetes" {
   )
 }
 
-resource "kubernetes_secret" "example" {
-  metadata {
-    name = "postgres"
-  }
-
-  data = {
-    username = var.username
-    password = var.password
-    host     = var.host
-    database = var.database_name
-  }
-
-}
 
 variable "prefix" {
 }
 variable "region" {
 }
-variable "username" {
-}
 
 variable "host" {
 }
 
-variable "password" {
-
+variable "sql_host" {
 }
-variable "database_name" {
+variable "sql_username" {
+}
+variable "sql_password" {
+}
+variable "sql_database" {
+}
 
+variable "mgo_uri" {
+}
+variable "mgo_username" {
+}
+variable "mgo_password" {
 }

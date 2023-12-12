@@ -1,4 +1,5 @@
 
+// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster
 resource "google_container_cluster" "gke" {
   name     = var.prefix
   location = var.region

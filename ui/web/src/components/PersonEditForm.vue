@@ -74,11 +74,14 @@
 import { ref, onMounted } from 'vue';
 // import { useDisplay } from 'vuetify'
 import { fetchAPI } from "@/store/auth";
+import { useConfig } from "@/store/app";
 import { Person, EditPerson } from "@/store/people.js";
 
 import InputTypeValue from '@/components/InputTypeValue.vue';
 import InputGender from '@/components/InputGender.vue';
 import InputBirthday from '@/components/InputBirthday.vue';
+
+const config = useConfig;
 
 onMounted(() => {
     console.log("onMounted.", props.modelValue.person.id)
@@ -137,7 +140,9 @@ async function addPerson(person) {
         body: JSON.stringify(data),
     };
     refs.value.loading = true;
-    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/save", request)
+    const url = config.BASE_URL + "/v1/people/save";
+    console.log("url", url)
+    await fetchAPI(url, request)
         .then((result) => {
             console.log("people.result", result)
         }).catch((err) => {
@@ -157,8 +162,10 @@ async function updatePerson(person) {
         method: "POST",
         body: JSON.stringify(data),
     };
+    const url = config.BASE_URL + "/v1/people/update";
+    console.log("url", url)
     refs.value.loading = true;
-    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/update", request)
+    await fetchAPI(url, request)
         .then((result) => {
             console.log("people.result", result)
         }).catch((err) => {

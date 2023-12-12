@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
@@ -24,16 +24,16 @@ func Test_Save(t *testing.T) {
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mongodb.Config{
+	cfg := mgo.Config{
 		TTL:        10 * time.Second,
 		Collection: "people",
 		User:       "admin",
-		Passwd:     "pass",
+		Password:   "pass",
 		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
+		Uri:        "mongodb://localhost:27017/",
 		// Debug:      "console",
 	}
-	testDb, err := mongodb.New(rootCtx, cfg)
+	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
 
@@ -64,16 +64,16 @@ func Test_List(t *testing.T) {
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mongodb.Config{
+	cfg := mgo.Config{
 		TTL:        10 * time.Second,
 		Collection: "people",
 		User:       "admin",
-		Passwd:     "pass",
+		Password:   "pass",
 		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
+		Uri:        "mongodb://localhost:27017/",
 		// Debug:      "console",
 	}
-	testDb, err := mongodb.New(rootCtx, cfg)
+	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
 

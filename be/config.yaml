@@ -27,11 +27,11 @@ rest:
 grpc:
   address: 0.0.0.0:8011
 prefix: module
-mongo:
+mgo:
   debug: shit
   ttl: 10s
   collection: people
   user: admin
-  passwd: pass
+  password: pass
   database: people
-  url: mongodb://localhost:27017/
+  uri: mongodb://localhost:27017/

@@ -41,7 +41,6 @@ metadata:
   labels:
     name: hello
 spec:
-  type: NodePort
   selector:
     name: hello
   ports:
@@ -53,21 +52,27 @@ kind: Ingress
 metadata:
   name: hello
   annotations:
-    kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: btmt-dev-public-ip
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-dev"
   labels:
     name: hello
 spec:
-  ingressClassName: "gce"
+  ingressClassName: "nginx"
   defaultBackend:
     service:
       name: hello
       port:
         number: 8080
+  tls:
+    - hosts:
+        - dev-gcp.batamata.org
+      secretName: hello-tls
   rules:
-    - http:
+    - host: dev-gcp.batamata.org
+      http:
         paths:
-          - path: /*
+          - path: /
             pathType: ImplementationSpecific
             backend:
               service:

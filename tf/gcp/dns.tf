@@ -7,6 +7,10 @@ variable "dns_zone_name" {
 
 }
 
+variable "dns_main" {
+  default = "dev-gcp"
+}
+
 provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
@@ -22,7 +26,7 @@ output "dns_zone" {
 resource "cloudflare_record" "example" {
   zone_id = data.cloudflare_zone.dns_zone.id
   name    = "dev-gcp"
-  value   = module.vpc.public_ip
+  value   = module.k8s.nginx-ingress-ip
   type    = "A"
   ttl     = 3600
 }

@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
@@ -22,17 +23,22 @@ type (
 	}
 )
 
+func mgoCfg() mgo.Config {
+	cfg := mgo.Config{
+		TTL:        10 * time.Second,
+		Collection: os.Getenv("MGO_COLLECTION"),
+		User:       os.Getenv("MGO_USERNAME"),
+		Password:   os.Getenv("MGO_PASSWORD"),
+		Database:   os.Getenv("MGO_DATABASE"),
+		Uri:        os.Getenv("MGO_URI"),
+	}
+	return cfg
+}
+
 func TestSave(t *testing.T) {
 	ctx := context.Background()
-	cfg := mongodb.Config{
-		TTL:        10 * time.Second,
-		Collection: "TestSave",
-		User:       "admin",
-		Passwd:     "pass",
-		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
-	}
-	testDb, err := mongodb.New(ctx, cfg)
+	cfg := mgoCfg()
+	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	// defer testRepo.Close()
 	defer testDb.Close(ctx)
@@ -161,16 +167,8 @@ func TestSave(t *testing.T) {
 // https://github.com/mongodb/mongo-go-driver/blob/v1.12.1/examples/documentation_examples/examples.go
 func TestList(t *testing.T) {
 	ctx := context.Background()
-	cfg := mongodb.Config{
-		TTL:        10 * time.Second,
-		Collection: "TestList",
-		User:       "admin",
-		Passwd:     "pass",
-		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
-		Debug:      "console",
-	}
-	testDb, err := mongodb.New(ctx, cfg)
+	cfg := mgoCfg()
+	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
 
@@ -418,15 +416,8 @@ func TestList(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	cfg := mongodb.Config{
-		TTL:        10 * time.Second,
-		Collection: "TestUpdate",
-		User:       "admin",
-		Passwd:     "pass",
-		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
-	}
-	testDb, err := mongodb.New(ctx, cfg)
+	cfg := mgoCfg()
+	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
 

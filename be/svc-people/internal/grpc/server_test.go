@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
@@ -30,17 +30,17 @@ type (
 func TestTelephoneServer_GetContact(t *testing.T) {
 	ctx := context.Background()
 
-	cfg := mongodb.Config{
+	cfg := mgo.Config{
 		TTL:        10 * time.Second,
 		Collection: "TestList",
 		User:       "admin",
-		Passwd:     "pass",
+		Password:   "pass",
 		Database:   "people",
-		Url:        "mongodb://localhost:27017/",
+		Uri:        "mongodb://localhost:27017/",
 		Debug:      "console",
 	}
 
-	testDb, err := mongodb.New(ctx, cfg)
+	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 
 	testRepo := repo.New(cfg.Collection, testDb)

@@ -9,7 +9,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
 	"github.com/ggrrrr/btmt-ui/be/common/cmd"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/mongodb"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 )
 
@@ -36,7 +36,7 @@ type (
 		Jwt             JwtConfig
 		Log             logger.Config
 		Rest            RestConfig
-		Mongo           mongodb.Config
+		Mgo             mgo.Config
 		ShutdownTimeout time.Duration `default:"10s"`
 	}
 )

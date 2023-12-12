@@ -116,6 +116,8 @@
 <script setup>
 
 import { fetchAPI } from "@/store/auth";
+import { useConfig } from "@/store/app";
+
 import ChipsList from '@/components/ChipsList'
 import BtnLoadData from '@/components/BtnLoadData';
 import InputTextsList from '@/components/InputTextsList';
@@ -130,6 +132,8 @@ import { ref } from 'vue'
 import { Person, Dob, EditPerson } from "@/store/people";
 
 // const store = usePeopleStore()
+const config = useConfig;
+
 
 const list = ref({ list: [] })
 
@@ -252,7 +256,9 @@ async function loadData() {
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    await fetchAPI("http://10.1.1.156:8000/rest/v1/people/list", request)
+    const url = config.BASE_URL + "/v1/people/list";
+    console.log("url", url)
+    await fetchAPI(url, request)
         .then((result) => {
             console.log("people.result", result)
             refs.value.totalItems = 0;
