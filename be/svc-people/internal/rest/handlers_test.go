@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
@@ -24,15 +23,7 @@ func Test_Save(t *testing.T) {
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mgo.Config{
-		TTL:        10 * time.Second,
-		Collection: "people",
-		User:       "admin",
-		Password:   "pass",
-		Database:   "people",
-		Uri:        "mongodb://localhost:27017/",
-		// Debug:      "console",
-	}
+	cfg := mgo.MgoTestCfg()
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
@@ -64,15 +55,7 @@ func Test_List(t *testing.T) {
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mgo.Config{
-		TTL:        10 * time.Second,
-		Collection: "people",
-		User:       "admin",
-		Password:   "pass",
-		Database:   "people",
-		Uri:        "mongodb://localhost:27017/",
-		// Debug:      "console",
-	}
+	cfg := mgo.MgoTestCfg()
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)

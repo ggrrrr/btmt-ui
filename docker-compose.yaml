@@ -26,55 +26,16 @@ services:
       # - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
       - "traefik.http.routers.whoami.rule=PathPrefix(`/whoami`)"
 
-  auth-build:
-    hostname: auth
-    container_name: auth
-    # networks:
-    # - dev
-    image: golang:1.21
-    command: /go/build-run.sh svc-auth/cmd/main.go
-    labels:
-      # - "traefik.http.routers.whoami.rule=Host(`auth.docker.localhost`)"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/rest/v1/auth`)"
-    ports:
-      - 8010:8010
-    # links:
-    #   - "localstack:localstack"
-    depends_on:
-      - localstack
-    # build:
-    # context: ./be
-    # dockerfile: .deploy/Dockerfile
-    # args:
-    # SERVICE: svc-auth
-    environment:
-      - JWT_KEYFILE=/app/jwt.key
-      - JWT_CRTFILE=/app/jwt.crt
-      - AWS_ACCESS_KEY_ID=AAA
-      - WAS_SECRET_ACCESS_KEY=BBB
-    volumes:
-      - ./build-run.sh:/go/build-run.sh
-      - ./be:/go/src/be
-      # - ./jwt.crt:/go/src/be/jwt.crt
-      # - ./jwt.key:/go/src/be/jwt.key
-      # - ~/.aws:/root/.aws/
-      # - ./.deploy/svc-auth/config.yaml:/go/src/be
-
   people:
     hostname: people
     container_name: people
-    image: svc/people
+    image: local/be/people:latest
     labels:
       - "traefik.http.routers.people.rule=PathPrefix(`/rest/v1/people`)"
     ports:
       - 8020:8020
     depends_on:
       - mongo
-    build:
-      context: ./be
-      dockerfile: .deploy/Dockerfile
-      args:
-        MAIN_FILE: svc-people/cmd/main.go
     environment:
       - JWT_CRTFILE=jwt.crt
     volumes:
@@ -84,18 +45,13 @@ services:
   auth:
     hostname: auth
     container_name: auth
-    image: svc/auth
+    image: local/be/auth:latest
     labels:
       - "traefik.http.routers.auth.rule=PathPrefix(`/rest/v1/auth`)"
     ports:
       - 8010:8010
     depends_on:
       - localstack
-    build:
-      context: ./be
-      dockerfile: .deploy/Dockerfile
-      args:
-        MAIN_FILE: svc-auth/cmd/main.go
     environment:
       - JWT_CRTFILE=/app/jwt.crt
       - JWT_KEYFILE=/app/jwt.key

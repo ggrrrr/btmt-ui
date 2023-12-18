@@ -20,6 +20,7 @@ type (
 		Password   string
 		Database   string
 		Uri        string
+		Host       string
 		Debug      string
 	}
 
@@ -47,7 +48,7 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 	logger.Info().
 		Str("user", cfg.User).
 		Str("database", cfg.Database).
-		Str("uri", cfg.Uri).
+		Str("host", cfg.Host).
 		Str("collection", cfg.Collection).
 		Str("debug", cfg.Debug).
 		Any("ttl", cfg.TTL.Seconds()).
@@ -56,18 +57,29 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	credential := options.Credential{
-		Username:      cfg.User,
-		Password:      cfg.Password,
-		AuthMechanism: "SCRAM-SHA-1",
-		// AuthMechanismProperties: {},
-		// AuthMechanism: "SCRAM-SHA-256",
+	var uri = ""
+	credential := options.Credential{}
+	credential.Username = cfg.User
+	credential.Password = cfg.Password
+
+	if len(cfg.Host) > 0 {
+		uri = fmt.Sprintf("mongodb://%s:%s@%s/?ssl=false&authSource=admin",
+			cfg.User,
+			cfg.Password,
+			cfg.Host,
+		)
+	}
+	if len(cfg.Uri) > 0 {
+		uri = cfg.Uri
 	}
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client()
-	opts.ApplyURI(cfg.Uri).SetServerAPIOptions(serverAPI)
-	opts.SetAuth(credential)
+	opts.ApplyURI(uri).SetServerAPIOptions(serverAPI)
+
+	if len(credential.Username) > 0 {
+		opts.SetAuth(credential)
+	}
 
 	if cfg.Debug == "console" {
 		cmdMonitor := &event.CommandMonitor{
@@ -94,38 +106,7 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 	}
 	logger.Info().Msg("Connected")
 
-	// d, err := client.ListDatabaseNames(ctx, bson.M{})
-	// if err != nil {
-	// 	logger.Error(err).
-	// 		Str("user", cfg.User).
-	// 		Str("password", cfg.Password).
-	// 		Str("database", cfg.Database).
-	// 		Str("uri", cfg.Uri).
-	// 		Str("collection", cfg.Collection).
-	// 		Str("debug", cfg.Debug).
-	// 		Any("ttl", cfg.TTL.Seconds()).
-	// 		Msg("ListDatabaseNames")
-
-	// 	return nil, err
-	// }
-	// fmt.Printf("ListDatabaseNames: %v, \n", d)
-
 	db := client.Database(cfg.Database)
-	// cc, err := db.ListCollectionNames(ctx, bson.M{})
-	// if err != nil {
-	// 	logger.Error(err).
-	// 		Str("user", cfg.User).
-	// 		Str("password", cfg.Password).
-	// 		Str("database", cfg.Database).
-	// 		Str("uri", cfg.Uri).
-	// 		Str("collection", cfg.Collection).
-	// 		Str("debug", cfg.Debug).
-	// 		Any("ttl", cfg.TTL.Seconds()).
-	// 		Msg("ListCollectionNames")
-
-	// 	return nil, err
-	// }
-	// fmt.Printf("ListCollectionNames: %v, \n", cc)
 
 	logger.Info().Msg("ok")
 	return &repo{

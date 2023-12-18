@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -23,21 +22,9 @@ type (
 	}
 )
 
-func mgoCfg() mgo.Config {
-	cfg := mgo.Config{
-		TTL:        10 * time.Second,
-		Collection: os.Getenv("MGO_COLLECTION"),
-		User:       os.Getenv("MGO_USERNAME"),
-		Password:   os.Getenv("MGO_PASSWORD"),
-		Database:   os.Getenv("MGO_DATABASE"),
-		Uri:        os.Getenv("MGO_URI"),
-	}
-	return cfg
-}
-
 func TestSave(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgoCfg()
+	cfg := mgo.MgoTestCfg()
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	// defer testRepo.Close()
@@ -167,7 +154,7 @@ func TestSave(t *testing.T) {
 // https://github.com/mongodb/mongo-go-driver/blob/v1.12.1/examples/documentation_examples/examples.go
 func TestList(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgoCfg()
+	cfg := mgo.MgoTestCfg()
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
@@ -416,7 +403,7 @@ func TestList(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgoCfg()
+	cfg := mgo.MgoTestCfg()
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)

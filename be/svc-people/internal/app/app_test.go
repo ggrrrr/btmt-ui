@@ -27,15 +27,7 @@ func TestSave(t *testing.T) {
 	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateAdminUser("mock", roles.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 
-	cfg := mgo.Config{
-		TTL:        10 * time.Second,
-		Collection: "app.TestList",
-		User:       "admin",
-		Password:   "pass",
-		Database:   "people",
-		Uri:        "mongodb://localhost:27017/",
-		// Debug:      "console",
-	}
+	cfg := mgo.MgoTestCfg()
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
