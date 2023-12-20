@@ -21,11 +21,6 @@ import (
 
 type Module struct{}
 
-type Cfg struct {
-	Prefix           string
-	config.AppConfig `mapstructure:",squash"`
-}
-
 func (Module) Startup(ctx context.Context, s *system.System) (err error) {
 	return Root(ctx, s)
 }

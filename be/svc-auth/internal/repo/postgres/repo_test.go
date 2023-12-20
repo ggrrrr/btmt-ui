@@ -12,15 +12,15 @@ import (
 
 func cfg() postgres.Config {
 	return postgres.Config{
-		Host:     "34.116.252.91",
+		Host:     "localhost",
 		Port:     5432,
 		Username: "initexample",
 		Password: "initexample",
 		Database: "test",
 		Preffix:  "dev",
 	}
-
 }
+
 func TestSave(t *testing.T) {
 	ctx := context.Background()
 	conn, err := Connect(cfg())
