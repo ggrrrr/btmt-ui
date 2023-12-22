@@ -40,7 +40,7 @@ func TestDialAndSend(t *testing.T) {
 		User string
 	}
 	myData := Data{User: "Pesho"}
-	template_data := `<p>Скъпи <b>{{ .User }}</b>, welcome to <img src="cid:gmail.png" alt="My image" /></p>.`
+	template_data := `<p>Скъпи <b>{{ .User }}</b>, welcome to <img src="cid:glass-mug-variant.png" alt="My image" /></p>.`
 	tmpl := template.Must(template.New("template_data").Parse(template_data))
 
 	email, err := CreateMsg(
@@ -52,7 +52,7 @@ func TestDialAndSend(t *testing.T) {
 	require.NoError(t, err)
 	// email.AddBcc(RcptList{{Mail: "mandajiev@yahoo.com", Name: "Besko"}})
 	email.AddCc(RcptList{{Mail: email2, Name: "Besko"}})
-	email.AddFile("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/gmail.png")
+	email.AddFile("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/glass-mug-variant.png")
 	email.AddHtmlBodyWriter(func(w io.Writer) error {
 		return tmpl.Execute(w, myData)
 	})

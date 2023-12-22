@@ -22,12 +22,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	AuthSvc_CreateAuth_FullMethodName    = "/authpb.AuthSvc/CreateAuth"
-	AuthSvc_LoginPasswd_FullMethodName   = "/authpb.AuthSvc/LoginPasswd"
-	AuthSvc_LoginOauth2_FullMethodName   = "/authpb.AuthSvc/LoginOauth2"
-	AuthSvc_ValidateToken_FullMethodName = "/authpb.AuthSvc/ValidateToken"
-	AuthSvc_UpdatePasswd_FullMethodName  = "/authpb.AuthSvc/UpdatePasswd"
-	AuthSvc_ListAuth_FullMethodName      = "/authpb.AuthSvc/ListAuth"
+	AuthSvc_CreateAuth_FullMethodName      = "/authpb.AuthSvc/CreateAuth"
+	AuthSvc_LoginPasswd_FullMethodName     = "/authpb.AuthSvc/LoginPasswd"
+	AuthSvc_LoginOauth2_FullMethodName     = "/authpb.AuthSvc/LoginOauth2"
+	AuthSvc_ValidateToken_FullMethodName   = "/authpb.AuthSvc/ValidateToken"
+	AuthSvc_UpdatePasswd_FullMethodName    = "/authpb.AuthSvc/UpdatePasswd"
+	AuthSvc_ListAuth_FullMethodName        = "/authpb.AuthSvc/ListAuth"
+	AuthSvc_GetOauth2Config_FullMethodName = "/authpb.AuthSvc/GetOauth2Config"
 )
 
 // AuthSvcClient is the client API for AuthSvc service.
@@ -40,6 +41,7 @@ type AuthSvcClient interface {
 	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error)
 	UpdatePasswd(ctx context.Context, in *UpdatePasswdRequest, opts ...grpc.CallOption) (*UpdatePasswdResponse, error)
 	ListAuth(ctx context.Context, in *ListAuthRequest, opts ...grpc.CallOption) (*ListAuthResponse, error)
+	GetOauth2Config(ctx context.Context, in *GetOauth2ConfigRequest, opts ...grpc.CallOption) (*GetOauth2ConfigResponse, error)
 }
 
 type authSvcClient struct {
@@ -104,6 +106,15 @@ func (c *authSvcClient) ListAuth(ctx context.Context, in *ListAuthRequest, opts 
 	return out, nil
 }
 
+func (c *authSvcClient) GetOauth2Config(ctx context.Context, in *GetOauth2ConfigRequest, opts ...grpc.CallOption) (*GetOauth2ConfigResponse, error) {
+	out := new(GetOauth2ConfigResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_GetOauth2Config_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthSvcServer is the server API for AuthSvc service.
 // All implementations must embed UnimplementedAuthSvcServer
 // for forward compatibility
@@ -114,6 +125,7 @@ type AuthSvcServer interface {
 	ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error)
 	UpdatePasswd(context.Context, *UpdatePasswdRequest) (*UpdatePasswdResponse, error)
 	ListAuth(context.Context, *ListAuthRequest) (*ListAuthResponse, error)
+	GetOauth2Config(context.Context, *GetOauth2ConfigRequest) (*GetOauth2ConfigResponse, error)
 	mustEmbedUnimplementedAuthSvcServer()
 }
 
@@ -138,6 +150,9 @@ func (UnimplementedAuthSvcServer) UpdatePasswd(context.Context, *UpdatePasswdReq
 }
 func (UnimplementedAuthSvcServer) ListAuth(context.Context, *ListAuthRequest) (*ListAuthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAuth not implemented")
+}
+func (UnimplementedAuthSvcServer) GetOauth2Config(context.Context, *GetOauth2ConfigRequest) (*GetOauth2ConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOauth2Config not implemented")
 }
 func (UnimplementedAuthSvcServer) mustEmbedUnimplementedAuthSvcServer() {}
 
@@ -260,6 +275,24 @@ func _AuthSvc_ListAuth_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthSvc_GetOauth2Config_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOauth2ConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSvcServer).GetOauth2Config(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthSvc_GetOauth2Config_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSvcServer).GetOauth2Config(ctx, req.(*GetOauth2ConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthSvc_ServiceDesc is the grpc.ServiceDesc for AuthSvc service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -290,6 +323,10 @@ var AuthSvc_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAuth",
 			Handler:    _AuthSvc_ListAuth_Handler,
+		},
+		{
+			MethodName: "GetOauth2Config",
+			Handler:    _AuthSvc_GetOauth2Config_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

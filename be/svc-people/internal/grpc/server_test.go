@@ -69,20 +69,20 @@ func TestTelephoneServer_GetContact(t *testing.T) {
 				})
 				require.NoError(tt, err)
 				fmt.Printf("%v \n", res)
-				res1, err := client.Get(ctx, &peoplepb.GetRequest{Id: res.Id})
+				res1, err := client.Get(ctx, &peoplepb.GetRequest{Id: res.Payload.Id})
 				require.NoError(tt, err)
 				fmt.Printf("%v \n", res1)
 				//
-				res1.Data.FullName = "some full name"
+				res1.Payload.FullName = "some full name"
 				res2, err := client.Update(ctx, &peoplepb.UpdateRequest{
-					Data: res1.Data,
+					Data: res1.Payload,
 				})
 				require.NoError(tt, err)
 				fmt.Printf("%v \n", res2)
-				res3, err := client.Get(ctx, &peoplepb.GetRequest{Id: res.Id})
+				res3, err := client.Get(ctx, &peoplepb.GetRequest{Id: res.Payload.Id})
 				require.NoError(tt, err)
 				fmt.Printf("%v \n", res3)
-				assert.Equal(tt, res3.Data.FullName, "some full name")
+				assert.Equal(tt, res3.Payload.FullName, "some full name")
 
 			},
 		},

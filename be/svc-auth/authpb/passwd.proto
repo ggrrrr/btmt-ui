@@ -42,6 +42,27 @@ service AuthSvc {
       get: "/v1/auth/list";
     };
   };
+  rpc GetOauth2Config(GetOauth2ConfigRequest) returns (GetOauth2ConfigResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/oauth2/config";
+    };
+  };
+}
+
+message GetOauth2ConfigRequest{
+}
+
+message Oauth2ConfigPayload{
+  string endpoint = 1;
+  string client_id = 2;
+  string redirect_uri = 3;
+  string response_type = 4;
+  string scope = 5;
+  string include_granted_scopes = 6;
+}
+
+message GetOauth2ConfigResponse{
+  Oauth2ConfigPayload payload = 1;
 }
 
 message CreateAuthRequest {
@@ -57,9 +78,13 @@ message LoginPasswdRequest {
   string password = 2;
 }
 
-message LoginPasswdResponse {
+message LoginPasswdPayload{
   string email = 1;
   string token = 2;
+}
+
+message LoginPasswdResponse {
+  LoginPasswdPayload payload = 1;
 }
 
 message UpdatePasswdRequest {
@@ -67,8 +92,8 @@ message UpdatePasswdRequest {
   string password = 2;
   string new_password = 3;
 }
-message UpdatePasswdResponse {}
 
+message UpdatePasswdResponse {}
 message ValidateTokenRequest {}
 message ValidateTokenResponse {}
 
@@ -80,6 +105,5 @@ message LoginOauth2Request {
 }
 
 message LoginOauth2Response {
-  string email = 1;
-  string token = 2;
+  LoginPasswdPayload payload = 1;
 }

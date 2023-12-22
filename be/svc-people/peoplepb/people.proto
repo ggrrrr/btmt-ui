@@ -43,10 +43,13 @@ service PeopleSvc {
 message PinParseRequest {
   string pin = 1;
 }
-
-message PinParseResponse {
+message PinParsePayload {
   Dob dob = 1;
   string gender = 2;
+}
+
+message PinParseResponse {
+  PinParsePayload payload = 1;
 }
 
 
@@ -54,8 +57,12 @@ message SaveRequest{
   Person data = 1;
 }
 
-message SaveResponse{
+message SavePayload {
   string id = 1;
+}
+
+message SaveResponse{
+  SavePayload payload = 1;
 }
 
 message UpdateRequest{
@@ -82,7 +89,7 @@ message GetRequest{
 }
 
 message GetResponse{
-  Person data = 1;
+  Person payload = 1;
 }
 
 message Dob {

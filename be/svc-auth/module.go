@@ -47,7 +47,7 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 	if awsCfg == pgCfg {
 		logger.Warn().Msg("in memory repo")
 		pass, _ := app.HashPassword("asdasd")
-		repo = mem.New()
+		repo, _ = mem.New()
 		asdUser := ddd.AuthPasswd{
 			Email:       "asd@asd",
 			Status:      ddd.StatusEnabled,

@@ -19,8 +19,10 @@ func (s *server) LoginPasswd(ctx context.Context, req *authpb.LoginPasswdRequest
 		return nil, app.ToGrpcError(err)
 	}
 	return &authpb.LoginPasswdResponse{
-		Email: req.Email,
-		Token: string(res.Payload()),
+		Payload: &authpb.LoginPasswdPayload{
+			Email: req.Email,
+			Token: string(res.Payload()),
+		},
 	}, nil
 }
 
@@ -49,4 +51,13 @@ func (s *server) ValidateToken(ctx context.Context, _ *authpb.ValidateTokenReque
 func (s *server) LoginOauth2(ctx context.Context, _ *authpb.LoginOauth2Request) (*authpb.LoginOauth2Response, error) {
 	logger.ErrorCtx(ctx, fmt.Errorf("ErrTeepot")).Msg("LoginOauth2")
 	return nil, app.ToGrpcError(app.ErrTeepot)
+}
+
+func (s *server) GetOauth2Config(ctx context.Context, _ *authpb.GetOauth2ConfigRequest) (*authpb.GetOauth2ConfigResponse, error) {
+	logger.ErrorCtx(ctx, fmt.Errorf("ErrTeepot")).Msg("GetOauth2Config")
+	out := authpb.GetOauth2ConfigResponse{
+		Payload: &authpb.Oauth2ConfigPayload{},
+	}
+	return &out, app.ToGrpcError(app.ErrTeepot)
+
 }

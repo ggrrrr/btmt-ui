@@ -134,6 +134,28 @@
         ]
       }
     },
+    "/v1/auth/oauth2/config": {
+      "get": {
+        "operationId": "AuthSvc_GetOauth2Config",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbGetOauth2ConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
     "/v1/auth/update/passwd": {
       "get": {
         "operationId": "AuthSvc_UpdatePasswd",
@@ -216,6 +238,14 @@
     "authpbCreateAuthResponse": {
       "type": "object"
     },
+    "authpbGetOauth2ConfigResponse": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "$ref": "#/definitions/authpbOauth2ConfigPayload"
+        }
+      }
+    },
     "authpbListAuthResponse": {
       "type": "object"
     },
@@ -237,6 +267,14 @@
       }
     },
     "authpbLoginOauth2Response": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "$ref": "#/definitions/authpbLoginPasswdPayload"
+        }
+      }
+    },
+    "authpbLoginPasswdPayload": {
       "type": "object",
       "properties": {
         "email": {
@@ -261,10 +299,30 @@
     "authpbLoginPasswdResponse": {
       "type": "object",
       "properties": {
-        "email": {
+        "payload": {
+          "$ref": "#/definitions/authpbLoginPasswdPayload"
+        }
+      }
+    },
+    "authpbOauth2ConfigPayload": {
+      "type": "object",
+      "properties": {
+        "endpoint": {
           "type": "string"
         },
-        "token": {
+        "clientId": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "responseType": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "includeGrantedScopes": {
           "type": "string"
         }
       }

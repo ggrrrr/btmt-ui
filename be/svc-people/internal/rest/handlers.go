@@ -97,7 +97,7 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 		web.SendError(w, err)
 		return
 	}
-	web.SendPayload(w, "ok", peoplepb.SaveResponse{Id: p.Id})
+	web.SendPayload(w, "ok", peoplepb.SavePayload{Id: p.Id})
 }
 
 func (s *server) Update(w http.ResponseWriter, r *http.Request) {

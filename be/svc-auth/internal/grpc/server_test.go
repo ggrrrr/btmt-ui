@@ -12,7 +12,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -42,7 +42,7 @@ func TestServer(t *testing.T) {
 	ctx := context.Background()
 	ctxAdmin := roles.CtxWithAuthInfo(ctx, roles.CreateAdminUser("admin", roles.Device{}))
 
-	store, err := dynamodb.New(cfg())
+	store, err := mem.New()
 	require.NoError(t, err)
 
 	testApp, err := app.New(app.WithAuthRepo(store), app.WithTokenSigner(token.NewSignerMock()))
@@ -66,6 +66,13 @@ func TestServer(t *testing.T) {
 					Email:    "asd@asd",
 					Password: "asdasdasd",
 				})
+				assert.NoError(tt, err)
+			},
+		},
+		{
+			test: "login cfg",
+			testFunc: func(tt *testing.T) {
+				_, err = client.GetOauth2Config(ctx, &authpb.GetOauth2ConfigRequest{})
 				assert.NoError(tt, err)
 			},
 		},

@@ -59,7 +59,7 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		web.SendError(w, err)
 		return
 	}
-	out := authpb.LoginPasswdResponse{
+	out := authpb.LoginPasswdPayload{
 		Email: req.Email,
 		Token: string(res.Payload()),
 	}

@@ -206,7 +206,7 @@
     "peoplepbGetResponse": {
       "type": "object",
       "properties": {
-        "data": {
+        "payload": {
           "$ref": "#/definitions/peoplepbPerson"
         }
       }
@@ -305,6 +305,17 @@
         }
       }
     },
+    "peoplepbPinParsePayload": {
+      "type": "object",
+      "properties": {
+        "dob": {
+          "$ref": "#/definitions/peoplepbDob"
+        },
+        "gender": {
+          "type": "string"
+        }
+      }
+    },
     "peoplepbPinParseRequest": {
       "type": "object",
       "properties": {
@@ -316,10 +327,15 @@
     "peoplepbPinParseResponse": {
       "type": "object",
       "properties": {
-        "dob": {
-          "$ref": "#/definitions/peoplepbDob"
-        },
-        "gender": {
+        "payload": {
+          "$ref": "#/definitions/peoplepbPinParsePayload"
+        }
+      }
+    },
+    "peoplepbSavePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
         }
       }
@@ -335,8 +351,8 @@
     "peoplepbSaveResponse": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
+        "payload": {
+          "$ref": "#/definitions/peoplepbSavePayload"
         }
       }
     },

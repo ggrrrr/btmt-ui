@@ -18,12 +18,12 @@ type (
 
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
 
-func New() *repo {
+func New() (*repo, error) {
 	logger.Warn().Msg("InMemmory auth repo")
 	return &repo{
 		mx: &sync.Mutex{},
 		db: map[string]*ddd.AuthPasswd{},
-	}
+	}, nil
 }
 
 func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) {

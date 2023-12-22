@@ -30,7 +30,9 @@ func (s *server) Save(ctx context.Context, req *peoplepb.SaveRequest) (*peoplepb
 		return nil, err
 	}
 	return &peoplepb.SaveResponse{
-		Id: person.Id,
+		Payload: &peoplepb.SavePayload{
+			Id: person.Id,
+		},
 	}, nil
 }
 
@@ -41,7 +43,7 @@ func (s *server) Get(ctx context.Context, req *peoplepb.GetRequest) (*peoplepb.G
 		return nil, err
 	}
 	return &peoplepb.GetResponse{
-		Data: peoplepb.FromPerson(res),
+		Payload: peoplepb.FromPerson(res),
 	}, nil
 }
 
