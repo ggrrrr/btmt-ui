@@ -57,6 +57,21 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
 	return nil
 }
 
+func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	old, ok := r.db[auth.Email]
+	if !ok {
+		return nil
+	}
+	old.Status = auth.Status
+	old.SystemRoles = auth.SystemRoles
+
+	// r.db[auth.Email] = old
+	logger.Warn().Str("email", auth.Email).Msg("Save")
+	return nil
+}
+
 func (r *repo) UpdatePassword(ctx context.Context, email string, password string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()

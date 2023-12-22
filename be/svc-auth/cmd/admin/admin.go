@@ -93,7 +93,7 @@ func runUpdateEmail() error {
 	if err != nil {
 		return err
 	}
-	err = app.UpdatePasswd(ctx, newEmail, newPasswd, newPasswd)
+	err = app.ChangePasswd(ctx, newEmail, newPasswd, newPasswd)
 	return err
 }
 

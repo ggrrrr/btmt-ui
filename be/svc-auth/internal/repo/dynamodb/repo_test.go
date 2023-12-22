@@ -75,4 +75,18 @@ func TestSave(t *testing.T) {
 	assert.Equal(t, 1, len(items), "expected email")
 	assert.Equal(t, ddd.StatusEnabled, items[0].Status, "expected email")
 
+	authUpdate := ddd.AuthPasswd{
+		Email:       auth1.Email,
+		Status:      ddd.StatusPending,
+		SystemRoles: []string{"noadmin", "shit"},
+	}
+
+	err = r.Update(ctx, authUpdate)
+	assert.NoError(t, err)
+	items, err = r.Get(ctx, email1)
+	assert.NoError(t, err, err)
+	assert.Equal(t, 1, len(items), "expected email")
+	assert.Equal(t, authUpdate.Status, items[0].Status, "expected email")
+	assert.Equal(t, authUpdate.SystemRoles, items[0].SystemRoles, "expected email")
+
 }

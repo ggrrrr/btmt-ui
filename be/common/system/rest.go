@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -20,10 +19,10 @@ import (
 
 func (s *System) httpMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasPrefix(r.RequestURI, "/rest") {
-			next.ServeHTTP(w, r)
-			return
-		}
+		// if !strings.HasPrefix(r.RequestURI, "/rest") {
+		// 	next.ServeHTTP(w, r)
+		// 	return
+		// }
 
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Authorization")

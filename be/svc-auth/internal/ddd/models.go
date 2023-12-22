@@ -31,6 +31,7 @@ type AuthPasswdRepo interface {
 	List(ctx context.Context) ([]AuthPasswd, error)
 	UpdatePassword(ctx context.Context, email, password string) error
 	UpdateStatus(ctx context.Context, email string, status StatusType) error
+	Update(ctx context.Context, auth AuthPasswd) error
 }
 
 func (a *AuthPasswd) ToAuthInfo() roles.AuthInfo {

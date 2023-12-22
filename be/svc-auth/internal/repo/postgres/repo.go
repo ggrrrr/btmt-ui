@@ -148,6 +148,22 @@ func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
 	return out, nil
 }
 
+func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
+	sql := r.table(`
+	update %s set  "status" = $1, "system_roles" = $2
+	where email = $3
+	`)
+	logger.DebugCtx(ctx).
+		Str("email", auth.Email).
+		Str("sql", sql).Msg("Update")
+	_, err := r.db.ExecContext(ctx, sql,
+		auth.Status,
+		pq.Array(auth.SystemRoles),
+		auth.Email,
+	)
+	return err
+}
+
 func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
 	sql := r.table(`
 	insert into %s ("email", "passwd", "status", "system_roles")
@@ -167,7 +183,7 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
 
 func (r *repo) UpdatePassword(ctx context.Context, email string, password string) error {
 	sql := r.table(`
-	update  %s_auth set "passwd" = $1
+	update  %s set "passwd" = $1
 	where email = $2
 	`)
 	logger.DebugCtx(ctx).

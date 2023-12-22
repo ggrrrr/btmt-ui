@@ -58,9 +58,9 @@ func (s *server) List(ctx context.Context, req *peoplepb.ListRequest) (*peoplepb
 		logger.ErrorCtx(ctx, err).Any("req", &req).Msg("List")
 		return &out, nil
 	}
-	out.List = []*peoplepb.Person{}
+	out.Payload = []*peoplepb.Person{}
 	for _, p := range list {
-		out.List = append(out.List, peoplepb.FromPerson(&p))
+		out.Payload = append(out.Payload, peoplepb.FromPerson(&p))
 	}
 	return &out, nil
 }

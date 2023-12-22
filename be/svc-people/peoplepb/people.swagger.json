@@ -225,7 +225,7 @@
     "peoplepbListResponse": {
       "type": "object",
       "properties": {
-        "list": {
+        "payload": {
           "type": "array",
           "items": {
             "type": "object",
@@ -251,7 +251,7 @@
         "id": {
           "type": "string"
         },
-        "idNumbers": {
+        "id_numbers": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -263,7 +263,7 @@
         "name": {
           "type": "string"
         },
-        "fullName": {
+        "full_name": {
           "type": "string"
         },
         "dob": {
@@ -296,7 +296,7 @@
             "type": "string"
           }
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },

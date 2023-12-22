@@ -21,7 +21,8 @@ type (
 	App interface {
 		LoginPasswd(ctx context.Context, email, passwd string) (app.Result[AuthToken], error)
 
-		UpdatePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error
+		ChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error
+		UpdateAuth(ctx context.Context, email ddd.AuthPasswd) error
 		Validate(ctx context.Context) error
 		ListAuth(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error)
 		CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error

@@ -31,6 +31,8 @@ func (s *server) Router() chi.Router {
 	router.Post("/v1/auth/login/passwd", s.LoginPasswd)
 	router.Get("/v1/auth/validate", s.Validate)
 	router.Post("/v1/auth/validate", s.Validate)
+	router.Post("/v1/auth/list", s.ListAuth)
+
 	return router
 }
 
@@ -75,4 +77,44 @@ func (s *server) Validate(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.InfoCtx(r.Context()).Msg("Validate")
 	web.SendPayload(w, "ok", nil)
+}
+
+func (s *server) ListAuth(w http.ResponseWriter, r *http.Request) {
+	list, err := s.app.ListAuth(r.Context())
+	if err != nil {
+		logger.ErrorCtx(r.Context(), err).Msg("ListAuth")
+		web.SendError(w, err)
+		return
+	}
+	out := []authpb.ListAuthPayload{}
+	for _, a := range list.Payload() {
+		out = append(out, authpb.ListAuthPayload{
+			Email:       a.Email,
+			Status:      string(a.Status),
+			SystemRoles: a.SystemRoles,
+			CreatedAt:   a.CreatedAt.GoString(),
+		})
+	}
+	logger.InfoCtx(r.Context()).Msg("ListAuth")
+	web.SendPayload(w, "ok", out)
+}
+
+func (s *server) CreateUser(w http.ResponseWriter, r *http.Request) {
+	list, err := s.app.ListAuth(r.Context())
+	if err != nil {
+		logger.ErrorCtx(r.Context(), err).Msg("ListAuth")
+		web.SendError(w, err)
+		return
+	}
+	out := []authpb.ListAuthPayload{}
+	for _, a := range list.Payload() {
+		out = append(out, authpb.ListAuthPayload{
+			Email:       a.Email,
+			Status:      string(a.Status),
+			SystemRoles: a.SystemRoles,
+			CreatedAt:   a.CreatedAt.GoString(),
+		})
+	}
+	logger.InfoCtx(r.Context()).Msg("ListAuth")
+	web.SendPayload(w, "ok", out)
 }

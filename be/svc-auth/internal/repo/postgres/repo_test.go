@@ -7,6 +7,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,7 +27,7 @@ func TestSave(t *testing.T) {
 	conn, err := Connect(cfg())
 	require.NoError(t, err)
 
-	_, err = conn.db.Exec(conn.table(`delete from %s_auth`))
+	_, err = conn.db.Exec(conn.table(`delete from %s`))
 	require.NoError(t, err)
 
 	ts := time.Now()
@@ -62,7 +63,7 @@ func TestUpdate(t *testing.T) {
 	conn, err := Connect(cfg())
 	require.NoError(t, err)
 
-	_, err = conn.db.Exec(conn.table(`delete from %s_auth`))
+	_, err = conn.db.Exec(conn.table(`delete from %s`))
 	require.NoError(t, err)
 
 	ts := time.Now()
@@ -90,5 +91,18 @@ func TestUpdate(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, "asdqweasdqwe", rows[0].Passwd)
+
+	updateData := ddd.AuthPasswd{
+		Email:       testData.Email,
+		Status:      ddd.StatusPending,
+		SystemRoles: []string{"notadmin", "other"},
+	}
+	err = conn.Update(ctx, updateData)
+	require.NoError(t, err)
+	rows, err = conn.Get(ctx, testData.Email)
+	require.NoError(t, err)
+	assert.True(t, len(rows) == 1)
+	assert.Equal(t, updateData.Status, rows[0].Status)
+	assert.Equal(t, updateData.SystemRoles, rows[0].SystemRoles)
 
 }

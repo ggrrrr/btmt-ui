@@ -31,7 +31,7 @@ services:
     container_name: people
     image: local/be/people:latest
     labels:
-      - "traefik.http.routers.people.rule=PathPrefix(`/rest/v1/people`)"
+      - "traefik.http.routers.people.rule=PathPrefix(`/v1/people`)"
     ports:
       - 8020:8020
     depends_on:
@@ -47,7 +47,7 @@ services:
     container_name: auth
     image: local/be/auth:latest
     labels:
-      - "traefik.http.routers.auth.rule=PathPrefix(`/rest/v1/auth`)"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/v1/auth`)"
     ports:
       - 8010:8010
     depends_on:

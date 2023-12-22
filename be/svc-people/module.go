@@ -62,7 +62,7 @@ func Root(ctx context.Context, s *system.System) error {
 	grpc.RegisterServer(a, s.RPC())
 
 	logger.Info().Msg("starting...")
-	if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8081"); err != nil {
+	if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8021"); err != nil {
 		return err
 	}
 	return nil

@@ -16,7 +16,11 @@ build_web:
 		--tag "${DOCKER_REPO}/ui/web:${GIT_HASH}" \
 		./ui/web
 
-build_be: build_svc_auth tag_svc_auth build_svc_people tag_svc_people
+build_tag_be: build_tag_auth build_tag_people
+
+build_tag_auth: build_svc_auth tag_svc_auth
+
+build_tag_people: build_svc_people tag_svc_people
 
 tag_web:
 	docker tag "${DOCKER_REPO}/ui/web:${GIT_HASH}" "${DOCKER_REPO}/ui/web:latest"

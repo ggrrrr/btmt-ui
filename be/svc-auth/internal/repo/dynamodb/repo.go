@@ -187,6 +187,38 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 	return err
 }
 
+func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
+	logger.DebugCtx(ctx).Str("email", auth.Email).Msg("Update")
+	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":status": {
+				S: aws.String(string(auth.Status)),
+			},
+			":system_roles": {
+				SS: aws.StringSlice(auth.SystemRoles),
+			},
+		},
+		TableName: aws.String(r.table()),
+		Key: map[string]*dynamodb.AttributeValue{
+			"email": {
+				S: aws.String(auth.Email),
+			},
+		},
+		UpdateExpression: aws.String("set #status = :status, #system_roles = :system_roles"),
+		ExpressionAttributeNames: map[string]*string{
+			"#status":       aws.String("status"),
+			"#system_roles": aws.String("system_roles"),
+		},
+	}
+	res, err := r.svc.UpdateItem(input)
+	if err != nil {
+		return err
+	}
+	logger.DebugCtx(ctx).
+		Any("res", res).
+		Msg("Update")
+	return nil
+}
 func (r *repo) errorIsNotFound(err error) {
 	if _, ok := err.(*dynamodb.ResourceNotFoundException); ok {
 		r.createTableAuth()

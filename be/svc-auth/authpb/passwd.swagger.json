@@ -136,12 +136,12 @@
     },
     "/v1/auth/oauth2/config": {
       "get": {
-        "operationId": "AuthSvc_GetOauth2Config",
+        "operationId": "AuthSvc_Oauth2Config",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbGetOauth2ConfigResponse"
+              "$ref": "#/definitions/authpbOauth2ConfigResponse"
             }
           },
           "default": {
@@ -156,14 +156,60 @@
         ]
       }
     },
-    "/v1/auth/update/passwd": {
+    "/v1/auth/update": {
       "get": {
-        "operationId": "AuthSvc_UpdatePasswd",
+        "operationId": "AuthSvc_UpdateAuth",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbUpdatePasswdResponse"
+              "$ref": "#/definitions/authpbUpdateAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "system_roles",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/update/passwd": {
+      "get": {
+        "operationId": "AuthSvc_ChangePasswd",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbChangePasswdResponse"
             }
           },
           "default": {
@@ -187,7 +233,7 @@
             "type": "string"
           },
           {
-            "name": "newPassword",
+            "name": "new_password",
             "in": "query",
             "required": false,
             "type": "string"
@@ -232,22 +278,63 @@
     }
   },
   "definitions": {
-    "authpbCreateAuthRequest": {
+    "authpbChangePasswdResponse": {
       "type": "object"
+    },
+    "authpbCreateAuthRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "system_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": "string"
+        }
+      }
     },
     "authpbCreateAuthResponse": {
       "type": "object"
     },
-    "authpbGetOauth2ConfigResponse": {
+    "authpbListAuthPayload": {
       "type": "object",
       "properties": {
-        "payload": {
-          "$ref": "#/definitions/authpbOauth2ConfigPayload"
+        "email": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "system_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string"
         }
       }
     },
     "authpbListAuthResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/authpbListAuthPayload"
+          }
+        }
+      }
     },
     "authpbLoginOauth2Request": {
       "type": "object",
@@ -310,24 +397,32 @@
         "endpoint": {
           "type": "string"
         },
-        "clientId": {
+        "client_id": {
           "type": "string"
         },
-        "redirectUri": {
+        "redirect_uri": {
           "type": "string"
         },
-        "responseType": {
+        "response_type": {
           "type": "string"
         },
         "scope": {
           "type": "string"
         },
-        "includeGrantedScopes": {
+        "include_granted_scopes": {
           "type": "string"
         }
       }
     },
-    "authpbUpdatePasswdResponse": {
+    "authpbOauth2ConfigResponse": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "$ref": "#/definitions/authpbOauth2ConfigPayload"
+        }
+      }
+    },
+    "authpbUpdateAuthResponse": {
       "type": "object"
     },
     "authpbValidateTokenRequest": {

@@ -33,9 +33,9 @@ func (a *application) CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error
 	return err
 }
 
-func (a *application) UpdatePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
+func (a *application) ChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authpb.AuthSvc_UpdatePasswd_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authpb.AuthSvc_ChangePasswd_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	rec, err := a.findEmail(ctx, email)
@@ -62,6 +62,24 @@ func (a *application) UpdatePasswd(ctx context.Context, email, oldPasswd, newPas
 		return err
 	}
 	return err
+}
+
+func (ap *application) UpdateAuth(ctx context.Context, auth ddd.AuthPasswd) error {
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	if err := ap.appPolices.CanDo(authpb.AuthSvc_UpdateAuth_FullMethodName, authInfo); err != nil {
+		return err
+	}
+	list, err := ap.authRepo.Get(ctx, auth.Email)
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return app.ErrorBadRequest("email not found", nil)
+	}
+	update := list[0]
+	update.Status = auth.Status
+	update.SystemRoles = auth.SystemRoles
+	return ap.authRepo.Update(ctx, update)
 }
 
 func (ap *application) ListAuth(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {

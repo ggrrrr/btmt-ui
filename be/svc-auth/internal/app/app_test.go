@@ -239,10 +239,10 @@ func TestUpdate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, jwt.Payload(), AuthToken("ok"))
 
-	err = testApp.UpdatePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
+	err = testApp.ChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
 	assert.ErrorIs(t, err, ErrAuthBadPassword)
 
-	err = testApp.UpdatePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
+	err = testApp.ChangePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
 	assert.NoError(t, err)
 
 	jwt, err = testApp.LoginPasswd(ctx, authItem.Email, "newpass")

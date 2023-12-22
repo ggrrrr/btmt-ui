@@ -8,6 +8,16 @@ import "google/api/annotations.proto";
 // import "protoc-gen-openapiv2/options/annotations.proto";
 
 service AuthSvc {
+  rpc ListAuth(ListAuthRequest) returns (ListAuthResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/list";
+    };
+  };
+  rpc UpdateAuth(UpdateAuthRequest) returns (UpdateAuthResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/update";
+    };
+  };
   rpc CreateAuth(CreateAuthRequest) returns (CreateAuthResponse) {
     option (google.api.http) = {
       post: "/v1/auth/create";
@@ -20,58 +30,69 @@ service AuthSvc {
       body: "*";
     };
   };
-  rpc LoginOauth2(LoginOauth2Request) returns (LoginOauth2Response) {
-    option (google.api.http) = {
-      post: "/v1/auth/login/oauth2";
-      body: "*";
-    };
-  };
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {
     option (google.api.http) = {
       post: "/v1/auth/validate";
       body: "*";
     };
   };
-  rpc UpdatePasswd(UpdatePasswdRequest) returns (UpdatePasswdResponse) {
+  rpc ChangePasswd(ChangePasswdRequest) returns (ChangePasswdResponse) {
     option (google.api.http) = {
-      get: "/v1/auth/update/passwd";
+      post: "/v1/auth/update/passwd";
     };
   };
-  rpc ListAuth(ListAuthRequest) returns (ListAuthResponse) {
+  rpc LoginOauth2(LoginOauth2Request) returns (LoginOauth2Response) {
     option (google.api.http) = {
-      get: "/v1/auth/list";
+      post: "/v1/auth/login/oauth2";
+      body: "*";
     };
   };
-  rpc GetOauth2Config(GetOauth2ConfigRequest) returns (GetOauth2ConfigResponse) {
+  rpc Oauth2Config(Oauth2ConfigRequest) returns (Oauth2ConfigResponse) {
     option (google.api.http) = {
       get: "/v1/auth/oauth2/config";
     };
   };
 }
-
-message GetOauth2ConfigRequest{
+message UpdateAuthRequest{
+  string email = 1;
+  string status = 2;
+  repeated string system_roles = 3 [json_name = "system_roles"];
 }
+message UpdateAuthResponse{}
 
+message Oauth2ConfigRequest{}
 message Oauth2ConfigPayload{
   string endpoint = 1;
-  string client_id = 2;
-  string redirect_uri = 3;
-  string response_type = 4;
+  string client_id = 2 [json_name = "client_id"];
+  string redirect_uri = 3 [json_name = "redirect_uri"];
+  string response_type = 4 [json_name = "response_type"];
   string scope = 5;
-  string include_granted_scopes = 6;
+  string include_granted_scopes = 6 [json_name = "include_granted_scopes"];
 }
 
-message GetOauth2ConfigResponse{
+message Oauth2ConfigResponse{
   Oauth2ConfigPayload payload = 1;
 }
-
 message CreateAuthRequest {
-}
-message CreateAuthResponse {
+  string email = 1;
+  string status = 2;
+  repeated string system_roles = 3 [json_name = "system_roles"];
+  string password = 4;
 }
 
+message CreateAuthResponse {}
 message ListAuthRequest {}
-message ListAuthResponse {}
+
+message ListAuthPayload {
+  string email = 1;
+  string status = 2;
+  repeated string system_roles = 3 [json_name = "system_roles"];
+  string created_at = 4 [json_name = "created_at"];
+}
+
+message ListAuthResponse {
+  repeated ListAuthPayload payload = 1;
+}
 
 message LoginPasswdRequest {
   string email = 1;
@@ -87,13 +108,13 @@ message LoginPasswdResponse {
   LoginPasswdPayload payload = 1;
 }
 
-message UpdatePasswdRequest {
+message ChangePasswdRequest {
   string email = 1;
   string password = 2;
-  string new_password = 3;
+  string new_password = 3 [json_name = "new_password"];
 }
 
-message UpdatePasswdResponse {}
+message ChangePasswdResponse {}
 message ValidateTokenRequest {}
 message ValidateTokenResponse {}
 

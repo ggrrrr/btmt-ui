@@ -81,7 +81,7 @@ message ListRequest{
 }
 
 message ListResponse{
-  repeated Person list = 1;
+  repeated Person payload = 1;
 }
 
 message GetRequest{
@@ -100,16 +100,16 @@ message Dob {
 
 message Person{
   string id = 1;
-  map<string,string> id_numbers = 2;
-  string login_email = 3;
+  map<string,string> id_numbers = 2 [json_name = "id_numbers"];
+  string login_email = 3 [json_name = "login_email"];
   string name = 4;
-  string full_name = 5;
+  string full_name = 5 [json_name = "full_name"];
   Dob dob = 6;
   string gender = 7;
   map<string,string> emails = 8;
   map<string,string> phones = 9;
   repeated string labels = 10;
   map<string,string> attr = 11;
-  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp created_at = 12 [json_name = "created_at"];
   string age = 13;
 }
