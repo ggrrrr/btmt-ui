@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
@@ -28,10 +29,11 @@ func (s *server) Router() chi.Router {
 	router := chi.NewRouter()
 	router.Post("/v1/noJson400", noJson400)
 	router.Post("/v1/json500", json500)
+
 	router.Post("/v1/auth/login/passwd", s.LoginPasswd)
-	router.Get("/v1/auth/validate", s.Validate)
-	router.Post("/v1/auth/validate", s.Validate)
-	router.Post("/v1/auth/list", s.ListAuth)
+	router.Get("/v1/auth/validate", s.TokenValidate)
+	router.Post("/v1/auth/validate", s.TokenValidate)
+	router.Post("/v1/auth/user/list", s.UserList)
 
 	return router
 }
@@ -61,17 +63,17 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		web.SendError(w, err)
 		return
 	}
-	out := authpb.LoginPasswdPayload{
+	out := authpb.LoginTokenPayload{
 		Email: req.Email,
 		Token: string(res.Payload()),
 	}
 	web.SendPayload(w, "ok", &out)
 }
 
-func (s *server) Validate(w http.ResponseWriter, r *http.Request) {
-	err := s.app.Validate(r.Context())
+func (s *server) TokenValidate(w http.ResponseWriter, r *http.Request) {
+	err := s.app.TokenValidate(r.Context())
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("Validate")
+		logger.ErrorCtx(r.Context(), err).Msg("TokenValidate")
 		web.SendError(w, err)
 		return
 	}
@@ -79,42 +81,22 @@ func (s *server) Validate(w http.ResponseWriter, r *http.Request) {
 	web.SendPayload(w, "ok", nil)
 }
 
-func (s *server) ListAuth(w http.ResponseWriter, r *http.Request) {
-	list, err := s.app.ListAuth(r.Context())
+func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
+	list, err := s.app.UserList(r.Context())
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("ListAuth")
+		logger.ErrorCtx(r.Context(), err).Msg("UserList")
 		web.SendError(w, err)
 		return
 	}
-	out := []authpb.ListAuthPayload{}
+	out := []authpb.UserListPayload{}
 	for _, a := range list.Payload() {
-		out = append(out, authpb.ListAuthPayload{
+		out = append(out, authpb.UserListPayload{
 			Email:       a.Email,
 			Status:      string(a.Status),
 			SystemRoles: a.SystemRoles,
-			CreatedAt:   a.CreatedAt.GoString(),
+			CreatedAt:   timestamppb.New(a.CreatedAt),
 		})
 	}
-	logger.InfoCtx(r.Context()).Msg("ListAuth")
-	web.SendPayload(w, "ok", out)
-}
-
-func (s *server) CreateUser(w http.ResponseWriter, r *http.Request) {
-	list, err := s.app.ListAuth(r.Context())
-	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("ListAuth")
-		web.SendError(w, err)
-		return
-	}
-	out := []authpb.ListAuthPayload{}
-	for _, a := range list.Payload() {
-		out = append(out, authpb.ListAuthPayload{
-			Email:       a.Email,
-			Status:      string(a.Status),
-			SystemRoles: a.SystemRoles,
-			CreatedAt:   a.CreatedAt.GoString(),
-		})
-	}
-	logger.InfoCtx(r.Context()).Msg("ListAuth")
+	logger.InfoCtx(r.Context()).Msg("UserList")
 	web.SendPayload(w, "ok", out)
 }

@@ -76,11 +76,11 @@ func TestLogin(t *testing.T) {
 
 	// if this fail it will attempt to create table.
 	// We will ignore first error coz it will.
-	_ = testApp.CreateAuth(ctx, authItem)
-	err = testApp.CreateAuth(ctx, authItem)
+	_ = testApp.UserCreate(ctx, authItem)
+	err = testApp.UserCreate(ctx, authItem)
 	require.NoError(t, err)
 
-	err = testApp.CreateAuth(ctx, authItemLocked)
+	err = testApp.UserCreate(ctx, authItemLocked)
 	require.NoError(t, err)
 
 	tests := []testCase{
@@ -155,18 +155,18 @@ func TestValidate(t *testing.T) {
 
 	// if this fail it will attempt to create table.
 	// We will ignore first error coz it will.
-	_ = testApp.CreateAuth(ctx, authItem)
-	err = testApp.CreateAuth(ctx, authItem)
+	_ = testApp.UserCreate(ctx, authItem)
+	err = testApp.UserCreate(ctx, authItem)
 	require.NoError(t, err)
 
-	err = testApp.CreateAuth(ctx, authItemLocked)
+	err = testApp.UserCreate(ctx, authItemLocked)
 	require.NoError(t, err)
 
 	tests := []testCase{
 		{
 			test: "Validate empty auth info",
 			prep: func(tt *testing.T) {
-				err := testApp.Validate(ctxNoEmail)
+				err := testApp.TokenValidate(ctxNoEmail)
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
 			},
 		},
@@ -177,7 +177,7 @@ func TestValidate(t *testing.T) {
 					User: "asdasdasd",
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
-				err := testApp.Validate(testCtx)
+				err := testApp.TokenValidate(testCtx)
 				assert.ErrorIs(tt, err, ErrAuthEmailNotFound)
 			},
 		},
@@ -188,7 +188,7 @@ func TestValidate(t *testing.T) {
 					User: authItemLocked.Email,
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
-				err := testApp.Validate(testCtx)
+				err := testApp.TokenValidate(testCtx)
 				assert.ErrorIs(tt, err, ErrAuthEmailLocked)
 			},
 		},
@@ -199,7 +199,7 @@ func TestValidate(t *testing.T) {
 					User: authItem.Email,
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
-				err := testApp.Validate(testCtx)
+				err := testApp.TokenValidate(testCtx)
 				assert.NoError(tt, err)
 			},
 		},
@@ -231,18 +231,18 @@ func TestUpdate(t *testing.T) {
 		SystemRoles: []string{"admin"},
 	}
 
-	_ = testApp.CreateAuth(ctx, authItem)
-	err = testApp.CreateAuth(ctx, authItem)
+	_ = testApp.UserCreate(ctx, authItem)
+	err = testApp.UserCreate(ctx, authItem)
 	require.NoError(t, err)
 
 	jwt, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
 	assert.NoError(t, err)
 	assert.Equal(t, jwt.Payload(), AuthToken("ok"))
 
-	err = testApp.ChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
+	err = testApp.UserChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
 	assert.ErrorIs(t, err, ErrAuthBadPassword)
 
-	err = testApp.ChangePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
+	err = testApp.UserChangePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
 	assert.NoError(t, err)
 
 	jwt, err = testApp.LoginPasswd(ctx, authItem.Email, "newpass")

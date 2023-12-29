@@ -16,60 +16,6 @@
     "application/json"
   ],
   "paths": {
-    "/v1/auth/create": {
-      "post": {
-        "operationId": "AuthSvc_CreateAuth",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/authpbCreateAuthResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/authpbCreateAuthRequest"
-            }
-          }
-        ],
-        "tags": [
-          "AuthSvc"
-        ]
-      }
-    },
-    "/v1/auth/list": {
-      "get": {
-        "operationId": "AuthSvc_ListAuth",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/authpbListAuthResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "AuthSvc"
-        ]
-      }
-    },
     "/v1/auth/login/oauth2": {
       "post": {
         "operationId": "AuthSvc_LoginOauth2",
@@ -156,14 +102,142 @@
         ]
       }
     },
-    "/v1/auth/update": {
-      "get": {
-        "operationId": "AuthSvc_UpdateAuth",
+    "/v1/auth/token/validate": {
+      "post": {
+        "operationId": "AuthSvc_TokenValidate",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbUpdateAuthResponse"
+              "$ref": "#/definitions/authpbTokenValidateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbTokenValidateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/user/change/passwd": {
+      "post": {
+        "operationId": "AuthSvc_UserChangePasswd",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbUserChangePasswdResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "new_password",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/user/create": {
+      "post": {
+        "operationId": "AuthSvc_UserCreate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbUserCreateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbUserCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/user/list": {
+      "get": {
+        "operationId": "AuthSvc_UserList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbUserListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthSvc"
+        ]
+      }
+    },
+    "/v1/auth/user/update": {
+      "get": {
+        "operationId": "AuthSvc_UserUpdate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authpbUserUpdateResponse"
             }
           },
           "default": {
@@ -201,141 +275,9 @@
           "AuthSvc"
         ]
       }
-    },
-    "/v1/auth/update/passwd": {
-      "get": {
-        "operationId": "AuthSvc_ChangePasswd",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/authpbChangePasswdResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "email",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "new_password",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "AuthSvc"
-        ]
-      }
-    },
-    "/v1/auth/validate": {
-      "post": {
-        "operationId": "AuthSvc_ValidateToken",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/authpbValidateTokenResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/authpbValidateTokenRequest"
-            }
-          }
-        ],
-        "tags": [
-          "AuthSvc"
-        ]
-      }
     }
   },
   "definitions": {
-    "authpbChangePasswdResponse": {
-      "type": "object"
-    },
-    "authpbCreateAuthRequest": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "system_roles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "authpbCreateAuthResponse": {
-      "type": "object"
-    },
-    "authpbListAuthPayload": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "system_roles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string"
-        }
-      }
-    },
-    "authpbListAuthResponse": {
-      "type": "object",
-      "properties": {
-        "payload": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/authpbListAuthPayload"
-          }
-        }
-      }
-    },
     "authpbLoginOauth2Request": {
       "type": "object",
       "properties": {
@@ -357,18 +299,7 @@
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/authpbLoginPasswdPayload"
-        }
-      }
-    },
-    "authpbLoginPasswdPayload": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string"
-        },
-        "token": {
-          "type": "string"
+          "$ref": "#/definitions/authpbLoginTokenPayload"
         }
       }
     },
@@ -387,7 +318,18 @@
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/authpbLoginPasswdPayload"
+          "$ref": "#/definitions/authpbLoginTokenPayload"
+        }
+      }
+    },
+    "authpbLoginTokenPayload": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
         }
       }
     },
@@ -422,13 +364,72 @@
         }
       }
     },
-    "authpbUpdateAuthResponse": {
+    "authpbTokenValidateRequest": {
       "type": "object"
     },
-    "authpbValidateTokenRequest": {
+    "authpbTokenValidateResponse": {
       "type": "object"
     },
-    "authpbValidateTokenResponse": {
+    "authpbUserChangePasswdResponse": {
+      "type": "object"
+    },
+    "authpbUserCreateRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "system_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "authpbUserCreateResponse": {
+      "type": "object"
+    },
+    "authpbUserListPayload": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "system_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "authpbUserListResponse": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/authpbUserListPayload"
+          }
+        }
+      }
+    },
+    "authpbUserUpdateResponse": {
       "type": "object"
     },
     "protobufAny": {

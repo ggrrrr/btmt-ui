@@ -60,7 +60,7 @@ func run() {
 	fmt.Println(resp.Payload.Token)
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", roles.AuthSchemeBeaerer, resp.Payload.Token))
-	_, err = client.ValidateToken(ctx, &authpb.ValidateTokenRequest{})
+	_, err = client.TokenValidate(ctx, &authpb.TokenValidateRequest{})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -22,28 +22,28 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	AuthSvc_ListAuth_FullMethodName      = "/authpb.AuthSvc/ListAuth"
-	AuthSvc_UpdateAuth_FullMethodName    = "/authpb.AuthSvc/UpdateAuth"
-	AuthSvc_CreateAuth_FullMethodName    = "/authpb.AuthSvc/CreateAuth"
-	AuthSvc_LoginPasswd_FullMethodName   = "/authpb.AuthSvc/LoginPasswd"
-	AuthSvc_ValidateToken_FullMethodName = "/authpb.AuthSvc/ValidateToken"
-	AuthSvc_ChangePasswd_FullMethodName  = "/authpb.AuthSvc/ChangePasswd"
-	AuthSvc_LoginOauth2_FullMethodName   = "/authpb.AuthSvc/LoginOauth2"
-	AuthSvc_Oauth2Config_FullMethodName  = "/authpb.AuthSvc/Oauth2Config"
+	AuthSvc_UserCreate_FullMethodName       = "/authpb.AuthSvc/UserCreate"
+	AuthSvc_UserList_FullMethodName         = "/authpb.AuthSvc/UserList"
+	AuthSvc_UserUpdate_FullMethodName       = "/authpb.AuthSvc/UserUpdate"
+	AuthSvc_UserChangePasswd_FullMethodName = "/authpb.AuthSvc/UserChangePasswd"
+	AuthSvc_Oauth2Config_FullMethodName     = "/authpb.AuthSvc/Oauth2Config"
+	AuthSvc_TokenValidate_FullMethodName    = "/authpb.AuthSvc/TokenValidate"
+	AuthSvc_LoginPasswd_FullMethodName      = "/authpb.AuthSvc/LoginPasswd"
+	AuthSvc_LoginOauth2_FullMethodName      = "/authpb.AuthSvc/LoginOauth2"
 )
 
 // AuthSvcClient is the client API for AuthSvc service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthSvcClient interface {
-	ListAuth(ctx context.Context, in *ListAuthRequest, opts ...grpc.CallOption) (*ListAuthResponse, error)
-	UpdateAuth(ctx context.Context, in *UpdateAuthRequest, opts ...grpc.CallOption) (*UpdateAuthResponse, error)
-	CreateAuth(ctx context.Context, in *CreateAuthRequest, opts ...grpc.CallOption) (*CreateAuthResponse, error)
-	LoginPasswd(ctx context.Context, in *LoginPasswdRequest, opts ...grpc.CallOption) (*LoginPasswdResponse, error)
-	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error)
-	ChangePasswd(ctx context.Context, in *ChangePasswdRequest, opts ...grpc.CallOption) (*ChangePasswdResponse, error)
-	LoginOauth2(ctx context.Context, in *LoginOauth2Request, opts ...grpc.CallOption) (*LoginOauth2Response, error)
+	UserCreate(ctx context.Context, in *UserCreateRequest, opts ...grpc.CallOption) (*UserCreateResponse, error)
+	UserList(ctx context.Context, in *UserListRequest, opts ...grpc.CallOption) (*UserListResponse, error)
+	UserUpdate(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*UserUpdateResponse, error)
+	UserChangePasswd(ctx context.Context, in *UserChangePasswdRequest, opts ...grpc.CallOption) (*UserChangePasswdResponse, error)
 	Oauth2Config(ctx context.Context, in *Oauth2ConfigRequest, opts ...grpc.CallOption) (*Oauth2ConfigResponse, error)
+	TokenValidate(ctx context.Context, in *TokenValidateRequest, opts ...grpc.CallOption) (*TokenValidateResponse, error)
+	LoginPasswd(ctx context.Context, in *LoginPasswdRequest, opts ...grpc.CallOption) (*LoginPasswdResponse, error)
+	LoginOauth2(ctx context.Context, in *LoginOauth2Request, opts ...grpc.CallOption) (*LoginOauth2Response, error)
 }
 
 type authSvcClient struct {
@@ -54,63 +54,36 @@ func NewAuthSvcClient(cc grpc.ClientConnInterface) AuthSvcClient {
 	return &authSvcClient{cc}
 }
 
-func (c *authSvcClient) ListAuth(ctx context.Context, in *ListAuthRequest, opts ...grpc.CallOption) (*ListAuthResponse, error) {
-	out := new(ListAuthResponse)
-	err := c.cc.Invoke(ctx, AuthSvc_ListAuth_FullMethodName, in, out, opts...)
+func (c *authSvcClient) UserCreate(ctx context.Context, in *UserCreateRequest, opts ...grpc.CallOption) (*UserCreateResponse, error) {
+	out := new(UserCreateResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_UserCreate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authSvcClient) UpdateAuth(ctx context.Context, in *UpdateAuthRequest, opts ...grpc.CallOption) (*UpdateAuthResponse, error) {
-	out := new(UpdateAuthResponse)
-	err := c.cc.Invoke(ctx, AuthSvc_UpdateAuth_FullMethodName, in, out, opts...)
+func (c *authSvcClient) UserList(ctx context.Context, in *UserListRequest, opts ...grpc.CallOption) (*UserListResponse, error) {
+	out := new(UserListResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_UserList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authSvcClient) CreateAuth(ctx context.Context, in *CreateAuthRequest, opts ...grpc.CallOption) (*CreateAuthResponse, error) {
-	out := new(CreateAuthResponse)
-	err := c.cc.Invoke(ctx, AuthSvc_CreateAuth_FullMethodName, in, out, opts...)
+func (c *authSvcClient) UserUpdate(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*UserUpdateResponse, error) {
+	out := new(UserUpdateResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_UserUpdate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authSvcClient) LoginPasswd(ctx context.Context, in *LoginPasswdRequest, opts ...grpc.CallOption) (*LoginPasswdResponse, error) {
-	out := new(LoginPasswdResponse)
-	err := c.cc.Invoke(ctx, AuthSvc_LoginPasswd_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authSvcClient) ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error) {
-	out := new(ValidateTokenResponse)
-	err := c.cc.Invoke(ctx, AuthSvc_ValidateToken_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authSvcClient) ChangePasswd(ctx context.Context, in *ChangePasswdRequest, opts ...grpc.CallOption) (*ChangePasswdResponse, error) {
-	out := new(ChangePasswdResponse)
-	err := c.cc.Invoke(ctx, AuthSvc_ChangePasswd_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authSvcClient) LoginOauth2(ctx context.Context, in *LoginOauth2Request, opts ...grpc.CallOption) (*LoginOauth2Response, error) {
-	out := new(LoginOauth2Response)
-	err := c.cc.Invoke(ctx, AuthSvc_LoginOauth2_FullMethodName, in, out, opts...)
+func (c *authSvcClient) UserChangePasswd(ctx context.Context, in *UserChangePasswdRequest, opts ...grpc.CallOption) (*UserChangePasswdResponse, error) {
+	out := new(UserChangePasswdResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_UserChangePasswd_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,18 +99,45 @@ func (c *authSvcClient) Oauth2Config(ctx context.Context, in *Oauth2ConfigReques
 	return out, nil
 }
 
+func (c *authSvcClient) TokenValidate(ctx context.Context, in *TokenValidateRequest, opts ...grpc.CallOption) (*TokenValidateResponse, error) {
+	out := new(TokenValidateResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_TokenValidate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authSvcClient) LoginPasswd(ctx context.Context, in *LoginPasswdRequest, opts ...grpc.CallOption) (*LoginPasswdResponse, error) {
+	out := new(LoginPasswdResponse)
+	err := c.cc.Invoke(ctx, AuthSvc_LoginPasswd_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authSvcClient) LoginOauth2(ctx context.Context, in *LoginOauth2Request, opts ...grpc.CallOption) (*LoginOauth2Response, error) {
+	out := new(LoginOauth2Response)
+	err := c.cc.Invoke(ctx, AuthSvc_LoginOauth2_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthSvcServer is the server API for AuthSvc service.
 // All implementations must embed UnimplementedAuthSvcServer
 // for forward compatibility
 type AuthSvcServer interface {
-	ListAuth(context.Context, *ListAuthRequest) (*ListAuthResponse, error)
-	UpdateAuth(context.Context, *UpdateAuthRequest) (*UpdateAuthResponse, error)
-	CreateAuth(context.Context, *CreateAuthRequest) (*CreateAuthResponse, error)
-	LoginPasswd(context.Context, *LoginPasswdRequest) (*LoginPasswdResponse, error)
-	ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error)
-	ChangePasswd(context.Context, *ChangePasswdRequest) (*ChangePasswdResponse, error)
-	LoginOauth2(context.Context, *LoginOauth2Request) (*LoginOauth2Response, error)
+	UserCreate(context.Context, *UserCreateRequest) (*UserCreateResponse, error)
+	UserList(context.Context, *UserListRequest) (*UserListResponse, error)
+	UserUpdate(context.Context, *UserUpdateRequest) (*UserUpdateResponse, error)
+	UserChangePasswd(context.Context, *UserChangePasswdRequest) (*UserChangePasswdResponse, error)
 	Oauth2Config(context.Context, *Oauth2ConfigRequest) (*Oauth2ConfigResponse, error)
+	TokenValidate(context.Context, *TokenValidateRequest) (*TokenValidateResponse, error)
+	LoginPasswd(context.Context, *LoginPasswdRequest) (*LoginPasswdResponse, error)
+	LoginOauth2(context.Context, *LoginOauth2Request) (*LoginOauth2Response, error)
 	mustEmbedUnimplementedAuthSvcServer()
 }
 
@@ -145,29 +145,29 @@ type AuthSvcServer interface {
 type UnimplementedAuthSvcServer struct {
 }
 
-func (UnimplementedAuthSvcServer) ListAuth(context.Context, *ListAuthRequest) (*ListAuthResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAuth not implemented")
+func (UnimplementedAuthSvcServer) UserCreate(context.Context, *UserCreateRequest) (*UserCreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserCreate not implemented")
 }
-func (UnimplementedAuthSvcServer) UpdateAuth(context.Context, *UpdateAuthRequest) (*UpdateAuthResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateAuth not implemented")
+func (UnimplementedAuthSvcServer) UserList(context.Context, *UserListRequest) (*UserListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserList not implemented")
 }
-func (UnimplementedAuthSvcServer) CreateAuth(context.Context, *CreateAuthRequest) (*CreateAuthResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAuth not implemented")
+func (UnimplementedAuthSvcServer) UserUpdate(context.Context, *UserUpdateRequest) (*UserUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserUpdate not implemented")
+}
+func (UnimplementedAuthSvcServer) UserChangePasswd(context.Context, *UserChangePasswdRequest) (*UserChangePasswdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserChangePasswd not implemented")
+}
+func (UnimplementedAuthSvcServer) Oauth2Config(context.Context, *Oauth2ConfigRequest) (*Oauth2ConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Oauth2Config not implemented")
+}
+func (UnimplementedAuthSvcServer) TokenValidate(context.Context, *TokenValidateRequest) (*TokenValidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenValidate not implemented")
 }
 func (UnimplementedAuthSvcServer) LoginPasswd(context.Context, *LoginPasswdRequest) (*LoginPasswdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginPasswd not implemented")
 }
-func (UnimplementedAuthSvcServer) ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidateToken not implemented")
-}
-func (UnimplementedAuthSvcServer) ChangePasswd(context.Context, *ChangePasswdRequest) (*ChangePasswdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangePasswd not implemented")
-}
 func (UnimplementedAuthSvcServer) LoginOauth2(context.Context, *LoginOauth2Request) (*LoginOauth2Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginOauth2 not implemented")
-}
-func (UnimplementedAuthSvcServer) Oauth2Config(context.Context, *Oauth2ConfigRequest) (*Oauth2ConfigResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Oauth2Config not implemented")
 }
 func (UnimplementedAuthSvcServer) mustEmbedUnimplementedAuthSvcServer() {}
 
@@ -182,128 +182,74 @@ func RegisterAuthSvcServer(s grpc.ServiceRegistrar, srv AuthSvcServer) {
 	s.RegisterService(&AuthSvc_ServiceDesc, srv)
 }
 
-func _AuthSvc_ListAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAuthRequest)
+func _AuthSvc_UserCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthSvcServer).ListAuth(ctx, in)
+		return srv.(AuthSvcServer).UserCreate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthSvc_ListAuth_FullMethodName,
+		FullMethod: AuthSvc_UserCreate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).ListAuth(ctx, req.(*ListAuthRequest))
+		return srv.(AuthSvcServer).UserCreate(ctx, req.(*UserCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthSvc_UpdateAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAuthRequest)
+func _AuthSvc_UserList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthSvcServer).UpdateAuth(ctx, in)
+		return srv.(AuthSvcServer).UserList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthSvc_UpdateAuth_FullMethodName,
+		FullMethod: AuthSvc_UserList_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).UpdateAuth(ctx, req.(*UpdateAuthRequest))
+		return srv.(AuthSvcServer).UserList(ctx, req.(*UserListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthSvc_CreateAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAuthRequest)
+func _AuthSvc_UserUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthSvcServer).CreateAuth(ctx, in)
+		return srv.(AuthSvcServer).UserUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthSvc_CreateAuth_FullMethodName,
+		FullMethod: AuthSvc_UserUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).CreateAuth(ctx, req.(*CreateAuthRequest))
+		return srv.(AuthSvcServer).UserUpdate(ctx, req.(*UserUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthSvc_LoginPasswd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginPasswdRequest)
+func _AuthSvc_UserChangePasswd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserChangePasswdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthSvcServer).LoginPasswd(ctx, in)
+		return srv.(AuthSvcServer).UserChangePasswd(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthSvc_LoginPasswd_FullMethodName,
+		FullMethod: AuthSvc_UserChangePasswd_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).LoginPasswd(ctx, req.(*LoginPasswdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthSvc_ValidateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ValidateTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthSvcServer).ValidateToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthSvc_ValidateToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).ValidateToken(ctx, req.(*ValidateTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthSvc_ChangePasswd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangePasswdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthSvcServer).ChangePasswd(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthSvc_ChangePasswd_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).ChangePasswd(ctx, req.(*ChangePasswdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthSvc_LoginOauth2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginOauth2Request)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthSvcServer).LoginOauth2(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthSvc_LoginOauth2_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSvcServer).LoginOauth2(ctx, req.(*LoginOauth2Request))
+		return srv.(AuthSvcServer).UserChangePasswd(ctx, req.(*UserChangePasswdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -326,6 +272,60 @@ func _AuthSvc_Oauth2Config_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthSvc_TokenValidate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TokenValidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSvcServer).TokenValidate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthSvc_TokenValidate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSvcServer).TokenValidate(ctx, req.(*TokenValidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthSvc_LoginPasswd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginPasswdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSvcServer).LoginPasswd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthSvc_LoginPasswd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSvcServer).LoginPasswd(ctx, req.(*LoginPasswdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthSvc_LoginOauth2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginOauth2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSvcServer).LoginOauth2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthSvc_LoginOauth2_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSvcServer).LoginOauth2(ctx, req.(*LoginOauth2Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthSvc_ServiceDesc is the grpc.ServiceDesc for AuthSvc service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -334,36 +334,36 @@ var AuthSvc_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AuthSvcServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListAuth",
-			Handler:    _AuthSvc_ListAuth_Handler,
+			MethodName: "UserCreate",
+			Handler:    _AuthSvc_UserCreate_Handler,
 		},
 		{
-			MethodName: "UpdateAuth",
-			Handler:    _AuthSvc_UpdateAuth_Handler,
+			MethodName: "UserList",
+			Handler:    _AuthSvc_UserList_Handler,
 		},
 		{
-			MethodName: "CreateAuth",
-			Handler:    _AuthSvc_CreateAuth_Handler,
+			MethodName: "UserUpdate",
+			Handler:    _AuthSvc_UserUpdate_Handler,
+		},
+		{
+			MethodName: "UserChangePasswd",
+			Handler:    _AuthSvc_UserChangePasswd_Handler,
+		},
+		{
+			MethodName: "Oauth2Config",
+			Handler:    _AuthSvc_Oauth2Config_Handler,
+		},
+		{
+			MethodName: "TokenValidate",
+			Handler:    _AuthSvc_TokenValidate_Handler,
 		},
 		{
 			MethodName: "LoginPasswd",
 			Handler:    _AuthSvc_LoginPasswd_Handler,
 		},
 		{
-			MethodName: "ValidateToken",
-			Handler:    _AuthSvc_ValidateToken_Handler,
-		},
-		{
-			MethodName: "ChangePasswd",
-			Handler:    _AuthSvc_ChangePasswd_Handler,
-		},
-		{
 			MethodName: "LoginOauth2",
 			Handler:    _AuthSvc_LoginOauth2_Handler,
-		},
-		{
-			MethodName: "Oauth2Config",
-			Handler:    _AuthSvc_Oauth2Config_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

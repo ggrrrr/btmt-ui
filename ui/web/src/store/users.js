@@ -1,10 +1,14 @@
 import { defineStore } from "pinia";
 
+export const userStatuses = ["enabled", "disable", "pending"];
+
+export const userSystemRoles = ["", "admin"];
+
 export class User {
   constructor() {
     this.email = "";
     this.status = "";
-    this.SystemRoles = [];
+    // this.system_roles;
   }
 }
 
@@ -12,6 +16,7 @@ export class EditUser {
   constructor() {
     this.show = false;
     this.user = new User();
+    this.isNew = true;
   }
 }
 

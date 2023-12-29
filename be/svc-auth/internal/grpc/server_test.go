@@ -48,7 +48,7 @@ func TestServer(t *testing.T) {
 	testApp, err := app.New(app.WithAuthRepo(store), app.WithTokenSigner(token.NewSignerMock()))
 	require.NoError(t, err)
 
-	err = testApp.CreateAuth(ctxAdmin, ddd.AuthPasswd{
+	err = testApp.UserCreate(ctxAdmin, ddd.AuthPasswd{
 		Email:  "asd@asd",
 		Passwd: "asdasdasd",
 		Status: ddd.StatusEnabled,
@@ -79,7 +79,7 @@ func TestServer(t *testing.T) {
 		{
 			test: "list cfg",
 			testFunc: func(tt *testing.T) {
-				_, err = client.ListAuth(ctx, &authpb.ListAuthRequest{})
+				_, err = client.UserList(ctx, &authpb.UserListRequest{})
 				assert.NoError(tt, err)
 			},
 		},

@@ -8,7 +8,16 @@
                             <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load"></BtnLoadData>
                         </v-col>
                         <v-col no-gutters cols="1" sm="6" md="4">
-                            Add
+                            <BtnLoadData @click="showNewUser" text="Add"></BtnLoadData>
+                            <v-dialog v-model="refs.edit.show" max-width="900">
+                                <UserEditForm v-model="refs.edit" @add="addUser" @save="saveUser" />
+                            </v-dialog>
+                            <!-- <div class="d-flex justify-center ma-4">
+                                <div class="d-flex justify-space-between" style="width: 60%">
+                                    <v-progress-circular></v-progress-circular>
+                                </div>
+                            </div>
+ -->
                         </v-col>
                     </v-row>
                     <v-row>
@@ -20,7 +29,7 @@
                     </v-row>
                 </v-container>
             </v-card-text>
-            <v-data-table-server show-expand :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
+            <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
                 :items="list.list" multi-sort class="elevation-1">
                 <template v-slot:top>
                 </template>
@@ -35,6 +44,9 @@
                 </template>
                 <template v-slot:[`item.system_roles`]="{ item }">
                     <FieldLabelsList :labels="item.system_roles"></FieldLabelsList>
+                </template>
+                <template v-slot:[`item.created_at`]="{ item }">
+                    <field-time-stamp :timeStamp="item.created_at"></field-time-stamp>
                 </template>
 
                 <template v-slot:[`item.actions`]="{ item }">
@@ -58,14 +70,17 @@
 
 import { fetchAPI } from "@/store/auth";
 import { useConfig } from "@/store/app";
+import { User, EditUser } from "@/store/users";
 
 import BtnLoadData from '@/components/BtnLoadData';
 import InputTextsList from '@/components/InputTextsList';
 import FieldLabelsList from '@/components/FieldLabelsList';
+import UserEditForm from '@/components/UserEditForm'
+import FieldTimeStamp from '@/components/FieldTimeStamp';
 
 import { ref } from 'vue'
 
-// const store = usePeopleStore()
+// const store = useUsersStore
 const config = useConfig;
 
 
@@ -74,9 +89,11 @@ const list = ref({ list: [] })
 const searchTextFields = ref({ list: [] })
 
 const refs = ref({
+    edit: new EditUser(),
     filters: {
         texts: [],
     },
+
     itemsPerPage: 5,
     serverItems: [],
     loadingText: "",
@@ -94,13 +111,33 @@ const refs = ref({
     ]
 })
 
+function editItem(user) {
+    console.log("editItem", user)
+    refs.value.edit.user = user
+    refs.value.edit.show = true
+    refs.value.edit.isNew = false
+}
+
+function showNewUser() {
+    refs.value.edit.user = new User()
+    refs.value.edit.show = true
+    refs.value.edit.isNew = true
+}
+
+function addUser() {
+}
+
+function saveUser() {
+}
+
+
 async function loadData() {
     const request = {
         // mode: "no-cors",
         method: "GET",
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/v1/auth/list";
+    const url = config.BASE_URL + "/v1/auth/user/list";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
@@ -110,8 +147,9 @@ async function loadData() {
             if (result.result !== null) {
                 result.result.forEach(
                     (j) => {
-                        console.log(j)
-                        list.value.list.push(j)
+                        let i = Object.assign(new User(), j);
+                        console.log(i)
+                        list.value.list.push(i)
                     }
                 )
             } else {

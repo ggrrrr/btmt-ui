@@ -19,13 +19,14 @@ type (
 	AppCfgFunc func(a *application) error
 
 	App interface {
-		LoginPasswd(ctx context.Context, email, passwd string) (app.Result[AuthToken], error)
+		UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
+		UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error)
+		UserUpdate(ctx context.Context, email ddd.AuthPasswd) error
+		UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error
 
-		ChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error
-		UpdateAuth(ctx context.Context, email ddd.AuthPasswd) error
-		Validate(ctx context.Context) error
-		ListAuth(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error)
-		CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error
+		LoginPasswd(ctx context.Context, email, passwd string) (app.Result[AuthToken], error)
+		TokenValidate(ctx context.Context) error
+
 		// RegisterEmail(ctx context.Context, email string) (*a.Result[string], error)
 		// EnableEmail(ctx context.Context, email string) (*a.Result[string], error)
 		// DisableAuth(ctx context.Context, email string) (a.Result[string], error)

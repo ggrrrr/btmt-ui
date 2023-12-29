@@ -18,8 +18,8 @@
         <v-list-item color="primary" prepend-icon="mdi-home" title="Home" link to="/"></v-list-item>
         <v-divider></v-divider>
         <v-list-item color="primary" prepend-icon="mdi-account-group" link title="People" to="/people"></v-list-item>
-        <v-list-item color="primary" prepend-icon="mdi-glass-mug-variant" link title="Users" to="/users"></v-list-item>
         <v-list-item color="primary" prepend-icon="mdi-glass-mug-variant" link title="todo" to="/todo"></v-list-item>
+        <v-list-item color="primary" prepend-icon="mdi-account-cog-outline" link title="Users" to="/users"></v-list-item>
     </v-navigation-drawer>
 </template>
 
@@ -30,7 +30,7 @@ import { ref } from 'vue'
 import LoginDialog from './LoginDialog.vue'
 
 
-let drawer = ref(true)
+let drawer = ref(false)
 let loginStore = useLoginStore()
 
 function showLogin() {

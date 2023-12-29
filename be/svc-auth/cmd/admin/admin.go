@@ -72,7 +72,7 @@ func runNewEmail() error {
 	if err != nil {
 		return err
 	}
-	err = app.CreateAuth(ctx, ddd.AuthPasswd{
+	err = app.UserCreate(ctx, ddd.AuthPasswd{
 		Email:       newEmail,
 		Passwd:      newPasswd,
 		SystemRoles: []string{"admin"},
@@ -93,7 +93,7 @@ func runUpdateEmail() error {
 	if err != nil {
 		return err
 	}
-	err = app.ChangePasswd(ctx, newEmail, newPasswd, newPasswd)
+	err = app.UserChangePasswd(ctx, newEmail, newPasswd, newPasswd)
 	return err
 }
 
@@ -138,7 +138,7 @@ func runListEmail() error {
 	if err != nil {
 		return err
 	}
-	res, err := app.ListAuth(ctx)
+	res, err := app.UserList(ctx)
 	for _, a := range res.Payload() {
 		fmt.Printf("%v \n", a)
 	}

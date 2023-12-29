@@ -10,9 +10,9 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
-func (a *application) CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error {
+func (a *application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authpb.AuthSvc_CreateAuth_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authpb.AuthSvc_UserCreate_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	if auth.Email == "" {
@@ -33,9 +33,40 @@ func (a *application) CreateAuth(ctx context.Context, auth ddd.AuthPasswd) error
 	return err
 }
 
-func (a *application) ChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
+func (ap *application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authpb.AuthSvc_ChangePasswd_FullMethodName, authInfo); err != nil {
+	if err := ap.appPolices.CanDo(authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
+		return app.Result[[]ddd.AuthPasswd]{}, err
+	}
+	out, err := ap.authRepo.List(ctx)
+	if err != nil {
+		return app.Result[[]ddd.AuthPasswd]{}, err
+	}
+	logger.InfoCtx(ctx).Msg("ListAuth")
+	return app.ResultPayload[[]ddd.AuthPasswd]("ok", out), err
+}
+
+func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) error {
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	if err := ap.appPolices.CanDo(authpb.AuthSvc_UserUpdate_FullMethodName, authInfo); err != nil {
+		return err
+	}
+	list, err := ap.authRepo.Get(ctx, auth.Email)
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return app.ErrorBadRequest("email not found", nil)
+	}
+	update := list[0]
+	update.Status = auth.Status
+	update.SystemRoles = auth.SystemRoles
+	return ap.authRepo.Update(ctx, update)
+}
+
+func (a *application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	if err := a.appPolices.CanDo(authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	rec, err := a.findEmail(ctx, email)
@@ -62,35 +93,4 @@ func (a *application) ChangePasswd(ctx context.Context, email, oldPasswd, newPas
 		return err
 	}
 	return err
-}
-
-func (ap *application) UpdateAuth(ctx context.Context, auth ddd.AuthPasswd) error {
-	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := ap.appPolices.CanDo(authpb.AuthSvc_UpdateAuth_FullMethodName, authInfo); err != nil {
-		return err
-	}
-	list, err := ap.authRepo.Get(ctx, auth.Email)
-	if err != nil {
-		return err
-	}
-	if len(list) == 0 {
-		return app.ErrorBadRequest("email not found", nil)
-	}
-	update := list[0]
-	update.Status = auth.Status
-	update.SystemRoles = auth.SystemRoles
-	return ap.authRepo.Update(ctx, update)
-}
-
-func (ap *application) ListAuth(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {
-	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := ap.appPolices.CanDo(authpb.AuthSvc_ListAuth_FullMethodName, authInfo); err != nil {
-		return app.Result[[]ddd.AuthPasswd]{}, err
-	}
-	out, err := ap.authRepo.List(ctx)
-	if err != nil {
-		return app.Result[[]ddd.AuthPasswd]{}, err
-	}
-	logger.InfoCtx(ctx).Msg("ListAuth")
-	return app.ResultPayload[[]ddd.AuthPasswd]("ok", out), err
 }

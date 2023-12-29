@@ -40,7 +40,7 @@ func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (a
 	return app.ResultPayload[AuthToken]("ok", AuthToken(jwt)), nil
 }
 
-func (ap *application) Validate(ctx context.Context) error {
+func (ap *application) TokenValidate(ctx context.Context) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if authInfo.User == "" {
 		return app.ErrAuthUnauthenticated

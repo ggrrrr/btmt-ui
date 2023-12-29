@@ -5,22 +5,39 @@ syntax = "proto3";
 package authpb;
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 // import "protoc-gen-openapiv2/options/annotations.proto";
 
 service AuthSvc {
-  rpc ListAuth(ListAuthRequest) returns (ListAuthResponse) {
+  rpc UserCreate(UserCreateRequest) returns (UserCreateResponse) {
     option (google.api.http) = {
-      get: "/v1/auth/list";
+      post: "/v1/auth/user/create";
+      body: "*";
     };
   };
-  rpc UpdateAuth(UpdateAuthRequest) returns (UpdateAuthResponse) {
+  rpc UserList(UserListRequest) returns (UserListResponse) {
     option (google.api.http) = {
-      get: "/v1/auth/update";
+      get: "/v1/auth/user/list";
     };
   };
-  rpc CreateAuth(CreateAuthRequest) returns (CreateAuthResponse) {
+  rpc UserUpdate(UserUpdateRequest) returns (UserUpdateResponse) {
     option (google.api.http) = {
-      post: "/v1/auth/create";
+      get: "/v1/auth/user/update";
+    };
+  };
+  rpc UserChangePasswd(UserChangePasswdRequest) returns (UserChangePasswdResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/user/change/passwd";
+    };
+  };
+  rpc Oauth2Config(Oauth2ConfigRequest) returns (Oauth2ConfigResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/oauth2/config";
+    };
+  };
+  rpc TokenValidate(TokenValidateRequest) returns (TokenValidateResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/token/validate";
       body: "*";
     };
   };
@@ -30,35 +47,19 @@ service AuthSvc {
       body: "*";
     };
   };
-  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/validate";
-      body: "*";
-    };
-  };
-  rpc ChangePasswd(ChangePasswdRequest) returns (ChangePasswdResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/update/passwd";
-    };
-  };
   rpc LoginOauth2(LoginOauth2Request) returns (LoginOauth2Response) {
     option (google.api.http) = {
       post: "/v1/auth/login/oauth2";
       body: "*";
     };
   };
-  rpc Oauth2Config(Oauth2ConfigRequest) returns (Oauth2ConfigResponse) {
-    option (google.api.http) = {
-      get: "/v1/auth/oauth2/config";
-    };
-  };
 }
-message UpdateAuthRequest{
+message UserUpdateRequest{
   string email = 1;
   string status = 2;
   repeated string system_roles = 3 [json_name = "system_roles"];
 }
-message UpdateAuthResponse{}
+message UserUpdateResponse{}
 
 message Oauth2ConfigRequest{}
 message Oauth2ConfigPayload{
@@ -69,29 +70,29 @@ message Oauth2ConfigPayload{
   string scope = 5;
   string include_granted_scopes = 6 [json_name = "include_granted_scopes"];
 }
-
 message Oauth2ConfigResponse{
   Oauth2ConfigPayload payload = 1;
 }
-message CreateAuthRequest {
+
+message UserCreateRequest {
   string email = 1;
   string status = 2;
   repeated string system_roles = 3 [json_name = "system_roles"];
   string password = 4;
 }
+message UserCreateResponse {}
 
-message CreateAuthResponse {}
-message ListAuthRequest {}
+message UserListRequest {}
 
-message ListAuthPayload {
+message UserListPayload {
   string email = 1;
   string status = 2;
   repeated string system_roles = 3 [json_name = "system_roles"];
-  string created_at = 4 [json_name = "created_at"];
+  google.protobuf.Timestamp created_at = 4 [json_name = "created_at"];
 }
 
-message ListAuthResponse {
-  repeated ListAuthPayload payload = 1;
+message UserListResponse {
+  repeated UserListPayload payload = 1;
 }
 
 message LoginPasswdRequest {
@@ -99,24 +100,15 @@ message LoginPasswdRequest {
   string password = 2;
 }
 
-message LoginPasswdPayload{
-  string email = 1;
-  string token = 2;
-}
-
-message LoginPasswdResponse {
-  LoginPasswdPayload payload = 1;
-}
-
-message ChangePasswdRequest {
+message UserChangePasswdRequest {
   string email = 1;
   string password = 2;
   string new_password = 3 [json_name = "new_password"];
 }
+message UserChangePasswdResponse {}
 
-message ChangePasswdResponse {}
-message ValidateTokenRequest {}
-message ValidateTokenResponse {}
+message TokenValidateRequest {}
+message TokenValidateResponse {}
 
 message LoginOauth2Request {
   string state = 1;
@@ -124,7 +116,13 @@ message LoginOauth2Request {
 	string provider = 3;
 	string redirect_url = 4;
 }
-
+message LoginTokenPayload{
+  string email = 1;
+  string token = 2;
+}
+message LoginPasswdResponse {
+  LoginTokenPayload payload = 1;
+}
 message LoginOauth2Response {
-  LoginPasswdPayload payload = 1;
+  LoginTokenPayload payload = 1;
 }
