@@ -25,8 +25,6 @@ func FromHttpMetadata(md http.Header, fullMethod string) UserRequest {
 
 	ua := useragent.Parse(out.Device.DeviceInfo)
 
-	// ua.String
-
 	out.Device.DeviceInfo = fmt.Sprintf("%s/%s/%s", ua.OS, ua.OSVersionNoFull(), ua.Name)
 
 	return out

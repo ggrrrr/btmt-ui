@@ -9,10 +9,8 @@ import (
 
 var (
 	ErrAuthUnauthenticated = ErrorUnauthenticated("please login", nil)
-
-	ErrForbidden = ErrorDenied("forbidden", nil)
-
-	ErrTeepot = ErrorSystem("teepot", nil)
+	ErrForbidden           = ErrorDenied("forbidden", nil)
+	ErrTeapot              = ErrorSystem("teapot", nil)
 )
 
 type AppError struct {

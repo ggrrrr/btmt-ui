@@ -19,7 +19,7 @@ type (
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
 
 func New() (*repo, error) {
-	logger.Warn().Msg("InMemmory auth repo")
+	logger.Warn().Msg("InMemory auth repo")
 	return &repo{
 		mx: &sync.Mutex{},
 		db: map[string]*ddd.AuthPasswd{},

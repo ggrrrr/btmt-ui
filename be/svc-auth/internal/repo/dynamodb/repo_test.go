@@ -43,6 +43,8 @@ func Test_List(t *testing.T) {
 func TestSave(t *testing.T) {
 	auth1 := ddd.AuthPasswd{
 		Email:       email1,
+		Status:      ddd.StatusDisable,
+		TenantRoles: map[string][]string{"local": {"role1"}},
 		SystemRoles: []string{"admin"},
 	}
 	passwd1 := "asd1asd"
@@ -59,7 +61,9 @@ func TestSave(t *testing.T) {
 	items, err := r.Get(ctx, email1)
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
-	assert.Equal(t, "", items[0].Passwd, "expected email")
+	auth1.CreatedAt = items[0].CreatedAt
+	assert.Equal(t, auth1, items[0], "expected email")
+
 	err = r.UpdatePassword(ctx, email1, passwd1)
 	assert.NoError(t, err, err)
 	items, err = r.Get(ctx, email1)
@@ -79,6 +83,7 @@ func TestSave(t *testing.T) {
 		Email:       auth1.Email,
 		Status:      ddd.StatusPending,
 		SystemRoles: []string{"noadmin", "shit"},
+		TenantRoles: map[string][]string{"asdasd": {"roles"}},
 	}
 
 	err = r.Update(ctx, authUpdate)
@@ -86,7 +91,8 @@ func TestSave(t *testing.T) {
 	items, err = r.Get(ctx, email1)
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
-	assert.Equal(t, authUpdate.Status, items[0].Status, "expected email")
-	assert.Equal(t, authUpdate.SystemRoles, items[0].SystemRoles, "expected email")
+	authUpdate.CreatedAt = items[0].CreatedAt
+	authUpdate.Passwd = items[0].Passwd
+	assert.Equal(t, authUpdate, items[0], "expected email")
 
 }

@@ -40,7 +40,7 @@ func cfg() awsdb.AwsConfig {
 
 func TestServer(t *testing.T) {
 	ctx := context.Background()
-	ctxAdmin := roles.CtxWithAuthInfo(ctx, roles.CreateAdminUser("admin", roles.Device{}))
+	ctxAdmin := roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemTenant, "admin", roles.Device{}))
 
 	store, err := mem.New()
 	require.NoError(t, err)
@@ -97,7 +97,7 @@ func testServer(ctx context.Context, app app.App) (authpb.AuthSvcClient, func())
 
 	baseServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-			ctx = roles.CtxWithAuthInfo(ctx, roles.CreateAdminUser("test", roles.Device{}))
+			ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{}))
 			return handler(ctx, req)
 		}),
 	)

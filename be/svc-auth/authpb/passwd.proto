@@ -57,7 +57,8 @@ service AuthSvc {
 message UserUpdateRequest{
   string email = 1;
   string status = 2;
-  repeated string system_roles = 3 [json_name = "system_roles"];
+  map<string, ListText> tenant_roles = 3 [json_name = "tenant_roles"];
+  repeated string system_roles = 4 [json_name = "system_roles"];
 }
 message UserUpdateResponse{}
 
@@ -84,11 +85,16 @@ message UserCreateResponse {}
 
 message UserListRequest {}
 
+message ListText {
+  repeated string list = 1;
+}
+
 message UserListPayload {
   string email = 1;
   string status = 2;
-  repeated string system_roles = 3 [json_name = "system_roles"];
-  google.protobuf.Timestamp created_at = 4 [json_name = "created_at"];
+  map<string, ListText> tenant_roles = 3 [json_name = "tenant_roles"];
+  repeated string system_roles = 4 [json_name = "system_roles"];
+  google.protobuf.Timestamp created_at = 5 [json_name = "created_at"];
 }
 
 message UserListResponse {

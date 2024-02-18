@@ -13,7 +13,7 @@
         <v-container>
             <v-row no-gutters>
                 <v-col class="mr-0 pr-1" cols="3">
-                    <v-text-field v-model="refs.person.name" label="Name" hint="Joro"></v-text-field>
+                    <v-text-field v-model="refs.person.name" label="Name" hint="Peter"></v-text-field>
                 </v-col>
                 <v-col class="ml-0 pl-1" cols="">
                     <v-text-field v-model="refs.person.full_name" label="Full names" hint="Varban Krushev"></v-text-field>

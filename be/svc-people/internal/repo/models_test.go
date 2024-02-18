@@ -35,16 +35,16 @@ func TestAsd(t *testing.T) {
 
 func Test_objectId(t *testing.T) {
 	uuid1 := primitive.NewObjectID()
-	fmt.Printf("uiud: %v \n", uuid1)
+	fmt.Printf("uuid: %v \n", uuid1)
 	hex := uuid1.Hex()
-	fmt.Printf("uiud: %x %v\n", hex, len(hex))
+	fmt.Printf("uuid: %x %v\n", hex, len(hex))
 
 	uuid1p, err := convertPersonId(hex)
 	assert.NoError(t, err)
 	assert.Equal(t, uuid1, uuid1p)
-	fmt.Printf("uiud : %s \n", uuid1p.String())
+	fmt.Printf("uuid : %s \n", uuid1p.String())
 	hex = uuid1p.Hex()
-	fmt.Printf("uiud: %s %v\n", hex, len(hex))
+	fmt.Printf("uuid: %s %v\n", hex, len(hex))
 
 	map1 := map[string]string{"key1": "val1", "key2": "val2"}
 	slice1 := toSlice(map1)

@@ -68,7 +68,7 @@ function handleAdd() {
         let temp = props.modelValue
         temp[type.value] = value.value
         // temp.set(type.value, value.value)
-        console.log("modelVelue", temp)
+        console.log("modelValue", temp)
         emits('update:modelValue', temp)
     }
 }

@@ -42,13 +42,15 @@ func TestSignVerify(t *testing.T) {
 	assert.NoError(t, err)
 
 	apiClaims := roles.AuthInfo{
-		User:  "user1",
-		Roles: []roles.RoleName{"admin"},
+		User:   "user1",
+		Tenant: "localhost",
+		Roles:  []roles.RoleName{"admin"},
 	}
 
 	expClaims := roles.AuthInfo{
-		User:  "user1",
-		Roles: []roles.RoleName{"admin"},
+		User:   "user1",
+		Tenant: "localhost",
+		Roles:  []roles.RoleName{"admin"},
 	}
 
 	_, err = testVer.Verify(
@@ -63,7 +65,7 @@ func TestSignVerify(t *testing.T) {
 	assert.NoError(t, err)
 	c, err := testVer.Verify(
 		roles.Authorization{
-			AuthScheme:      roles.AuthSchemeBeaerer,
+			AuthScheme:      roles.AuthSchemeBearer,
 			AuthCredentials: roles.AuthCredentials(jwt),
 		},
 	)

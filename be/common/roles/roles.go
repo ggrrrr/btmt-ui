@@ -1,20 +1,18 @@
 package roles
 
-import (
-	"context"
-)
-
-const AuthSchemeBeaerer string = "Bearer"
+const AuthSchemeBearer string = "Bearer"
 
 type (
 	ctxKeyType struct{}
 
 	RoleName string
 
+	Tenant string
+
 	AuthCredentials string
 
 	Authorization struct {
-		AuthScheme      string          // Basic,Beaerer,
+		AuthScheme      string          // Basic, Bearer, ...,
 		AuthCredentials AuthCredentials // JWT TOKEN OR OTHER secret data
 	}
 	UserRequest struct {
@@ -22,30 +20,12 @@ type (
 		Device        Device
 		Authorization Authorization
 	}
-
-	Device struct {
-		RemoteAddr string
-		DeviceInfo string
-	}
-
-	AuthInfo struct {
-		User   string
-		Roles  []RoleName
-		Device Device
-	}
 )
 
 const (
-	RoleAdmin RoleName = "admin"
+	RoleAdmin    RoleName = "admin"
+	SystemTenant Tenant   = "localhost"
 )
-
-func CreateAdminUser(user string, device Device) AuthInfo {
-	return AuthInfo{
-		User:   user,
-		Roles:  []RoleName{RoleAdmin},
-		Device: device,
-	}
-}
 
 func HasRole(role RoleName, roles []RoleName) bool {
 	for r := range roles {
@@ -54,20 +34,4 @@ func HasRole(role RoleName, roles []RoleName) bool {
 		}
 	}
 	return false
-}
-
-func isSystemAdmin(authInfo AuthInfo) bool {
-	return HasRole(RoleAdmin, authInfo.Roles)
-}
-
-func CtxWithAuthInfo(ctx context.Context, authInfo AuthInfo) context.Context {
-	return context.WithValue(ctx, ctxKeyType{}, authInfo)
-}
-
-func AuthInfoFromCtx(ctx context.Context) AuthInfo {
-	value, ok := ctx.Value(ctxKeyType{}).(AuthInfo)
-	if !ok {
-		return AuthInfo{}
-	}
-	return value
 }

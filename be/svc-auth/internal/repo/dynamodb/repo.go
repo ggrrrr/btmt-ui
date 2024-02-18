@@ -187,6 +187,15 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 	return err
 }
 
+func toAwsMap(src map[string][]string) map[string]*dynamodb.AttributeValue {
+	out := map[string]*dynamodb.AttributeValue{}
+	for k, v := range src {
+		out[k] = &dynamodb.AttributeValue{SS: aws.StringSlice(v)}
+
+	}
+	return out
+}
+
 func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 	logger.DebugCtx(ctx).Str("email", auth.Email).Msg("Update")
 	input := &dynamodb.UpdateItemInput{
@@ -197,6 +206,9 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 			":system_roles": {
 				SS: aws.StringSlice(auth.SystemRoles),
 			},
+			":tenant_roles": {
+				M: toAwsMap(auth.TenantRoles),
+			},
 		},
 		TableName: aws.String(r.table()),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -204,10 +216,11 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 				S: aws.String(auth.Email),
 			},
 		},
-		UpdateExpression: aws.String("set #status = :status, #system_roles = :system_roles"),
+		UpdateExpression: aws.String("set #status = :status, #system_roles = :system_roles, #tenant_roles = :tenant_roles"),
 		ExpressionAttributeNames: map[string]*string{
 			"#status":       aws.String("status"),
 			"#system_roles": aws.String("system_roles"),
+			"#tenant_roles": aws.String("tenant_roles"),
 		},
 	}
 	res, err := r.svc.UpdateItem(input)
@@ -219,6 +232,7 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 		Msg("Update")
 	return nil
 }
+
 func (r *repo) errorIsNotFound(err error) {
 	if _, ok := err.(*dynamodb.ResourceNotFoundException); ok {
 		r.createTableAuth()

@@ -3,10 +3,11 @@ package monolith
 import (
 	"context"
 
-	"github.com/ggrrrr/btmt-ui/be/common/config"
-	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 	"github.com/go-chi/chi"
 	"google.golang.org/grpc"
+
+	"github.com/ggrrrr/btmt-ui/be/common/config"
+	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 )
 
 type Monolith struct {

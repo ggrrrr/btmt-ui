@@ -12,14 +12,14 @@ import (
 
 func (a *application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authpb.AuthSvc_UserCreate_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserCreate_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	if auth.Email == "" {
 		return app.ErrorBadRequest("email empty", nil)
 	}
 	if auth.Passwd == "" {
-		return app.ErrorBadRequest("passord empty", nil)
+		return app.ErrorBadRequest("password empty", nil)
 	}
 	logger.InfoCtx(ctx).Any("email", auth.Email).Msg("CreateAuth")
 	if auth.Passwd != "" {
@@ -35,7 +35,7 @@ func (a *application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
 
 func (ap *application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := ap.appPolices.CanDo(authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
+	if err := ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
 		return app.Result[[]ddd.AuthPasswd]{}, err
 	}
 	out, err := ap.authRepo.List(ctx)
@@ -48,7 +48,7 @@ func (ap *application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPassw
 
 func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := ap.appPolices.CanDo(authpb.AuthSvc_UserUpdate_FullMethodName, authInfo); err != nil {
+	if err := ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserUpdate_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	list, err := ap.authRepo.Get(ctx, auth.Email)
@@ -66,7 +66,7 @@ func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) erro
 
 func (a *application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	rec, err := a.findEmail(ctx, email)

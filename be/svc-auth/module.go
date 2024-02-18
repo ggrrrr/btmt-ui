@@ -73,7 +73,7 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 		return nil, errors.New("shit")
 	}
 
-	tokemSigner, err := token.NewSigner(cfg.Jwt.TTL, cfg.Jwt.KeyFile)
+	tokenSigner, err := token.NewSigner(cfg.Jwt.TTL, cfg.Jwt.KeyFile)
 	if err != nil {
 		logger.Error(err).Msg("NewSigner")
 		return nil, err
@@ -81,7 +81,7 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 
 	a, err := app.New(
 		app.WithAuthRepo(repo),
-		app.WithTokenSigner(tokemSigner),
+		app.WithTokenSigner(tokenSigner),
 	)
 	if err != nil {
 		logger.Error(err).Msg("app error")

@@ -16,6 +16,7 @@ var (
 	ErrJwtBadScheme         = errors.New("JWT authorization scheme is invalid")
 	ErrJwtBadAlg            = errors.New("JWT Inconsistent Algorithm")
 	ErrJwtInvalid           = errors.New("JWT is invalid")
+	ErrJwtNotFoundTenant    = errors.New("JWT tenant not set")
 	ErrJwtInvalidSubject    = errors.New("JWT subject is invalid")
 	ErrJwtNotFoundMapClaims = errors.New("JWT MapClaims not found ")
 )
@@ -44,7 +45,7 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	}
 	logger.Info().
 		Str("crtFile", crtFile).
-		Str("schema", roles.AuthSchemeBeaerer).
+		Str("schema", roles.AuthSchemeBearer).
 		Msg("Verifier")
 	return &verifier{
 		signMethod: "RS256",
@@ -54,7 +55,7 @@ func NewVerifier(crtFile string) (*verifier, error) {
 }
 
 func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error) {
-	if inputToken.AuthScheme != roles.AuthSchemeBeaerer {
+	if inputToken.AuthScheme != roles.AuthSchemeBearer {
 		return roles.AuthInfo{}, ErrJwtBadScheme
 
 	}
@@ -85,15 +86,26 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtInvalidSubject
 	}
 
+	var tenant string
 	var listRoles []roles.RoleName
 	tmp, ok := (claims["roles"]).([]interface{})
 	if ok {
 		listRoles = listToRoles(tmp)
 	}
 
+	tenant, ok = (claims["tenant"]).(string)
+	if !ok {
+		return roles.AuthInfo{}, ErrJwtNotFoundTenant
+	}
+
+	if tenant == "" {
+		return roles.AuthInfo{}, ErrJwtNotFoundTenant
+	}
+
 	return roles.AuthInfo{
-		User:  user,
-		Roles: listRoles,
+		User:   user,
+		Tenant: roles.Tenant(tenant),
+		Roles:  listRoles,
 	}, nil
 }
 

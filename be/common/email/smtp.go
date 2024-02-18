@@ -62,7 +62,7 @@ func (e *Msg) writerTo(w io.Writer) error {
 	rootPart := &partWriter{
 		w: w,
 	}
-	mpwriter := multipart.NewWriter(rootPart.w)
+	mpWriter := multipart.NewWriter(rootPart.w)
 
 	for k, v := range e.headers {
 		err = rootPart.writeHeader(k, v...)
@@ -74,7 +74,7 @@ func (e *Msg) writerTo(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	rootPart.boundary = mpwriter.Boundary()
+	rootPart.boundary = mpWriter.Boundary()
 	err = rootPart.writeMultipart(multipartRelated)
 	if err != nil {
 		return err

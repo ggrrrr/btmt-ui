@@ -11,11 +11,12 @@ type (
 	StatusType string
 
 	AuthPasswd struct {
-		Email       string     `json:"email"`
-		Passwd      string     `json:"passwd"`
-		Status      StatusType `json:"status"`
-		SystemRoles []string   `json:"system_roles"`
-		CreatedAt   time.Time  `json:"created_at"`
+		Email       string              `json:"email"`
+		Passwd      string              `json:"passwd"`
+		Status      StatusType          `json:"status"`
+		TenantRoles map[string][]string `json:"tenant_roles"`
+		SystemRoles []string            `json:"system_roles"`
+		CreatedAt   time.Time           `json:"created_at"`
 	}
 )
 
@@ -34,13 +35,19 @@ type AuthPasswdRepo interface {
 	Update(ctx context.Context, auth AuthPasswd) error
 }
 
-func (a *AuthPasswd) ToAuthInfo() roles.AuthInfo {
+func (a *AuthPasswd) ToAuthInfo(tenant roles.Tenant) roles.AuthInfo {
 	out := roles.AuthInfo{
-		User:  a.Email,
-		Roles: []roles.RoleName{},
+		User:        a.Email,
+		Tenant:      tenant,
+		Roles:       []roles.RoleName{},
+		SystemRoles: []roles.RoleName{},
+	}
+	hostRoles := a.TenantRoles[string(tenant)]
+	for _, v := range hostRoles {
+		out.Roles = append(out.Roles, roles.RoleName(v))
 	}
 	for _, v := range a.SystemRoles {
-		out.Roles = append(out.Roles, roles.RoleName(v))
+		out.SystemRoles = append(out.SystemRoles, roles.RoleName(v))
 	}
 	return out
 }

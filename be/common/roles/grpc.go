@@ -52,7 +52,7 @@ func extractGrpcDevice(md metadata.MD) Device {
 	if len(md[lower(HttpUserAgent)]) > 0 {
 		out.DeviceInfo = strings.Join(md[lower(HttpUserAgent)], ",")
 	}
-	// if we have grpc gaateway set header this
+	// if we have grpc gateway set header this
 	if len(md[GrpcUserAgent]) > 0 {
 		out.DeviceInfo = strings.Join(md[GrpcUserAgent], ",")
 	}

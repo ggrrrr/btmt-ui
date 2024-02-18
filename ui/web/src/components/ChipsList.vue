@@ -21,5 +21,4 @@ function delSearchField(index) {
     emits('click', index)
 }
 
-
 </script>

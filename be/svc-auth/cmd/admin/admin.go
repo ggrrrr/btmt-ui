@@ -50,12 +50,14 @@ var ListCmd = &cobra.Command{
 var (
 	newEmail  string
 	newPasswd string
+	domain    string
 	w         waiter.Waiter
 )
 
 func init() {
 	AdminCmd.Flags().StringVarP(&newEmail, "email", "e", "", "new email")
 	AdminCmd.Flags().StringVarP(&newPasswd, "passwd", "p", "", "new passwd")
+	AdminCmd.Flags().StringVarP(&domain, "domain", "d", "localhost", "domain name")
 }
 
 func runNewEmail() error {
@@ -104,7 +106,8 @@ func prepCli() (context.Context, app.App, error) {
 		Format: "console",
 	})
 	hostname, _ := os.Hostname()
-	ctx := roles.CtxWithAuthInfo(context.Background(), roles.CreateAdminUser(
+	ctx := roles.CtxWithAuthInfo(context.Background(), roles.CreateSystemAdminUser(
+		roles.SystemTenant,
 		"root",
 		roles.Device{
 			DeviceInfo: fmt.Sprintf("%v@%v", os.Getenv("USER"), hostname),

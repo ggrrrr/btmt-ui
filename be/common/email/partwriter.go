@@ -63,8 +63,8 @@ func (w *partWriter) writeHeader(header headerName, values ...string) error {
 	return err
 }
 
-// TODO implment quotedprintable
-// Implmement multiple parts
+// TODO implement quotedprintable
+// Implement multiple parts
 func (w *partWriter) writePart(part *mailPart) error {
 	w.writeBoundaryStart()
 	w.writeHeader(headerContentType, string(part.contentType))
@@ -75,7 +75,7 @@ func (w *partWriter) writePart(part *mailPart) error {
 	return part.copier(w.w)
 }
 
-// TODO implment text files none base64 encoding based on mimeType
+// TODO implement text files none base64 encoding based on mimeType
 func (w *partWriter) writeAttachment(part *attachment) error {
 	mediaType := mime.TypeByExtension(filepath.Ext(part.name))
 

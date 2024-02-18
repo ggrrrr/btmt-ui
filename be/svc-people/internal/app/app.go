@@ -73,7 +73,7 @@ func WithAppPolicies(appPolices roles.AppPolices) AppConfiguration {
 func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 	var err error
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	if p.Id != "" {
@@ -103,7 +103,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 
 func (a *application) GetById(ctx context.Context, id string) (*ddd.Person, error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return nil, err
 	}
 	logger.InfoCtx(ctx).Str("id", id).Msg("GetById")
@@ -112,7 +112,7 @@ func (a *application) GetById(ctx context.Context, id string) (*ddd.Person, erro
 
 func (a *application) List(ctx context.Context, filters Filters) ([]ddd.Person, error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		logger.ErrorCtx(ctx, err).Any("filters", filters).Msg("List")
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (a *application) List(ctx context.Context, filters Filters) ([]ddd.Person, 
 
 func (a *application) Update(ctx context.Context, p *ddd.Person) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	logger.DebugCtx(ctx).Any("person", p).Msg("Update")

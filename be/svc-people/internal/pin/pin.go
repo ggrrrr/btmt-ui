@@ -88,7 +88,7 @@ func (o *egn) validate() bool {
 	sexBit, err := strconv.Atoi(o.origin[8 : 8+1])
 	if err == nil {
 		// log.Printf("asdasdasDASDASDAsdasd: %v", err)
-		o.Gender = "fimale"
+		o.Gender = "female"
 		if (sexBit % 2) == 0 {
 			o.Gender = "male"
 		}

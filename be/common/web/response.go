@@ -91,7 +91,7 @@ func send(w http.ResponseWriter, code int, msg string, err1 error, payload any) 
 	}
 	b, err := json.Marshal(body)
 	if err != nil {
-		log.Printf("unable to write reponse body(%v) error: %v", body, err)
+		log.Printf("unable to write response body(%v) error: %v", body, err)
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)

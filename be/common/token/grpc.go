@@ -32,7 +32,7 @@ func (s *verifier) UnaryInterceptor(
 	startTs := time.Now()
 	infoLog := logger.Info()
 	defer func() {
-		infoLog.TimeDiff("ts", time.Now(), startTs).Msg("UunaryInterceptor")
+		infoLog.TimeDiff("ts", time.Now(), startTs).Msg("UnaryInterceptor")
 	}()
 
 	if md, ok = metadata.FromIncomingContext(ctx); ok {

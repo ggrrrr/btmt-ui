@@ -21,7 +21,7 @@ export const useLoginStore = defineStore({
       this.token = "";
       this.email = "";
     },
-    logedIn(result) {
+    loggedIn(result) {
       this.email = result.email;
       this.token = result.token;
       localStorage.setItem("email", result.email);
@@ -61,7 +61,7 @@ export const useLoginStore = defineStore({
       const { result, ok, error } = await fetchAPIFunc(url, requestOptions);
       if (ok) {
         console.log("result", result);
-        this.logedIn(result);
+        this.loggedIn(result);
       } else {
         console.log("error:", error);
       }

@@ -18,24 +18,26 @@ func cfg() postgres.Config {
 		Username: "initexample",
 		Password: "initexample",
 		Database: "test",
-		Preffix:  "dev",
+		Prefix:   "dev",
 	}
 }
 
-func TestSave(t *testing.T) {
+func TestSaveGetList(t *testing.T) {
 	ctx := context.Background()
 	conn, err := Connect(cfg())
 	require.NoError(t, err)
 
-	_, err = conn.db.Exec(conn.table(`delete from %s`))
+	_, err = conn.db.Exec(conn.table(`drop table if exists %s`))
+	require.NoError(t, err)
+	err = conn.create()
 	require.NoError(t, err)
 
 	ts := time.Now()
-	testData := ddd.AuthPasswd{Email: "email11", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
+	testData := ddd.AuthPasswd{Email: "emai@asd.com", Passwd: "pass1", Status: "stat1", TenantRoles: map[string][]string{"localhost": {"admin"}}, SystemRoles: []string{"systemRoleAdmin"}}
 	err = conn.Save(ctx, testData)
 	require.NoError(t, err)
 
-	rows, err := conn.Get(ctx, "email11")
+	rows, err := conn.Get(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
@@ -63,7 +65,9 @@ func TestUpdate(t *testing.T) {
 	conn, err := Connect(cfg())
 	require.NoError(t, err)
 
-	_, err = conn.db.Exec(conn.table(`delete from %s`))
+	_, err = conn.db.Exec(conn.table(`drop table if exists %s`))
+	require.NoError(t, err)
+	err = conn.create()
 	require.NoError(t, err)
 
 	ts := time.Now()
@@ -96,13 +100,16 @@ func TestUpdate(t *testing.T) {
 		Email:       testData.Email,
 		Status:      ddd.StatusPending,
 		SystemRoles: []string{"notadmin", "other"},
+		TenantRoles: map[string][]string{"t1": {"asd"}},
 	}
 	err = conn.Update(ctx, updateData)
 	require.NoError(t, err)
 	rows, err = conn.Get(ctx, testData.Email)
 	require.NoError(t, err)
 	assert.True(t, len(rows) == 1)
-	assert.Equal(t, updateData.Status, rows[0].Status)
-	assert.Equal(t, updateData.SystemRoles, rows[0].SystemRoles)
+	got := rows[0]
+	updateData.CreatedAt = got.CreatedAt
+	updateData.Passwd = got.Passwd
+	assert.Equal(t, updateData, got)
 
 }

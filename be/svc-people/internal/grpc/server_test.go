@@ -99,7 +99,7 @@ func testServer(ctx context.Context, app app.App) (peoplepb.PeopleSvcClient, fun
 
 	baseServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-			ctx = roles.CtxWithAuthInfo(ctx, roles.CreateAdminUser("test", roles.Device{}))
+			ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{}))
 			return handler(ctx, req)
 		}),
 	)

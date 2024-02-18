@@ -63,15 +63,17 @@ func (w *waiter) Add(fns ...WaitFunc) {
 func (w waiter) Wait() (err error) {
 	g, ctx := errgroup.WithContext(w.ctx)
 
+	// Here we wait for OS signal or for root ctx cancel call
 	g.Go(func() error {
 		<-ctx.Done()
 		w.cancel()
 		return nil
 	})
 
+	// Here we are starting all Wait functions in goroutine
 	for _, fn := range w.fns {
-		fn := fn
-		g.Go(func() error { return fn(ctx) })
+		waitFn := fn
+		g.Go(func() error { return waitFn(ctx) })
 	}
 
 	for _, fn := range w.cleanupFuncs {

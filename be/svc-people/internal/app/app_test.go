@@ -24,7 +24,7 @@ type (
 
 func TestSave(t *testing.T) {
 	rootCtx := context.Background()
-	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateAdminUser("mock", roles.Device{}))
+	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemTenant, "mock", roles.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 
 	cfg := mgo.MgoTestCfg()
@@ -96,7 +96,7 @@ func TestSave(t *testing.T) {
 			},
 		},
 		{
-			test: "forbiden",
+			test: "forbidden",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
 					IdNumbers:  map[string]string{"pin": "pin1"},
@@ -117,7 +117,7 @@ func TestSave(t *testing.T) {
 			},
 		},
 		{
-			test: "pin validateor",
+			test: "pin validator",
 			testFunc: func(tt *testing.T) {
 				p1 := &ddd.Person{
 					IdNumbers:  map[string]string{"EGN": os.Getenv("PIN2")},

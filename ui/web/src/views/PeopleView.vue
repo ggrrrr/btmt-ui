@@ -8,7 +8,7 @@
                             <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load people"></BtnLoadData>
                         </v-col>
                         <v-col no-gutters cols="1" sm="6" md="4">
-                            <BtnLoadData @click="showNewPersonn" text="Add"></BtnLoadData>
+                            <BtnLoadData @click="showNewPerson" text="Add"></BtnLoadData>
                             <v-dialog v-model="refs.edit.show" max-width="900">
                                 <PersonEditForm v-model="refs.edit" @add="addPerson" @save="savePerson" />
                             </v-dialog>
@@ -229,7 +229,7 @@ function editItem(person) {
     refs.value.edit.show = true
 }
 
-function showNewPersonn() {
+function showNewPerson() {
     refs.value.edit.person = new Person()
     refs.value.edit.show = true
 }

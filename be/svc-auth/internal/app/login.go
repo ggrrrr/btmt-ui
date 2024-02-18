@@ -33,7 +33,7 @@ func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (a
 		return app.Result[AuthToken]{}, ErrAuthBadPassword
 	}
 
-	jwt, err := ap.signer.Sign(auth.ToAuthInfo())
+	jwt, err := ap.signer.Sign(auth.ToAuthInfo(roles.SystemTenant))
 	if err != nil {
 		return app.Result[AuthToken]{}, err
 	}

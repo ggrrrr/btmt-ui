@@ -52,7 +52,7 @@ func cfg() awsdb.AwsConfig {
 
 func TestLogin(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateAdminUser("test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
 	store, err := dynamodb.New(cfg())
@@ -130,7 +130,7 @@ func TestLogin(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateAdminUser("test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 	ctxNoEmail := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{})
 
@@ -213,7 +213,7 @@ func TestValidate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateAdminUser("test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
 	store, err := dynamodb.New(cfg())

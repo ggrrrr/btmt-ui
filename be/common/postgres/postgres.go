@@ -8,6 +8,7 @@ type (
 		Password string
 		Database string
 		SSLMode  string
-		Preffix  string
+		Prefix   string
 	}
 )
+

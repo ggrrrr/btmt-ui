@@ -14,7 +14,8 @@ import (
 )
 
 type (
-	repo struct {
+	tRoles map[string][]string
+	repo   struct {
 		prefix string
 		db     *sql.DB
 	}
@@ -32,10 +33,11 @@ func (r *repo) Close() error {
 
 func (r *repo) create() error {
 	sql := r.table(`CREATE TABLE IF NOT EXISTS %s (
-		email TEXT,
-		passwd TEXT,
-		"status" TEXT,
-		system_roles TEXT[],
+		email TEXT  not null,
+		passwd TEXT  not null,
+		"status" TEXT  not null,
+		system_roles TEXT[] not null,
+		tenant_roles JSONB  not null,
 		created_at TIMESTAMP DEFAULT NOW(),
 		UNIQUE(email)
 	)`)
@@ -51,9 +53,9 @@ func Connect(cfg postgres.Config) (*repo, error) {
 	if cfg.SSLMode == "" {
 		cfg.SSLMode = "disable"
 	}
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	psqlConn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database, cfg.SSLMode)
-	db, err := sql.Open("postgres", psqlconn)
+	db, err := sql.Open("postgres", psqlConn)
 	if err != nil {
 		logger.Error(err).Msg("Connect")
 		return nil, err
@@ -63,8 +65,8 @@ func Connect(cfg postgres.Config) (*repo, error) {
 		logger.Error(err).Msg("Ping")
 		return nil, err
 	}
-	if cfg.Preffix == "" {
-		cfg.Preffix = "dev"
+	if cfg.Prefix == "" {
+		cfg.Prefix = "dev"
 	}
 	logger.Info().
 		Str("host", cfg.Host).
@@ -73,7 +75,7 @@ func Connect(cfg postgres.Config) (*repo, error) {
 		Msg("Connected")
 	repo := &repo{
 		db:     db,
-		prefix: strings.Trim(cfg.Preffix, " "),
+		prefix: strings.Trim(cfg.Prefix, " "),
 	}
 
 	err = repo.create()
@@ -86,7 +88,7 @@ func Connect(cfg postgres.Config) (*repo, error) {
 
 func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) {
 	sql := r.table(`
-	select "email", "passwd", "status", "system_roles", created_at from %s
+	select "email", "passwd", "status", "tenant_roles", "system_roles", created_at from %s
 	where email = $1
 	`)
 	logger.DebugCtx(ctx).
@@ -98,17 +100,20 @@ func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) 
 	}
 	out := []ddd.AuthPasswd{}
 	for rows.Next() {
+		var m tRoles
 		var row ddd.AuthPasswd
 		err = rows.Scan(
 			&row.Email,
 			&row.Passwd,
 			&row.Status,
+			&m,
 			pq.Array(&row.SystemRoles),
 			&row.CreatedAt,
 		)
 		if err != nil {
 			return []ddd.AuthPasswd{}, err
 		}
+		row.TenantRoles = m
 		out = append(out, row)
 	}
 	return out, nil
@@ -116,7 +121,7 @@ func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) 
 
 func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
 	sql := r.table(`
-	select "email", "passwd", "status", "system_roles", created_at from %s
+	select "email", "passwd", "status", "tenant_roles", "system_roles", created_at from %s
 	`)
 	logger.DebugCtx(ctx).
 		Str("sql", sql).Msg("List")
@@ -132,17 +137,20 @@ func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
 	}
 	out := []ddd.AuthPasswd{}
 	for rows.Next() {
+		var m tRoles
 		var row ddd.AuthPasswd
 		err = rows.Scan(
 			&row.Email,
 			&row.Passwd,
 			&row.Status,
+			&m,
 			pq.Array(&row.SystemRoles),
 			&row.CreatedAt,
 		)
 		if err != nil {
 			return []ddd.AuthPasswd{}, err
 		}
+		row.TenantRoles = m
 		out = append(out, row)
 	}
 	return out, nil
@@ -150,24 +158,25 @@ func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
 
 func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 	sql := r.table(`
-	update %s set  "status" = $1, "system_roles" = $2
-	where email = $3
+	update %s set  "status" = $2, "system_roles" = $3, "tenant_roles" = $4
+	where email = $1
 	`)
 	logger.DebugCtx(ctx).
 		Str("email", auth.Email).
 		Str("sql", sql).Msg("Update")
 	_, err := r.db.ExecContext(ctx, sql,
+		auth.Email,
 		auth.Status,
 		pq.Array(auth.SystemRoles),
-		auth.Email,
+		tRoles(auth.TenantRoles),
 	)
 	return err
 }
 
 func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
 	sql := r.table(`
-	insert into %s ("email", "passwd", "status", "system_roles")
-	values($1, $2, $3, $4) 
+	insert into %s ("email", "passwd", "status", "tenant_roles", "system_roles")
+	values($1, $2, $3, $4, $5)
 	`)
 	logger.DebugCtx(ctx).
 		Str("email", auth.Email).
@@ -176,6 +185,7 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
 		auth.Email,
 		auth.Passwd,
 		auth.Status,
+		tRoles(auth.TenantRoles),
 		pq.Array(auth.SystemRoles),
 	)
 	return err

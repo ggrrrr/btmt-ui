@@ -24,10 +24,10 @@ func FetchEmailGmail(client *http.Client, url string) (any, error) {
 	var pp profileT
 	json.Unmarshal(body, &pp)
 	log.Printf("%v: %v", "", string(body))
-	// log.Printf("prfile %+v\n\n\n ", pp)
+	// log.Printf("profile %+v\n\n\n ", pp)
 	if pp.Email == "" {
 		log.Printf("%v: %v", "", string(body))
-		log.Printf("prfile %+v", pp)
+		log.Printf("profile %+v", pp)
 		return nil, fmt.Errorf("unable to find email in profile")
 	}
 	_ = map[string]string{

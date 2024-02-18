@@ -17,10 +17,6 @@ type Config struct {
 
 var log zerolog.Logger
 
-// func Log() *zerolog.Logger {
-// 	return &log
-// }
-
 func traceMap(ctx context.Context) map[string]any {
 	d := roles.AuthInfoFromCtx(ctx)
 	out := map[string]any{}

@@ -20,7 +20,8 @@ type (
 	}
 
 	appJwt struct {
-		Roles []string `json:"roles"`
+		Roles  []string `json:"roles"`
+		Tenant string   `json:"tenant"`
 		jwt.RegisteredClaims
 	}
 
@@ -32,11 +33,13 @@ type (
 func fromAuthInfo(from roles.AuthInfo) *appJwt {
 	out := appJwt{
 		Roles:            []string{},
+		Tenant:           string(from.Tenant),
 		RegisteredClaims: jwt.RegisteredClaims{Subject: from.User},
 	}
 	for _, v := range from.Roles {
 		out.Roles = append(out.Roles, string(v))
 	}
+
 	return &out
 }
 
@@ -66,8 +69,8 @@ func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
 func (c *signer) Sign(authInfo roles.AuthInfo) (string, error) {
 	claims := fromAuthInfo(authInfo)
 	claims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(c.ttl))
-	mytoken := jwt.NewWithClaims(jwt.GetSigningMethod(c.signMethod), claims)
-	tokenString, err := mytoken.SignedString(c.signKey)
+	myToken := jwt.NewWithClaims(jwt.GetSigningMethod(c.signMethod), claims)
+	tokenString, err := myToken.SignedString(c.signKey)
 	encoded := base64.StdEncoding.EncodeToString([]byte(tokenString))
 	return encoded, err
 }

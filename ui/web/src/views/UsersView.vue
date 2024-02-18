@@ -5,7 +5,7 @@
                 <v-container fill-height no-gutters class="ma-0 mp-0">
                     <v-row>
                         <v-col no-gutters cols="4" sm="6" md="4">
-                            <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load"></BtnLoadData>
+                            <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load Users"></BtnLoadData>
                         </v-col>
                         <v-col no-gutters cols="1" sm="6" md="4">
                             <BtnLoadData @click="showNewUser" text="Add"></BtnLoadData>
@@ -34,7 +34,7 @@
                 <template v-slot:top>
                 </template>
                 <template v-slot:no-data>
-                    <BtnLoadData v-if="!refs.loadingText" @click="loadData" text="Load"></BtnLoadData>
+                    <BtnLoadData v-if="!refs.loadingText" @click="loadData" text="Load Users"></BtnLoadData>
                     <v-chip color="primary" veriant="text" v-else>{{ refs.loadingText }}</v-chip>
                 </template>
                 <template v-slot:[`header.email`]="{ column }">

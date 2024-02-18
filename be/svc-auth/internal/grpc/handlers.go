@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -83,8 +82,8 @@ func (s *server) TokenValidate(ctx context.Context, _ *authpb.TokenValidateReque
 }
 
 func (s *server) LoginOauth2(ctx context.Context, _ *authpb.LoginOauth2Request) (*authpb.LoginOauth2Response, error) {
-	logger.ErrorCtx(ctx, fmt.Errorf("ErrTeepot")).Msg("LoginOauth2")
-	return nil, app.ToGrpcError(app.ErrTeepot)
+	logger.ErrorCtx(ctx, app.ErrTeapot).Msg("LoginOauth2")
+	return nil, app.ToGrpcError(app.ErrTeapot)
 }
 
 func (s *server) Oauth2Config(ctx context.Context, _ *authpb.Oauth2ConfigRequest) (*authpb.Oauth2ConfigResponse, error) {
