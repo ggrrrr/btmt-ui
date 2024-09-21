@@ -66,9 +66,21 @@ func (w *partWriter) writeHeader(header headerName, values ...string) error {
 // TODO implement quotedprintable
 // Implement multiple parts
 func (w *partWriter) writePart(part *mailPart) error {
-	w.writeBoundaryStart()
-	w.writeHeader(headerContentType, string(part.contentType))
-	w.Write(newLine)
+	var err error
+	err = w.writeBoundaryStart()
+	if err != nil {
+		return err
+	}
+
+	err = w.writeHeader(headerContentType, string(part.contentType))
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write(newLine)
+	if err != nil {
+		return err
+	}
 
 	// qp := quotedprintable.NewWriter(w.w)
 	// defer qp.Close()
@@ -77,14 +89,37 @@ func (w *partWriter) writePart(part *mailPart) error {
 
 // TODO implement text files none base64 encoding based on mimeType
 func (w *partWriter) writeAttachment(part *attachment) error {
+	var err error
 	mediaType := mime.TypeByExtension(filepath.Ext(part.name))
 
-	w.writeBoundaryStart()
-	w.writeHeader(headerContentType, fmt.Sprintf(`%s; name="%s"`, mediaType, part.name))
-	w.writeHeader(headerContentTransferEncoding, string(Base64))
-	w.writeHeader(headerContentDisposition, fmt.Sprintf(`attachment; filename="%s"`, part.name))
-	w.writeHeader(headerContentID, fmt.Sprintf(`<%s>`, part.name))
-	w.Write(newLine)
+	err = w.writeBoundaryStart()
+	if err != nil {
+		return err
+	}
+	err = w.writeHeader(headerContentType, fmt.Sprintf(`%s; name="%s"`, mediaType, part.name))
+	if err != nil {
+		return err
+	}
+
+	err = w.writeHeader(headerContentTransferEncoding, string(Base64))
+	if err != nil {
+		return err
+	}
+
+	err = w.writeHeader(headerContentDisposition, fmt.Sprintf(`attachment; filename="%s"`, part.name))
+	if err != nil {
+		return err
+	}
+
+	err = w.writeHeader(headerContentID, fmt.Sprintf(`<%s>`, part.name))
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write(newLine)
+	if err != nil {
+		return err
+	}
 
 	wc := base64.NewEncoder(base64.StdEncoding, w)
 	defer wc.Close()

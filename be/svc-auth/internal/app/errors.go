@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	ErrAuthEmailEmpty    = app.ErrorBadRequest("email empty", nil)
-	ErrAuthPasswdEmpty   = app.ErrorBadRequest("password empty", nil)
-	ErrAuthEmailNotFound = app.ErrorUnauthenticated("email not found", nil)
-	ErrAuthBadPassword   = app.ErrorUnauthenticated("wrong password", nil)
-	ErrAuthEmailLocked   = app.ErrorUnauthenticated("emails locked", nil)
+	ErrAuthEmailEmpty    = app.BadRequestError("email empty", nil)
+	ErrAuthPasswdEmpty   = app.BadRequestError("password empty", nil)
+	ErrAuthEmailNotFound = app.BadRequestError("email not found", nil)
+	ErrAuthBadPassword   = app.UnauthenticatedError("wrong password", nil)
+	ErrAuthEmailLocked   = app.UnauthenticatedError("emails locked", nil)
 
-	ErrAuthMultipleEmail = app.ErrorSystem("multiple emails", nil)
+	ErrAuthMultipleEmail = app.SystemError("multiple emails", nil)
 )

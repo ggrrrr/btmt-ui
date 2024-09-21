@@ -51,6 +51,7 @@ func TestWrites(t *testing.T) {
 				return w.writePart(&mailPart{
 					contentType: contentTypePlain,
 					copier: func(w io.Writer) error {
+						// nolint: errcheck
 						w.Write([]byte(`body of email`))
 						return nil
 					},
@@ -65,7 +66,7 @@ func TestWrites(t *testing.T) {
 				return w.writeAttachment(&attachment{
 					name: "file.txt",
 					copier: func(w io.Writer) error {
-						w.Write([]byte(`text file`))
+						_, _ = w.Write([]byte(`text file`))
 						return nil
 					},
 				})

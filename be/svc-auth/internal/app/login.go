@@ -17,8 +17,8 @@ func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (a
 	}
 	auth, err := ap.findEmail(ctx, email)
 	if err != nil {
-		logger.Error(err).Msg("failed to fetch email")
-		return app.Result[AuthToken]{}, app.ErrorSystem("failed to fetch email", err)
+		logger.Error(err).Msg("ap.findEmail")
+		return app.Result[AuthToken]{}, app.SystemError("failed to fetch email", err)
 	}
 
 	if auth == nil {
@@ -35,9 +35,10 @@ func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (a
 
 	jwt, err := ap.signer.Sign(auth.ToAuthInfo(roles.SystemTenant))
 	if err != nil {
-		return app.Result[AuthToken]{}, err
+		logger.ErrorCtx(ctx, err).Msg("ap.signer.Sign")
+		return app.Result[AuthToken]{}, app.SystemError("Unable to sign, please try again later", nil)
 	}
-	return app.ResultPayload[AuthToken]("ok", AuthToken(jwt)), nil
+	return app.ResultWithPayload[AuthToken]("ok", AuthToken(jwt)), nil
 }
 
 func (ap *application) TokenValidate(ctx context.Context) error {
@@ -47,8 +48,8 @@ func (ap *application) TokenValidate(ctx context.Context) error {
 	}
 	auth, err := ap.findEmail(ctx, authInfo.User)
 	if err != nil {
-		logger.Error(err).Msg("Validate")
-		return app.ErrorSystem("failed to fetch email", err)
+		logger.ErrorCtx(ctx, err).Msg("Validate")
+		return app.SystemError("failed to fetch email", err)
 	}
 	if auth == nil {
 		return ErrAuthEmailNotFound

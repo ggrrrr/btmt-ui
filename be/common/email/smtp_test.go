@@ -39,7 +39,8 @@ MQoyCg==
 	mail.AddFile("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/test.txt")
 
 	buf := new(bytes.Buffer)
-	mail.writerTo(buf)
+	err := mail.writerTo(buf)
+	assert.NoError(t, err)
 	fmt.Printf("%s \n", buf.String())
 	assert.Equal(t, result, buf.String())
 }

@@ -235,7 +235,10 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 
 func (r *repo) errorIsNotFound(err error) {
 	if _, ok := err.(*dynamodb.ResourceNotFoundException); ok {
-		r.createTableAuth()
+		err := r.createTableAuth()
+		if err != nil {
+			logger.Error(err).Msg("createTableAuth")
+		}
 	}
 }
 

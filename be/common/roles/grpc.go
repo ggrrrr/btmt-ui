@@ -26,7 +26,7 @@ func lower(from string) string {
 
 func extractGrpcAuthorization(md metadata.MD) Authorization {
 	out := Authorization{}
-	// We check first for grpc specific header 'authorization'
+	// We check first for http specific header 'authorization'
 	if len(md[lower(HttpAuthorization)]) == 1 {
 		gwAuthorization := strings.Split(md[lower(HttpAuthorization)][0], " ")
 		if len(gwAuthorization) == 2 {

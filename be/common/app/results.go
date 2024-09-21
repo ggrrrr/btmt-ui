@@ -13,11 +13,11 @@ func (r Result[T]) Payload() T {
 	return r.payload
 }
 
-func ResultMsg[T any](msg string) Result[T] {
+func ResultWithMsg[T any](msg string) Result[T] {
 	return Result[T]{msg: msg}
 }
 
-func ResultPayload[T any](msg string, payload T) Result[T] {
+func ResultWithPayload[T any](msg string, payload T) Result[T] {
 	return Result[T]{msg: msg, payload: payload}
 }
 

@@ -79,7 +79,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 	if p.Id != "" {
 		old, _ := a.repoPeople.GetById(ctx, p.Id)
 		if old != nil {
-			return app.ErrorBadRequest("person with id exists", nil)
+			return app.BadRequestError("person with id exists", nil)
 		}
 	}
 	if p.Phones == nil {
@@ -107,7 +107,14 @@ func (a *application) GetById(ctx context.Context, id string) (*ddd.Person, erro
 		return nil, err
 	}
 	logger.InfoCtx(ctx).Str("id", id).Msg("GetById")
-	return a.repoPeople.GetById(ctx, id)
+	person, err := a.repoPeople.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if person == nil {
+		return nil, app.ItemNotFoundError("person", id)
+	}
+	return person, nil
 }
 
 func (a *application) List(ctx context.Context, filters Filters) ([]ddd.Person, error) {

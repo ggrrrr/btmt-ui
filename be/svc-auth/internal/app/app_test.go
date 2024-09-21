@@ -13,6 +13,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
 )
 
 func TestCheckPassword(t *testing.T) {
@@ -134,7 +135,8 @@ func TestValidate(t *testing.T) {
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 	ctxNoEmail := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{})
 
-	store, err := dynamodb.New(cfg())
+	// store, err := dynamodb.New(cfg())
+	store, err := mem.New()
 	require.NoError(t, err)
 
 	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))

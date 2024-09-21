@@ -6,7 +6,6 @@ import (
 	"net"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
@@ -27,16 +26,16 @@ type (
 	}
 )
 
-func cfg() awsdb.AwsConfig {
-	return awsdb.AwsConfig{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:4566",
-		Database: awsdb.DynamodbConfig{
-			Database: "",
-			Prefix:   "test",
-		},
-	}
-}
+// func cfg() awsdb.AwsConfig {
+// 	return awsdb.AwsConfig{
+// 		Region:   "us-east-1",
+// 		Endpoint: "http://localhost:4566",
+// 		Database: awsdb.DynamodbConfig{
+// 			Database: "",
+// 			Prefix:   "test",
+// 		},
+// 	}
+// }
 
 func TestServer(t *testing.T) {
 	ctx := context.Background()

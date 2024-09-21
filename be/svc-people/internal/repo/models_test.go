@@ -11,28 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func cage(asd *int) {
-	age1 := 10
-	asd = &age1
-}
-
-func TestAsd(t *testing.T) {
-
-	type Age struct {
-		age *int
-	}
-
-	age := time.Now().Year() - 1978
-
-	asd := Age{age: new(int)}
-	t.Logf("%v \n", asd.age)
-	cage(asd.age)
-	t.Logf("%v \n", asd.age)
-	asd.age = &age
-	t.Logf("%v \n", *asd.age)
-
-}
-
 func Test_objectId(t *testing.T) {
 	uuid1 := primitive.NewObjectID()
 	fmt.Printf("uuid: %v \n", uuid1)

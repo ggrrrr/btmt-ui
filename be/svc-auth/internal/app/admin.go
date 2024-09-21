@@ -16,10 +16,10 @@ func (a *application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
 		return err
 	}
 	if auth.Email == "" {
-		return app.ErrorBadRequest("email empty", nil)
+		return app.BadRequestError("email empty", nil)
 	}
 	if auth.Passwd == "" {
-		return app.ErrorBadRequest("password empty", nil)
+		return app.BadRequestError("password empty", nil)
 	}
 	logger.InfoCtx(ctx).Any("email", auth.Email).Msg("CreateAuth")
 	if auth.Passwd != "" {
@@ -43,7 +43,7 @@ func (ap *application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPassw
 		return app.Result[[]ddd.AuthPasswd]{}, err
 	}
 	logger.InfoCtx(ctx).Msg("ListAuth")
-	return app.ResultPayload[[]ddd.AuthPasswd]("ok", out), err
+	return app.ResultWithPayload[[]ddd.AuthPasswd]("ok", out), err
 }
 
 func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) error {
@@ -56,7 +56,7 @@ func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) erro
 		return err
 	}
 	if len(list) == 0 {
-		return app.ErrorBadRequest("email not found", nil)
+		return app.BadRequestError("email not found", nil)
 	}
 	update := list[0]
 	update.Status = auth.Status

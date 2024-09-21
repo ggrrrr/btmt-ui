@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	ErrAuthUnauthenticated = ErrorUnauthenticated("please login", nil)
-	ErrForbidden           = ErrorDenied("forbidden", nil)
-	ErrTeapot              = ErrorSystem("teapot", nil)
+	ErrAuthUnauthenticated = UnauthenticatedError("please login", nil)
+	ErrForbidden           = PermissionDeniedError("forbidden", nil)
+	ErrTeapot              = SystemError("teapot", nil)
 )
 
 type AppError struct {
@@ -19,7 +19,7 @@ type AppError struct {
 	grpcCode codes.Code
 }
 
-func (e *AppError) Err() error {
+func (e *AppError) Cause() error {
 	return e.err
 }
 
@@ -34,9 +34,9 @@ func (e *AppError) Code() codes.Code {
 func (e *AppError) Error() string {
 	errStr := ""
 	if e.err != nil {
-		errStr = e.err.Error()
+		return fmt.Sprintf("[%d]: %s -> %v", e.grpcCode, e.msg, errStr)
 	}
-	return fmt.Sprintf("[%d]: %s %s", e.grpcCode, e.msg, errStr)
+	return fmt.Sprintf("[%d]: %s", e.grpcCode, e.msg)
 }
 
 func ToGrpcError(e error) error {
@@ -50,7 +50,8 @@ func ToGrpcError(e error) error {
 	return status.Error(codes.Internal, e.Error())
 }
 
-func ErrorSystem(msg string, err error) error {
+// HTTP CODE 500
+func SystemError(msg string, err error) error {
 	return &AppError{
 		grpcCode: codes.Internal,
 		msg:      msg,
@@ -58,7 +59,8 @@ func ErrorSystem(msg string, err error) error {
 	}
 }
 
-func ErrorBadRequest(msg string, err error) error {
+// HTTP CODE 400
+func BadRequestError(msg string, err error) error {
 	return &AppError{
 		grpcCode: codes.InvalidArgument,
 		msg:      msg,
@@ -66,7 +68,8 @@ func ErrorBadRequest(msg string, err error) error {
 	}
 }
 
-func ErrorUnauthenticated(msg string, err error) error {
+// HTTP code 401
+func UnauthenticatedError(msg string, err error) error {
 	return &AppError{
 		grpcCode: codes.Unauthenticated,
 		msg:      msg,
@@ -74,10 +77,20 @@ func ErrorUnauthenticated(msg string, err error) error {
 	}
 }
 
-func ErrorDenied(msg string, err error) error {
+// HTTP code 403
+func PermissionDeniedError(msg string, err error) error {
 	return &AppError{
 		grpcCode: codes.PermissionDenied,
 		msg:      msg,
 		err:      err,
+	}
+}
+
+// HTTP code 404
+func ItemNotFoundError(itemName, itemID string) error {
+	return &AppError{
+		grpcCode: codes.NotFound,
+		msg:      fmt.Sprintf("%s with ID:%s not found", itemName, itemID),
+		err:      nil,
 	}
 }

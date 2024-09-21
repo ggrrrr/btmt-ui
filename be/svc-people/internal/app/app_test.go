@@ -42,7 +42,7 @@ func TestSave(t *testing.T) {
 
 	tests := []testCase{
 		{
-			test: "no access",
+			test: "no accessa",
 			testFunc: func(tt *testing.T) {
 				_, err = testApp.GetById(rootCtx, "asd")
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)

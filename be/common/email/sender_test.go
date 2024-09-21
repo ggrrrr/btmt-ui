@@ -23,8 +23,8 @@ func loadConfig() {
 	email1 = os.Getenv("EMAIL_EMAIL1")
 	email2 = os.Getenv("EMAIL_EMAIL2")
 	cfg = Config{
-		Host:     os.Getenv("EMAIL_HOST"),
-		Addr:     os.Getenv("EMAIL_ADDR"),
+		SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
+		SMTPAddr: os.Getenv("EMAIL_SMTP_ADDR"),
 		Username: os.Getenv("EMAIL_USERNAME"),
 		Password: os.Getenv("EMAIL_PASSWORD"),
 	}
@@ -32,7 +32,7 @@ func loadConfig() {
 
 func TestDialAndSend(t *testing.T) {
 	loadConfig()
-	if cfg.Addr == "" {
+	if cfg.SMTPAddr == "" {
 		t.Skip("NO Addr CONFIG")
 	}
 	var err error
@@ -68,7 +68,7 @@ func TestDialAndSend(t *testing.T) {
 func TestMultipleMsg(t *testing.T) {
 	loadConfig()
 
-	if cfg.Addr == "" {
+	if cfg.SMTPAddr == "" {
 		t.Skip("NO Addr CONFIG")
 	}
 	emails := RcptList{

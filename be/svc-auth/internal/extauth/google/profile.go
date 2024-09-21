@@ -10,7 +10,10 @@ import (
 
 func FetchEmailGmail(client *http.Client, url string) (any, error) {
 	resProfile, _ := client.Get(url)
-	body, _ := io.ReadAll(resProfile.Body)
+	body, err := io.ReadAll(resProfile.Body)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("fetchEmailGmail.body: %v", string(body))
 	type profileT struct {
 		Id            string `json:"id"`
@@ -22,7 +25,10 @@ func FetchEmailGmail(client *http.Client, url string) (any, error) {
 		LastName      string `json:"family_name"`
 	}
 	var pp profileT
-	json.Unmarshal(body, &pp)
+	err = json.Unmarshal(body, &pp)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("%v: %v", "", string(body))
 	// log.Printf("profile %+v\n\n\n ", pp)
 	if pp.Email == "" {

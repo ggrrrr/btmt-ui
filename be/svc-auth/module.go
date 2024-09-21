@@ -54,7 +54,10 @@ func InitApp(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (app.Ap
 			SystemRoles: []string{"admin"},
 			Passwd:      pass,
 		}
-		repo.Save(ctx, asdUser)
+		err = repo.Save(ctx, asdUser)
+		if err != nil {
+			logger.Error(err).Msg("InitApp.save")
+		}
 	}
 	if awsCfg {
 		repo, err = initAwsRepo(ctx, w, cfg)

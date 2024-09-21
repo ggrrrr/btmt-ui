@@ -44,7 +44,10 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 			// w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			out := "ok"
 			w.WriteHeader(200)
-			w.Write([]byte(out))
+			_, err := w.Write([]byte(out))
+			if err != nil {
+				logger.ErrorCtx(r.Context(), err)
+			}
 			return
 		}
 
@@ -68,7 +71,7 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 					Any("Method", r.Method).
 					Any("request", userRequest).
 					Err(err)
-				web.SendError(w, app.ErrorUnauthenticated(err.Error(), nil))
+				web.SendError(w, app.UnauthenticatedError(err.Error(), nil))
 				return
 				// return req, status.Error(codes.Unauthenticated, err.Error())
 				// next.ServeHTTP(w, r)

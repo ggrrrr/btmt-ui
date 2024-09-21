@@ -106,7 +106,7 @@ func toDob(fromDob *dob) *ddd.Dob {
 func fromPerson(p *ddd.Person) (*person, error) {
 	id, err := convertPersonId(p.Id)
 	if err != nil {
-		return nil, app.ErrorBadRequest("invalid person.id", err)
+		return nil, app.BadRequestError("invalid person.id", err)
 	}
 
 	out := person{

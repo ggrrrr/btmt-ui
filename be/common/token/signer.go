@@ -71,6 +71,9 @@ func (c *signer) Sign(authInfo roles.AuthInfo) (string, error) {
 	claims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(c.ttl))
 	myToken := jwt.NewWithClaims(jwt.GetSigningMethod(c.signMethod), claims)
 	tokenString, err := myToken.SignedString(c.signKey)
+	if err != nil {
+		return "", err
+	}
 	encoded := base64.StdEncoding.EncodeToString([]byte(tokenString))
-	return encoded, err
+	return encoded, nil
 }

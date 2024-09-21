@@ -15,8 +15,8 @@ type (
 	AuthType string
 
 	Config struct {
-		Host     string
-		Addr     string
+		SMTPHost string
+		SMTPAddr string
 		Username string
 		Password string
 		AuthType AuthType
@@ -56,29 +56,29 @@ func Dial(cfg Config) (*smtpConn, error) {
 
 func (smtpConn *smtpConn) Dial() (*smtpConn, error) {
 
-	tcpConn, err := net.DialTimeout("tcp", smtpConn.cfg.Addr, smtpConn.cfg.timeout)
+	tcpConn, err := net.DialTimeout("tcp", smtpConn.cfg.SMTPAddr, smtpConn.cfg.timeout)
 	if err != nil {
-		return nil, errors.Wrap(err, "DialTimeout")
+		return nil, errors.Wrap(err, "Dial")
 	}
-	logger.Info().Str("host", smtpConn.cfg.Addr).Msg("Connected.")
-	client, err := smtp.NewClient(tcpConn, smtpConn.cfg.Host)
+	logger.Info().Str("host", smtpConn.cfg.SMTPAddr).Msg("Connected.")
+	client, err := smtp.NewClient(tcpConn, smtpConn.cfg.SMTPHost)
 	if err != nil {
 		return nil, errors.Wrap(err, "NewClient")
 	}
 
 	if ok, _ := client.Extension("STARTTLS"); ok {
-		if err := client.StartTLS(&tls.Config{ServerName: smtpConn.cfg.Host}); err != nil {
+		if err := client.StartTLS(&tls.Config{ServerName: smtpConn.cfg.SMTPHost}); err != nil {
 			client.Close()
 			return nil, errors.Wrap(err, "StartTLS")
 		}
 		logger.Debug().Msg("StartTLS.")
 	}
 
-	auth := smtp.PlainAuth("", smtpConn.cfg.Username, smtpConn.cfg.Password, smtpConn.cfg.Host)
+	auth := smtp.PlainAuth("", smtpConn.cfg.Username, smtpConn.cfg.Password, smtpConn.cfg.SMTPHost)
 	err = client.Auth(auth)
 	if err != nil {
 		logger.Error(err).Str("username", smtpConn.cfg.Username).Msg("PlainAuth")
-		return nil, errors.Wrap(err, "PlainAuth")
+		return nil, errors.Wrap(err, "Auth")
 	}
 
 	smtpConn.client = client
@@ -112,6 +112,8 @@ func (a *smtpConn) Send(email *Msg) error {
 }
 
 func (conn *smtpConn) Close() error {
-	conn.client.Quit()
+	if err := conn.client.Quit(); err != nil {
+		logger.Error(err).Msg("Close")
+	}
 	return conn.client.Close()
 }

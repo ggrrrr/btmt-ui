@@ -48,7 +48,9 @@ func (r *repo) CreateIndex(ctx context.Context) {
 		},
 		Options: nil,
 	}
-	c.Indexes().CreateOne(ctx, mod)
+	if _, err := c.Indexes().CreateOne(ctx, mod); err != nil {
+		logger.ErrorCtx(ctx, err).Msg("CreateIndex")
+	}
 }
 
 func (r *repo) Save(ctx context.Context, p *ddd.Person) error {
@@ -68,7 +70,7 @@ func (r *repo) Save(ctx context.Context, p *ddd.Person) error {
 
 func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	if len(p.Id) == 0 {
-		return app.ErrorBadRequest("person.id is empty", nil)
+		return app.BadRequestError("person.id is empty", nil)
 	}
 	newPerson, err := fromPerson(p)
 	if err != nil {
@@ -110,7 +112,7 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	}
 
 	if len(setReq) == 0 {
-		return app.ErrorBadRequest("empty person", nil)
+		return app.BadRequestError("empty person", nil)
 	}
 	updateReq := bson.M{
 		"$set": setReq,
@@ -153,7 +155,7 @@ func (r *repo) GetById(ctx context.Context, fromId string) (*ddd.Person, error) 
 	}
 	err = res.Decode(&out)
 	if err != nil {
-		return nil, app.ErrorSystem("unable to decode record", err)
+		return nil, app.SystemError("unable to decode record", err)
 	}
 	d := out.toPerson()
 	return &d, nil

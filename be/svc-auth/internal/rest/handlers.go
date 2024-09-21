@@ -40,11 +40,13 @@ func (s *server) Router() chi.Router {
 
 func noJson400(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(400)
-	w.Write([]byte("asdasd"))
+	// nolint: errcheck
+	w.Write([]byte("noJson400"))
 }
 
 func json500(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(500)
+	// nolint: errcheck
 	w.Write([]byte(`{"me":"json500"}`))
 }
 

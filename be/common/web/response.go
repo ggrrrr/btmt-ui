@@ -23,12 +23,11 @@ type AppResponse struct {
 func SendError(w http.ResponseWriter, e error) {
 	var httpCode int = 500
 	var msg string
-	var err error
-
+	var err error = e
 	appError, ok := e.(*app.AppError)
 	if ok {
 		msg = appError.Msg()
-		err = appError.Err()
+		err = appError.Cause()
 		switch appError.Code() {
 		case codes.Internal:
 			httpCode = 500
@@ -38,6 +37,8 @@ func SendError(w http.ResponseWriter, e error) {
 			httpCode = 401
 		case codes.PermissionDenied:
 			httpCode = 403
+		case codes.NotFound:
+			httpCode = 404
 		default:
 			httpCode = 500
 		}
@@ -68,12 +69,12 @@ func SendErrorBadRequest(w http.ResponseWriter, msg string, err error) {
 func DecodeJsonRequest(r *http.Request, payload any) error {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		return app.ErrorSystem("unable to load http body", err)
+		return app.SystemError("unable to load http body", err)
 	}
 	err = json.NewDecoder(bytes.NewReader(b)).Decode(&payload)
 	if err != nil {
 		logger.Error(err).Str("body", string(b)).Send()
-		return app.ErrorBadRequest("bad json", err)
+		return app.BadRequestError("bad json", err)
 	}
 	return nil
 }
@@ -95,5 +96,8 @@ func send(w http.ResponseWriter, code int, msg string, err1 error, payload any) 
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
-	w.Write(b)
+	_, err = w.Write(b)
+	if err != nil {
+		logger.Error(err).Msg("unable to write response")
+	}
 }

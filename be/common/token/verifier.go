@@ -18,7 +18,7 @@ var (
 	ErrJwtInvalid           = errors.New("JWT is invalid")
 	ErrJwtNotFoundTenant    = errors.New("JWT tenant not set")
 	ErrJwtInvalidSubject    = errors.New("JWT subject is invalid")
-	ErrJwtNotFoundMapClaims = errors.New("JWT MapClaims not found ")
+	ErrJwtNotFoundMapClaims = errors.New("JWT MapClaims not found")
 )
 
 type (

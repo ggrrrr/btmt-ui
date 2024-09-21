@@ -31,7 +31,8 @@ func Test_List(t *testing.T) {
 
 	r, err := New(cfg())
 	require.NoError(t, err)
-	r.List(ctx)
+	_, err = r.List(ctx)
+	require.NoError(t, err)
 
 	_ = r.createTableAuth()
 

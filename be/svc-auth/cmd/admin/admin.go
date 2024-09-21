@@ -62,6 +62,7 @@ func init() {
 
 func runNewEmail() error {
 	defer func() {
+		// nolint: errcheck
 		w.Wait()
 		fmt.Println("Wait")
 	}()
@@ -82,8 +83,11 @@ func runNewEmail() error {
 	})
 	return err
 }
+
+// nolint: unused
 func runUpdateEmail() error {
 	defer func() {
+		// nolint: errcheck
 		w.Wait()
 		fmt.Println("Wait")
 	}()
@@ -128,6 +132,7 @@ func prepCli() (context.Context, app.App, error) {
 
 func runListEmail() error {
 	defer func() {
+		// nolint: errcheck
 		w.Wait()
 		fmt.Println("Wait")
 	}()
