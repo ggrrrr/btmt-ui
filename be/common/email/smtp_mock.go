@@ -15,7 +15,7 @@ type SmtpClientMock struct {
 	buf              *bytes.Buffer
 	dataBlocks       []string
 	from             string
-	to               string
+	to               []string
 }
 
 func (d *SmtpClientMock) Write(p []byte) (n int, err error) {
@@ -37,6 +37,7 @@ func NewSmtpClientMock() *SmtpClientMock {
 	return &SmtpClientMock{
 		buf:        nil,
 		dataBlocks: []string{},
+		to:         []string{},
 	}
 }
 
@@ -68,7 +69,7 @@ func (s *SmtpClientMock) Mail(from string) error {
 }
 
 func (s *SmtpClientMock) Rcpt(rcpt string) error {
-	s.to = rcpt
+	s.to = append(s.to, rcpt)
 	return nil
 }
 

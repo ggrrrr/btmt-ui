@@ -12,7 +12,7 @@ type (
 		from        Rcpt
 		to          RcptList
 		headers     []smtpHeader
-		parts       []*mailPart
+		parts       []*bodyPart
 		attachments []*attachmentPart
 		encoding    encoding
 		charset     string
@@ -24,7 +24,7 @@ type (
 		values []string
 	}
 
-	mailPart struct {
+	bodyPart struct {
 		contentType contentType
 		copier      func(io.Writer) error
 		encoding    encoding
@@ -37,8 +37,25 @@ type (
 	}
 )
 
-func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
-	if from.Mail == "" {
+func CreateMsgFromString(fromStr string, toStr []string, subject string) (*Msg, error) {
+	from, err := RcptFromString(fromStr)
+	if err != nil {
+		return nil, fmt.Errorf("from address: %w", err)
+	}
+	to := RcptList{}
+	for _, v := range toStr {
+		rcpt, err := RcptFromString(v)
+		if err != nil {
+			return nil, fmt.Errorf("to address: %w", err)
+		}
+		to = append(to, rcpt)
+	}
+
+	return createMsg(from, to, subject)
+}
+
+func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
+	if from.addr == "" {
 		return nil, fmt.Errorf("from is empty")
 	}
 	if to == nil {
@@ -47,7 +64,7 @@ func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 	if len(to) == 0 {
 		return nil, fmt.Errorf("to list is empty")
 	}
-	if to[0].Mail == "" {
+	if to[0].addr == "" {
 		return nil, fmt.Errorf("to[0] is empty")
 	}
 	if subject == "" {
@@ -57,14 +74,14 @@ func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 		from:        from,
 		to:          to,
 		headers:     []smtpHeader{},
-		parts:       []*mailPart{},
+		parts:       []*bodyPart{},
 		attachments: []*attachmentPart{},
 		charset:     "UTF-8",
 		encoding:    QuotedPrintable,
 	}
 
-	msg.setHeader(headerFrom, from.Format())
-	msg.setHeader(headerTo, to.FormatedMails()...)
+	msg.setHeader(headerFrom, from.Formatted())
+	msg.setHeader(headerTo, to.Formatted()...)
 	//return "=?utf-8?q?" + subject + "?="
 	msg.setHeader(headerSubject, subject)
 
@@ -73,7 +90,7 @@ func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 
 func (e *Msg) AddCc(cc RcptList) {
 	e.to = append(e.to, cc...)
-	e.setHeader(headerCc, cc.Format()...)
+	e.setHeader(headerCc, cc.Formatted()...)
 }
 
 func (e *Msg) AddBcc(bcc RcptList) {
@@ -81,7 +98,7 @@ func (e *Msg) AddBcc(bcc RcptList) {
 }
 
 func (e *Msg) AddBodyString(body string) {
-	e.parts = append(e.parts, &mailPart{
+	e.parts = append(e.parts, &bodyPart{
 		contentType: contentTypePlain,
 		copier:      newStringCopier(body),
 		encoding:    Unencoded,
@@ -89,7 +106,7 @@ func (e *Msg) AddBodyString(body string) {
 }
 
 func (e *Msg) AddHtmlBodyString(body string) {
-	e.parts = append(e.parts, &mailPart{
+	e.parts = append(e.parts, &bodyPart{
 		contentType: contentTypeHtml,
 		copier:      newStringCopier(body),
 		encoding:    Unencoded,
@@ -97,7 +114,7 @@ func (e *Msg) AddHtmlBodyString(body string) {
 }
 
 func (e *Msg) AddHtmlBodyWriter(copier func(io.Writer) error) {
-	e.parts = append(e.parts, &mailPart{
+	e.parts = append(e.parts, &bodyPart{
 		contentType: contentTypeHtml,
 		copier:      copier,
 		encoding:    Unencoded,

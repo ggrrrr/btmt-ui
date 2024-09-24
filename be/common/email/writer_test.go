@@ -12,11 +12,23 @@ import (
 
 func Test_WriteTo(t *testing.T) {
 	newLine = []byte("\n")
+	var err error
+
+	mailEmpty, _ := createMsg(
+		Rcpt{addr: "asd@asd", name: "From name"},
+		RcptList{Rcpt{addr: "to@to", name: "To name"}},
+		"Subject 1",
+	)
+
+	bufEmpty := new(bytes.Buffer)
+	err = mailEmpty.writerTo(bufEmpty)
+	err1 := &MailFormatError{}
+	assert.ErrorAs(t, err, &err1)
 
 	pwd := os.Getenv("PWD")
-	mail, _ := CreateMsg(
-		Rcpt{Mail: "asd@asd", Name: "From name"},
-		RcptList{Rcpt{Mail: "to@to", Name: "To name"}},
+	mail, _ := createMsg(
+		Rcpt{addr: "asd@asd", name: "From name"},
+		RcptList{Rcpt{addr: "to@to", name: "To name"}},
 		"Subject 1",
 	)
 
@@ -43,7 +55,7 @@ MQoyCg==
 	mail.AddFile(fmt.Sprintf("%s/../../../test.txt", pwd))
 
 	buf := new(bytes.Buffer)
-	err := mail.writerTo(buf)
+	err = mail.writerTo(buf)
 	assert.NoError(t, err)
 	assert.True(t, mail.rootWriter.boundary != "")
 	resultB := strings.ReplaceAll(result, "c306cfe3a93593b66e74fae51429f45917f23e2a74f3e70aa042fdec2891", mail.rootWriter.boundary)

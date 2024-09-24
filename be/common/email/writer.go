@@ -42,38 +42,13 @@ const (
 	Unencoded encoding = "8bit"
 )
 
-func (a *Sender) Send(email *Msg) error {
-	var err error
-	err = a.smtpClient.Mail(email.from.Mail)
-	if err != nil {
-		return fmt.Errorf("smtpClient.Mail[%s]: %w", email.from.Mail, err)
-	}
-
-	for _, t := range email.to {
-		if err := a.smtpClient.Rcpt(t.Mail); err != nil {
-			return fmt.Errorf("smtpClient.to[].Rcpt[%s]: %w", t.Mail, err)
+func (e *Msg) writerTo(w io.Writer) error {
+	if len(e.parts) == 0 {
+		return &MailFormatError{
+			err: fmt.Errorf("body is empty"),
 		}
 	}
 
-	w, err := a.smtpClient.Data()
-	if err != nil {
-		return fmt.Errorf("smtpClient.Data: %w", err)
-	}
-
-	defer w.Close()
-	err = email.writerTo(w)
-	if err != nil {
-		return fmt.Errorf("email.writeTo[%s]: %w", email.to[0].Mail, err)
-	}
-
-	logger.Info().Str("to", email.to[0].Mail).Msg("Send")
-	return nil
-}
-
-func (e *Msg) writerTo(w io.Writer) error {
-	if len(e.parts) == 0 {
-		return fmt.Errorf("msg.parts is empty")
-	}
 	var err error
 	e.rootWriter = &partWriter{
 		w:        w,
@@ -97,7 +72,7 @@ func (e *Msg) writerTo(w io.Writer) error {
 		return fmt.Errorf("msg.writeMultipart: %w", err)
 	}
 
-	err = e.rootWriter.writePart(e.parts[0])
+	err = e.rootWriter.writeBody(e.parts[0])
 	if err != nil {
 		return fmt.Errorf("msg.writePart[0]: %w", err)
 	}

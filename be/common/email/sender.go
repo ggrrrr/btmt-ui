@@ -2,6 +2,7 @@ package email
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/smtp"
@@ -98,6 +99,47 @@ func NewSender(cfg Config) (*Sender, error) {
 	return sender, err
 }
 
+func (a *Sender) Send(email *Msg) error {
+	if len(email.parts) == 0 {
+		return &MailFormatError{
+			err: fmt.Errorf("body is empty"),
+		}
+	}
+
+	var err error
+	err = a.smtpClient.Mail(email.from.addr)
+	if err != nil {
+		return fmt.Errorf("smtpClient.Mail[%s]: %w", email.from.addr, err)
+	}
+
+	for _, t := range email.to {
+		if err := a.smtpClient.Rcpt(t.addr); err != nil {
+			return fmt.Errorf("smtpClient.to[].Rcpt[%s]: %w", t.addr, err)
+		}
+	}
+
+	w, err := a.smtpClient.Data()
+	if err != nil {
+		return fmt.Errorf("smtpClient.Data: %w", err)
+	}
+
+	defer w.Close()
+	err = email.writerTo(w)
+	if err != nil {
+		return fmt.Errorf("email.writeTo[%s]: %w", email.to[0].addr, err)
+	}
+
+	logger.Info().Str("to", email.to[0].addr).Msg("Send")
+	return nil
+}
+
+func (conn *Sender) Close() error {
+	if err := conn.smtpClient.Quit(); err != nil {
+		logger.Error(err).Msg("Close")
+	}
+	return conn.smtpClient.Close()
+}
+
 func (sender *Sender) smtpAuth() error {
 	var err error
 
@@ -132,11 +174,4 @@ func (sender *Sender) smtpAuth() error {
 	}
 
 	return nil
-}
-
-func (conn *Sender) Close() error {
-	if err := conn.smtpClient.Quit(); err != nil {
-		logger.Error(err).Msg("Close")
-	}
-	return conn.smtpClient.Close()
 }

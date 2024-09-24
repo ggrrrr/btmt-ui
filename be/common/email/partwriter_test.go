@@ -50,7 +50,7 @@ func TestWrites(t *testing.T) {
 			name: "writePart",
 			want: "\r\n--boundary-1\r\nContent-Type: text/plain\r\n\r\nbody of email",
 			testFunc: func(w *partWriter) error {
-				return w.writePart(&mailPart{
+				return w.writeBody(&bodyPart{
 					contentType: contentTypePlain,
 					copier: func(w io.Writer) error {
 						// nolint: errcheck
@@ -80,6 +80,7 @@ func TestWrites(t *testing.T) {
 			testWrite(t, tc.testFunc, tc.want)
 		})
 	}
+
 }
 
 func testWrite(t *testing.T, testFunc func(w *partWriter) error, res string) {
@@ -92,4 +93,5 @@ func testWrite(t *testing.T, testFunc func(w *partWriter) error, res string) {
 	err := testFunc(&w)
 	require.NoError(t, err)
 	assert.Equal(t, res, buf.String())
+
 }

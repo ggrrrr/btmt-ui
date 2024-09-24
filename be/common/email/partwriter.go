@@ -55,7 +55,7 @@ func (w *partWriter) writeHeader(header smtpHeader) error {
 
 // TODO implement quotedprintable
 // Implement multiple parts
-func (w *partWriter) writePart(part *mailPart) error {
+func (w *partWriter) writeBody(part *bodyPart) error {
 	var err error
 	err = w.writeBoundaryStart()
 	if err != nil {

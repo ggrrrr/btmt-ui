@@ -8,6 +8,49 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestRcptMail(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name: "ok",
+			testFunc: func(t *testing.T) {
+				msg, err := CreateMsgFromString("me@me.com", []string{"to@to.com"}, "subject")
+				require.NoError(t, err)
+				assert.Equal(t, &Msg{
+					from: Rcpt{addr: "me@me.com"},
+					to:   RcptList{Rcpt{addr: "to@to.com"}},
+					headers: []smtpHeader{
+						{key: "From", values: []string{"me@me.com"}},
+						{key: "To", values: []string{"to@to.com"}},
+						{key: "Subject", values: []string{"subject"}},
+					},
+					parts:       []*bodyPart{},
+					attachments: []*attachmentPart{},
+					encoding:    "quoted-printable",
+					charset:     "UTF-8",
+					rootWriter:  nil,
+				}, msg)
+			},
+		},
+		{
+			name: "rcpt list fail",
+			testFunc: func(t *testing.T) {
+				_, err := CreateMsgFromString("me@me.com", []string{"to@to.com", "asdasd"}, "subject")
+				require.Error(t, err)
+				err1 := &MailFormatError{}
+				require.ErrorAs(t, err, &err1)
+				fmt.Printf("%+v \n", err)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, tc.testFunc)
+	}
+}
+
 func TestCreateMsg(t *testing.T) {
 	type testCase struct {
 		name    string
@@ -20,18 +63,18 @@ func TestCreateMsg(t *testing.T) {
 	tst := []testCase{
 		{
 			name:    "ok",
-			from:    Rcpt{Mail: "from@me", Name: "c"},
-			to:      RcptList{Rcpt{Mail: "to@me", Name: "to"}, {Mail: "to1@me", Name: "to1"}},
+			from:    Rcpt{addr: "from@me", name: "c"},
+			to:      RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
 			subject: "subject1",
 			want: &Msg{
-				from: Rcpt{Mail: "from@me", Name: "c"},
-				to:   RcptList{Rcpt{Mail: "to@me", Name: "to"}, {Mail: "to1@me", Name: "to1"}},
+				from: Rcpt{addr: "from@me", name: "c"},
+				to:   RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
 				headers: []smtpHeader{
 					{key: headerFrom, values: []string{"\"c\" <from@me>"}},
 					{key: headerTo, values: []string{"\"to\" <to@me>", "\"to1\" <to1@me>"}},
 					{key: headerSubject, values: []string{"subject1"}},
 				},
-				parts:       []*mailPart{},
+				parts:       []*bodyPart{},
 				attachments: []*attachmentPart{},
 				encoding:    "quoted-printable",
 				charset:     "UTF-8",
@@ -39,22 +82,22 @@ func TestCreateMsg(t *testing.T) {
 		},
 		{
 			name:    "from missing",
-			from:    Rcpt{Mail: "from@me", Name: "c"},
+			from:    Rcpt{addr: "from@me", name: "c"},
 			subject: "subject1",
 			want:    &Msg{},
 			err:     fmt.Errorf(""),
 		},
 		{
 			name:    "to missing",
-			from:    Rcpt{Mail: "from@me", Name: "c"},
+			from:    Rcpt{addr: "from@me", name: "c"},
 			subject: "",
 			want:    &Msg{},
 			err:     fmt.Errorf(""),
 		},
 		{
 			name:    "subject missing",
-			from:    Rcpt{Mail: "from@me", Name: "c"},
-			to:      RcptList{Rcpt{Mail: "to@me", Name: "to"}, {Mail: "to1@me", Name: "to1"}},
+			from:    Rcpt{addr: "from@me", name: "c"},
+			to:      RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
 			subject: "",
 			want:    &Msg{},
 			err:     fmt.Errorf(""),
@@ -62,7 +105,7 @@ func TestCreateMsg(t *testing.T) {
 	}
 	for _, tc := range tst {
 		t.Run(tc.name, func(t *testing.T) {
-			m, gotErr := CreateMsg(tc.from, tc.to, tc.subject)
+			m, gotErr := createMsg(tc.from, tc.to, tc.subject)
 			if tc.err != nil {
 				assert.Error(t, gotErr)
 			} else {

@@ -32,6 +32,7 @@ func loadConfig() {
 		Username: os.Getenv("EMAIL_USERNAME"),
 		Password: os.Getenv("EMAIL_PASSWORD"),
 	}
+
 }
 
 func TestDialAndSend(t *testing.T) {
@@ -50,15 +51,15 @@ func TestDialAndSend(t *testing.T) {
 	template_data := `<p>Скъпи <b>{{ .User }}</b>, welcome to <img src="cid:glass-mug-variant.png" alt="My image" /></p>.`
 	tmpl := template.Must(template.New("template_data").Parse(template_data))
 
-	email, err := CreateMsg(
-		Rcpt{Mail: email_from, Name: "admin at batamata.org"},
-		[]Rcpt{{Mail: email1, Name: "Vesko"}},
+	email, err := createMsg(
+		Rcpt{addr: email_from, name: "admin at batamata.org"},
+		[]Rcpt{{addr: email1, name: "Vesko"}},
 		"проба ?{}<> с символи!",
 	)
 	require.NoError(t, err)
 
 	// email.AddBcc(RcptList{{Mail: "mandajiev@yahoo.com", Name: "Besko"}})
-	email.AddCc(RcptList{{Mail: email2, Name: "Besko"}})
+	email.AddCc(RcptList{{addr: email2, name: "Besko"}})
 	email.AddFile(fmt.Sprintf("%s/glass-mug-variant.png", repoFolder))
 	email.AddHtmlBodyWriter(func(w io.Writer) error {
 		return tmpl.Execute(w, myData)
@@ -70,6 +71,7 @@ func TestDialAndSend(t *testing.T) {
 
 	err = client.Send(email)
 	assert.NoError(t, err)
+
 }
 
 func TestMultipleMsg(t *testing.T) {
@@ -80,8 +82,8 @@ func TestMultipleMsg(t *testing.T) {
 		t.Skip("NO Addr CONFIG")
 	}
 	emails := RcptList{
-		Rcpt{Mail: email1, Name: "email 1"},
-		Rcpt{Mail: email2, Name: "email 2"},
+		Rcpt{addr: email1, name: "email 1"},
+		Rcpt{addr: email2, name: "email 2"},
 	}
 	type Data struct {
 		Time time.Time
@@ -96,11 +98,11 @@ func TestMultipleMsg(t *testing.T) {
 
 	for _, m := range emails {
 		data := Data{
-			Name: m.Name,
+			Name: m.name,
 			Time: time.Now(),
 		}
-		msg, err := CreateMsg(
-			Rcpt{Mail: email_from, Name: "admin at batamata.org"},
+		msg, err := createMsg(
+			Rcpt{addr: email_from, name: "admin at batamata.org"},
 			[]Rcpt{m},
 			"testing mails",
 		)
@@ -203,17 +205,20 @@ func TestSend(t *testing.T) {
 			name: "single text email",
 			prep: func(t *testing.T) {
 				var err error
-				testMsg, err = CreateMsg(
-					Rcpt{Mail: "mail@from", Name: "name from"},
-					[]Rcpt{{Mail: "mail@to", Name: "name to"}},
+				testMsg, err = createMsg(
+					Rcpt{addr: "mail@from", name: "name from"},
+					[]Rcpt{{addr: "mail@to", name: "name to"}},
 					"mail subject",
 				)
+				testMsg.AddCc(RcptList{Rcpt{addr: "cc@cc.cc", name: "cc name"}})
+				testMsg.AddBcc(RcptList{Rcpt{addr: "bcc@bcc.bcc", name: "bcc name"}})
 				assert.NoError(t, err, "prep email")
 				testMsg.AddBodyString("mail body")
 			},
 			dataBlock: `From: "name from" <mail@from>
 To: "name to" <mail@to>
 Subject: mail subject
+Cc: "cc name" <cc@cc.cc>
 MIME-Version: 1.0
 Content-Type: multipart/related; boundary=ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910
 
@@ -228,9 +233,9 @@ mail body
 			name: "single html email and file",
 			prep: func(t *testing.T) {
 				var err error
-				testMsg, err = CreateMsg(
-					Rcpt{Mail: "mail@from", Name: "name from"},
-					[]Rcpt{{Mail: "mail@to", Name: "name to"}},
+				testMsg, err = createMsg(
+					Rcpt{addr: "mail@from", name: "name from"},
+					[]Rcpt{{addr: "mail@to", name: "name to"}},
 					"mail subject",
 				)
 
@@ -311,6 +316,9 @@ func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *
 	expected := strings.ReplaceAll(expectedData, "ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910", email.rootWriter.boundary)
 	require.True(t, actualData.dataBlocks[0] != "", "actual data is empty")
 	assert.Equal(t, expected, actualData.dataBlocks[0], "data dont match")
-	assert.Equal(t, email.from.Mail, actualData.from)
-	assert.Equal(t, email.to.JoinMails(), actualData.to)
+	assert.Equal(t, email.from.addr, actualData.from, "from dont match")
+	assert.Equal(t, strings.Split(email.to.AddressList(), ","), actualData.to, "to dont match")
+
+	fmt.Printf("mail.to: %+v\n", actualData.to)
+
 }
