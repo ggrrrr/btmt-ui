@@ -1,9 +1,11 @@
 package email
 
 import (
+	"crypto/rand"
 	"fmt"
 	"io"
-	"mime/multipart"
+
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 type (
@@ -40,18 +42,44 @@ const (
 	Unencoded encoding = "8bit"
 )
 
+func (a *Sender) Send(email *Msg) error {
+	var err error
+	err = a.smtpClient.Mail(email.from.Mail)
+	if err != nil {
+		return fmt.Errorf("smtpClient.Mail[%s]: %w", email.from.Mail, err)
+	}
+
+	for _, t := range email.to {
+		if err := a.smtpClient.Rcpt(t.Mail); err != nil {
+			return fmt.Errorf("smtpClient.to[].Rcpt[%s]: %w", t.Mail, err)
+		}
+	}
+
+	w, err := a.smtpClient.Data()
+	if err != nil {
+		return fmt.Errorf("smtpClient.Data: %w", err)
+	}
+	defer w.Close()
+	err = email.writerTo(w)
+	if err != nil {
+		return fmt.Errorf("email.writeTo[%s]: %w", email.to[0].Mail, err)
+	}
+	logger.Info().Str("to", email.to[0].Mail).Msg("Send")
+	return nil
+}
+
 func (e *Msg) writerTo(w io.Writer) error {
 	if len(e.parts) == 0 {
 		return fmt.Errorf("msg.parts is empty")
 	}
 	var err error
 	e.rootWriter = &partWriter{
-		w: w,
+		w:        w,
+		boundary: randomBoundary(),
 	}
-	mpWriter := multipart.NewWriter(e.rootWriter.w)
 
-	for k, v := range e.headers {
-		err = e.rootWriter.writeHeader(k, v...)
+	for _, v := range e.headers {
+		err = e.rootWriter.writeHeader(v)
 		if err != nil {
 			return fmt.Errorf("msg.writeHeaders: %w", err)
 		}
@@ -61,7 +89,6 @@ func (e *Msg) writerTo(w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("msg.writeMimeVer:1.0: %w", err)
 	}
-	e.rootWriter.boundary = mpWriter.Boundary()
 	err = e.rootWriter.writeMultipart(multipartRelated)
 	if err != nil {
 		return fmt.Errorf("msg.writeMultipart: %w", err)
@@ -79,4 +106,13 @@ func (e *Msg) writerTo(w io.Writer) error {
 		}
 	}
 	return e.rootWriter.writeBoundaryClose()
+}
+
+func randomBoundary() string {
+	var buf [30]byte
+	_, err := io.ReadFull(rand.Reader, buf[:])
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%x", buf[:])
 }

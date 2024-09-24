@@ -19,9 +19,9 @@ func Test_WriteTo(t *testing.T) {
 		"Subject 1",
 	)
 
-	result := `Subject: Subject 1
-From: "From name" <asd@asd>
+	result := `From: "From name" <asd@asd>
 To: "To name" <to@to>
+Subject: Subject 1
 MIME-Version: 1.0
 Content-Type: multipart/related; boundary=c306cfe3a93593b66e74fae51429f45917f23e2a74f3e70aa042fdec2891
 

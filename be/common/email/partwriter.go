@@ -27,9 +27,9 @@ func (w *partWriter) writeBoundaryClose() error {
 	return w.writeString(fmt.Sprintf("%s--%s--%s", newLine, w.boundary, newLine))
 }
 
-func (w *partWriter) writeHeader(header headerName, values ...string) error {
+func (w *partWriter) writeHeader(header smtpHeader) error {
 	var err error
-	err = w.writeString(string(header))
+	err = w.writeString(string(header.key))
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (w *partWriter) writeHeader(header headerName, values ...string) error {
 	if err != nil {
 		return err
 	}
-	for i, v := range values {
+	for i, v := range header.values {
 		if i > 0 {
 			err = w.writeString(", ")
 			if err != nil {
@@ -62,7 +62,7 @@ func (w *partWriter) writePart(part *mailPart) error {
 		return err
 	}
 
-	err = w.writeHeader(headerContentType, string(part.contentType))
+	err = w.writeHeader(smtpHeader{key: headerContentType, values: []string{string(part.contentType)}})
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (w *partWriter) writePart(part *mailPart) error {
 }
 
 // TODO implement text files none base64 encoding based on mimeType
-func (w *partWriter) writeAttachment(part *attachment) error {
+func (w *partWriter) writeAttachment(part *attachmentPart) error {
 	var err error
 	mediaType := mime.TypeByExtension(filepath.Ext(part.name))
 
@@ -86,22 +86,22 @@ func (w *partWriter) writeAttachment(part *attachment) error {
 	if err != nil {
 		return err
 	}
-	err = w.writeHeader(headerContentType, fmt.Sprintf(`%s; name="%s"`, mediaType, part.name))
+	err = w.writeHeader(smtpHeader{headerContentType, []string{fmt.Sprintf(`%s; name="%s"`, mediaType, part.name)}})
 	if err != nil {
 		return err
 	}
 
-	err = w.writeHeader(headerContentTransferEncoding, string(Base64))
+	err = w.writeHeader(smtpHeader{headerContentTransferEncoding, []string{string(Base64)}})
 	if err != nil {
 		return err
 	}
 
-	err = w.writeHeader(headerContentDisposition, fmt.Sprintf(`attachment; filename="%s"`, part.name))
+	err = w.writeHeader(smtpHeader{headerContentDisposition, []string{fmt.Sprintf(`attachment; filename="%s"`, part.name)}})
 	if err != nil {
 		return err
 	}
 
-	err = w.writeHeader(headerContentID, fmt.Sprintf(`<%s>`, part.name))
+	err = w.writeHeader(smtpHeader{headerContentID, []string{fmt.Sprintf(`<%s>`, part.name)}})
 	if err != nil {
 		return err
 	}
@@ -117,11 +117,11 @@ func (w *partWriter) writeAttachment(part *attachment) error {
 }
 
 func (w *partWriter) writeMimeVer10() error {
-	return w.writeHeader(headerMimeVer, "1.0")
+	return w.writeHeader(smtpHeader{headerMimeVer, []string{"1.0"}})
 }
 
 func (w *partWriter) writeMultipart(multipart string) error {
-	return w.writeHeader(headerContentType, fmt.Sprintf("%s; boundary=%s", multipart, w.boundary))
+	return w.writeHeader(smtpHeader{headerContentType, []string{fmt.Sprintf("%s; boundary=%s", multipart, w.boundary)}})
 }
 
 // Implements io.Writer interface

@@ -41,7 +41,7 @@ func TestWrites(t *testing.T) {
 			name: "writeHeader",
 			want: "Cc: asd0, asd1\r\n",
 			testFunc: func(w *partWriter) error {
-				return w.writeHeader(headerCc, "asd0", "asd1")
+				return w.writeHeader(smtpHeader{headerCc, []string{"asd0", "asd1"}})
 			},
 		},
 		{
@@ -63,7 +63,7 @@ func TestWrites(t *testing.T) {
 			name: "writeAttachment",
 			want: "\r\n--boundary-1\r\nContent-Type: text/plain; charset=utf-8; name=\"file.txt\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"file.txt\"\r\nContent-ID: <file.txt>\r\n\r\ndGV4dCBmaWxl",
 			testFunc: func(w *partWriter) error {
-				return w.writeAttachment(&attachment{
+				return w.writeAttachment(&attachmentPart{
 					name: "file.txt",
 					copier: func(w io.Writer) error {
 						_, _ = w.Write([]byte(`text file`))

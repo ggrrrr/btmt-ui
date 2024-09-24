@@ -11,15 +11,18 @@ type (
 	Msg struct {
 		from        Rcpt
 		to          RcptList
-		headers     headers
+		headers     []smtpHeader
 		parts       []*mailPart
-		attachments []*attachment
+		attachments []*attachmentPart
 		encoding    encoding
 		charset     string
 		rootWriter  *partWriter
 	}
 
-	headers map[headerName][]string
+	smtpHeader struct {
+		key    headerName
+		values []string
+	}
 
 	mailPart struct {
 		contentType contentType
@@ -27,7 +30,7 @@ type (
 		encoding    encoding
 	}
 
-	attachment struct {
+	attachmentPart struct {
 		name   string
 		header map[string][]string
 		copier func(w io.Writer) error
@@ -37,6 +40,9 @@ type (
 func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 	if from.Mail == "" {
 		return nil, fmt.Errorf("from is empty")
+	}
+	if to == nil {
+		return nil, fmt.Errorf("to list is nil")
 	}
 	if len(to) == 0 {
 		return nil, fmt.Errorf("to list is empty")
@@ -50,9 +56,9 @@ func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 	msg := &Msg{
 		from:        from,
 		to:          to,
-		headers:     headers{},
+		headers:     []smtpHeader{},
 		parts:       []*mailPart{},
-		attachments: []*attachment{},
+		attachments: []*attachmentPart{},
 		charset:     "UTF-8",
 		encoding:    QuotedPrintable,
 	}
@@ -99,7 +105,7 @@ func (e *Msg) AddHtmlBodyWriter(copier func(io.Writer) error) {
 }
 
 func (e *Msg) AddAttachment(name string, copier func(io.Writer) error) {
-	f := &attachment{
+	f := &attachmentPart{
 		name:   name,
 		header: map[string][]string{},
 		copier: copier,
@@ -108,7 +114,7 @@ func (e *Msg) AddAttachment(name string, copier func(io.Writer) error) {
 }
 
 func (e *Msg) AddFile(fileName string) {
-	f := &attachment{
+	f := &attachmentPart{
 		name:   filepath.Base(fileName),
 		header: map[string][]string{},
 		copier: func(w io.Writer) error {
@@ -127,7 +133,10 @@ func (e *Msg) AddFile(fileName string) {
 }
 
 func (m *Msg) setHeader(field headerName, value ...string) {
-	m.headers[field] = value
+	m.headers = append(m.headers, smtpHeader{
+		key:    field,
+		values: value,
+	})
 }
 
 func newStringCopier(s string) func(io.Writer) error {

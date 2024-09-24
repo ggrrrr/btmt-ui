@@ -26,13 +26,13 @@ func TestCreateMsg(t *testing.T) {
 			want: &Msg{
 				from: Rcpt{Mail: "from@me", Name: "c"},
 				to:   RcptList{Rcpt{Mail: "to@me", Name: "to"}, {Mail: "to1@me", Name: "to1"}},
-				headers: headers{
-					headerFrom:    []string{"\"c\" <from@me>"},
-					headerTo:      []string{"\"to\" <to@me>", "\"to1\" <to1@me>"},
-					headerSubject: []string{"subject1"},
+				headers: []smtpHeader{
+					smtpHeader{key: headerFrom, values: []string{"\"c\" <from@me>"}},
+					smtpHeader{key: headerTo, values: []string{"\"to\" <to@me>", "\"to1\" <to1@me>"}},
+					smtpHeader{key: headerSubject, values: []string{"subject1"}},
 				},
 				parts:       []*mailPart{},
-				attachments: []*attachment{},
+				attachments: []*attachmentPart{},
 				encoding:    "quoted-printable",
 				charset:     "UTF-8",
 			},
