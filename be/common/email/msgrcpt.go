@@ -4,13 +4,16 @@ import "fmt"
 
 type (
 	Rcpt struct {
+		// mail@to.com
 		Mail string
+		// Mail name
 		Name string
 	}
 
 	RcptList []Rcpt
 )
 
+// return "Mail name" <email.com>
 func (rcpt Rcpt) Format() string {
 	if rcpt.Name == "" {
 		return rcpt.Mail
@@ -18,6 +21,7 @@ func (rcpt Rcpt) Format() string {
 	return fmt.Sprintf("\"%s\" <%s>", rcpt.Name, rcpt.Mail)
 }
 
+// return mail1@root,mail2@root
 func (r RcptList) JoinMails() string {
 	if r == nil {
 		return ""
@@ -32,7 +36,8 @@ func (r RcptList) JoinMails() string {
 	return out[:len(out)-1]
 }
 
-func (r RcptList) Mails() []string {
+// return "Mail name" <email.com>,"Mail name 1" <email1.com>
+func (r RcptList) FormatedMails() []string {
 	if r == nil {
 		return []string{}
 	}

@@ -67,7 +67,7 @@ func (o *egn) validate() bool {
 		return false
 	}
 
-	dob := time.Time{}
+	var dob time.Time
 
 	o.year = year
 	o.month = mon

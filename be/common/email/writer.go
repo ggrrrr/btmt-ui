@@ -59,11 +59,13 @@ func (a *Sender) Send(email *Msg) error {
 	if err != nil {
 		return fmt.Errorf("smtpClient.Data: %w", err)
 	}
+
 	defer w.Close()
 	err = email.writerTo(w)
 	if err != nil {
 		return fmt.Errorf("email.writeTo[%s]: %w", email.to[0].Mail, err)
 	}
+
 	logger.Info().Str("to", email.to[0].Mail).Msg("Send")
 	return nil
 }
@@ -89,6 +91,7 @@ func (e *Msg) writerTo(w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("msg.writeMimeVer:1.0: %w", err)
 	}
+
 	err = e.rootWriter.writeMultipart(multipartRelated)
 	if err != nil {
 		return fmt.Errorf("msg.writeMultipart: %w", err)
@@ -105,13 +108,20 @@ func (e *Msg) writerTo(w io.Writer) error {
 			return fmt.Errorf("msg.writeAttachment[...]: %w", err)
 		}
 	}
-	return e.rootWriter.writeBoundaryClose()
+
+	err = e.rootWriter.writeBoundaryClose()
+	if err != nil {
+		return fmt.Errorf("msg.writeBoundaryClose: %w", err)
+	}
+
+	return nil
 }
 
 func randomBoundary() string {
 	var buf [30]byte
 	_, err := io.ReadFull(rand.Reader, buf[:])
 	if err != nil {
+		logger.Error(err).Msg("randomBoundary ReadFull(rand.Reader)")
 		panic(err)
 	}
 	return fmt.Sprintf("%x", buf[:])

@@ -176,6 +176,7 @@ func TestAuth(t *testing.T) {
 			err := testSender.smtpAuth()
 			if tc.respErr != nil {
 				// assert.Equal(t, tc.respErr, err)
+				fmt.Printf("error: %v\n", err)
 				assert.ErrorAs(t, err, &tc.respErr)
 				assert.ErrorAs(t, err, &tc.respErrAs)
 			} else {
@@ -188,32 +189,29 @@ func TestAuth(t *testing.T) {
 }
 
 func TestSend(t *testing.T) {
-
+	pwd := os.Getenv("PWD")
 	newLine = []byte("\n")
 
-	smtpClientMock := NewSmtpClientMock()
+	var testMsg *Msg
 
-	testSender := &Sender{
-		cfg: Config{
-			SMTPHost: "",
-			SMTPAddr: "",
-			Username: "",
-			Password: "",
-			AuthType: "",
-			Timeout:  time.Second * 1,
-		},
-		tcpConn:    nil,
-		smtpClient: smtpClientMock,
-	}
-	email, err := CreateMsg(
-		Rcpt{Mail: "mail@from", Name: "name from"},
-		[]Rcpt{{Mail: "mail@to", Name: "name to"}},
-		"mail subject",
-	)
-	require.NoError(t, err)
-	email.AddBodyString("mail body")
-
-	expectedData := `From: "name from" <mail@from>
+	tests := []struct {
+		name      string
+		prep      func(t *testing.T)
+		dataBlock string
+	}{
+		{
+			name: "single text email",
+			prep: func(t *testing.T) {
+				var err error
+				testMsg, err = CreateMsg(
+					Rcpt{Mail: "mail@from", Name: "name from"},
+					[]Rcpt{{Mail: "mail@to", Name: "name to"}},
+					"mail subject",
+				)
+				assert.NoError(t, err, "prep email")
+				testMsg.AddBodyString("mail body")
+			},
+			dataBlock: `From: "name from" <mail@from>
 To: "name to" <mail@to>
 Subject: mail subject
 MIME-Version: 1.0
@@ -224,18 +222,95 @@ Content-Type: text/plain
 
 mail body
 --ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910--
-`
+`,
+		},
+		{
+			name: "single html email and file",
+			prep: func(t *testing.T) {
+				var err error
+				testMsg, err = CreateMsg(
+					Rcpt{Mail: "mail@from", Name: "name from"},
+					[]Rcpt{{Mail: "mail@to", Name: "name to"}},
+					"mail subject",
+				)
 
-	err = testSender.Send(email)
-	require.NoError(t, err)
+				myData := struct{ User string }{User: "Pesho"}
+				template_data := `User: {{ .User }}`
+				tmpl := template.Must(template.New("template_data").Parse(template_data))
 
-	fmt.Printf("\n\n%v\n\n", email.rootWriter.boundary)
-	fmt.Printf("\n\n%v\n\n", smtpClientMock.dataBlocks)
-	testMockedEmail(t, email, expectedData, smtpClientMock.dataBlocks[0])
+				assert.NoError(t, err, "prep email")
+				testMsg.AddFile(fmt.Sprintf("%s/../../../test.txt", pwd))
+				testMsg.AddAttachment("myfile.png", func(w io.Writer) error {
+					fileBody := "secret"
+					_, err := w.Write([]byte(fileBody))
+					return err
+				},
+				)
+				testMsg.AddHtmlBodyWriter(
+					func(w io.Writer) error {
+						return tmpl.Execute(w, myData)
+					},
+				)
+			},
+			dataBlock: `From: "name from" <mail@from>
+To: "name to" <mail@to>
+Subject: mail subject
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary=ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910
+
+--ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910
+Content-Type: text/html
+
+User: Pesho
+--ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910
+Content-Type: text/plain; charset=utf-8; name="test.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="test.txt"
+Content-ID: <test.txt>
+
+MQoyCg==
+--ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910
+Content-Type: image/png; name="myfile.png"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="myfile.png"
+Content-ID: <myfile.png>
+
+c2VjcmV0
+--ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910--
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			smtpClientMock := NewSmtpClientMock()
+
+			testSender := &Sender{
+				cfg: Config{
+					SMTPHost: "",
+					SMTPAddr: "",
+					Username: "",
+					Password: "",
+					AuthType: "",
+					Timeout:  time.Second * 1,
+				},
+				tcpConn:    nil,
+				smtpClient: smtpClientMock,
+			}
+
+			tc.prep(t)
+			err := testSender.Send(testMsg)
+			require.NoError(t, err)
+			testMockedEmail(t, testMsg, tc.dataBlock, smtpClientMock)
+		})
+	}
+
 }
 
-func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData string) {
+func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *SmtpClientMock) {
 	expected := strings.ReplaceAll(expectedData, "ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910", email.rootWriter.boundary)
-	require.True(t, actualData != "", "actual data is empty")
-	require.Equal(t, expected, actualData, "data dont match")
+	require.True(t, actualData.dataBlocks[0] != "", "actual data is empty")
+	assert.Equal(t, expected, actualData.dataBlocks[0], "data dont match")
+	assert.Equal(t, email.from.Mail, actualData.from)
+	assert.Equal(t, email.to.JoinMails(), actualData.to)
 }

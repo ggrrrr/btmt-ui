@@ -64,7 +64,7 @@ func CreateMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 	}
 
 	msg.setHeader(headerFrom, from.Format())
-	msg.setHeader(headerTo, to.Mails()...)
+	msg.setHeader(headerTo, to.FormatedMails()...)
 	//return "=?utf-8?q?" + subject + "?="
 	msg.setHeader(headerSubject, subject)
 

@@ -88,7 +88,10 @@ func NewSender(cfg Config) (*Sender, error) {
 
 	err = sender.smtpAuth()
 	if err != nil {
-		smtpClient.Quit()
+		e := smtpClient.Quit()
+		if e != nil {
+			logger.Warn().Err(e).Msg("smtpClient.Quit")
+		}
 		return nil, err
 	}
 	sender.smtpClient = smtpClient

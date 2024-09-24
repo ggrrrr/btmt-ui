@@ -14,6 +14,8 @@ type SmtpClientMock struct {
 	errorOnAuth      bool
 	buf              *bytes.Buffer
 	dataBlocks       []string
+	from             string
+	to               string
 }
 
 func (d *SmtpClientMock) Write(p []byte) (n int, err error) {
@@ -60,11 +62,13 @@ func (s *SmtpClientMock) Auth(smtp.Auth) error {
 	return nil
 }
 
-func (*SmtpClientMock) Mail(string) error {
+func (s *SmtpClientMock) Mail(from string) error {
+	s.from = from
 	return nil
 }
 
-func (*SmtpClientMock) Rcpt(string) error {
+func (s *SmtpClientMock) Rcpt(rcpt string) error {
+	s.to = rcpt
 	return nil
 }
 
