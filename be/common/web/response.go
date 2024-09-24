@@ -54,18 +54,23 @@ func MethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
 	send(w, http.StatusMethodNotAllowed, fmt.Sprintf("StatusMethodNotAllowed: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
+// HTTP CODE 200
 func SendPayload(w http.ResponseWriter, msg string, payload any) {
 	send(w, http.StatusOK, msg, nil, payload)
 }
 
+// HTTP CODE 500
 func SendSystemError(w http.ResponseWriter, msg string, err error, payload any) {
 	send(w, http.StatusInternalServerError, msg, err, nil)
 }
 
+// HTTP CODE 400
 func SendErrorBadRequest(w http.ResponseWriter, msg string, err error) {
 	send(w, http.StatusBadRequest, msg, err, nil)
 }
 
+// return system error on ReadAll
+// return BadRequestError on Decode
 func DecodeJsonRequest(r *http.Request, payload any) error {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {

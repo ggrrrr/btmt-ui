@@ -1,6 +1,7 @@
 package email
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -16,12 +17,14 @@ var (
 	email_from = ""
 	email1     = ""
 	email2     = ""
+	repoFolder = ""
 )
 
 func loadConfig() {
 	email_from = os.Getenv("EMAIL_FROM1")
 	email1 = os.Getenv("EMAIL_EMAIL1")
 	email2 = os.Getenv("EMAIL_EMAIL2")
+	repoFolder = os.Getenv("REPO_FOLDER")
 	cfg = Config{
 		SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
 		SMTPAddr: os.Getenv("EMAIL_SMTP_ADDR"),
@@ -48,16 +51,16 @@ func TestDialAndSend(t *testing.T) {
 		[]Rcpt{{Mail: email1, Name: "Vesko"}},
 		"проба ?{}<> с символи!",
 	)
-
 	require.NoError(t, err)
+
 	// email.AddBcc(RcptList{{Mail: "mandajiev@yahoo.com", Name: "Besko"}})
 	email.AddCc(RcptList{{Mail: email2, Name: "Besko"}})
-	email.AddFile("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/glass-mug-variant.png")
+	email.AddFile(fmt.Sprintf("%s/glass-mug-variant.png", repoFolder))
 	email.AddHtmlBodyWriter(func(w io.Writer) error {
 		return tmpl.Execute(w, myData)
 	})
 
-	client, err := Dial(cfg)
+	client, err := NewSender(cfg)
 	require.NoError(t, err)
 	defer client.Close()
 
@@ -82,7 +85,7 @@ func TestMultipleMsg(t *testing.T) {
 	template_data := `<p>Hello: <b>{{ .Name }}</b>, time is: {{ .Time }} /></p>.`
 	tmpl := template.Must(template.New("template_data").Parse(template_data))
 
-	conn, err := Dial(cfg)
+	conn, err := NewSender(cfg)
 	require.NoError(t, err)
 	defer conn.Close()
 

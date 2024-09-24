@@ -2,17 +2,29 @@ package email
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/smtp"
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/stackus/errors"
 )
 
 type (
 	AuthType string
+
+	extSmtpClient interface {
+		Hello(string) error
+		Extension(string) (bool, string)
+		StartTLS(*tls.Config) error
+		Auth(smtp.Auth) error
+		Mail(string) error
+		Rcpt(string) error
+		Data() (io.WriteCloser, error)
+		Quit() error
+		Close() error
+	}
 
 	Config struct {
 		SMTPHost string
@@ -20,13 +32,14 @@ type (
 		Username string
 		Password string
 		AuthType AuthType
-		timeout  time.Duration
+		Timeout  time.Duration
 	}
 
 	// Implements SenderCloser
-	smtpConn struct {
-		cfg    Config
-		client extSmtpClient
+	Sender struct {
+		cfg        Config
+		tcpConn    net.Conn
+		smtpClient extSmtpClient
 	}
 
 	SenderCloser interface {
@@ -39,81 +52,84 @@ const (
 	AuthTypePlain AuthType = "plain"
 )
 
-var _ (SenderCloser) = (*smtpConn)(nil)
+var _ (SenderCloser) = (*Sender)(nil)
 
-func Dial(cfg Config) (*smtpConn, error) {
+func NewSender(cfg Config) (*Sender, error) {
 	if cfg.AuthType == "" {
 		cfg.AuthType = AuthTypePlain
 	}
-	if cfg.timeout == 0 {
-		cfg.timeout = 10 * time.Second
+	if cfg.Timeout == 0 {
+		cfg.Timeout = 10 * time.Second
 	}
-	smtpConn := &smtpConn{
+	smtpConn := &Sender{
 		cfg: cfg,
 	}
-	return smtpConn.Dial()
+
+	tcpConn, err := net.DialTimeout("tcp", cfg.SMTPAddr, cfg.Timeout)
+	if err != nil {
+		logger.Error(err).Int("timeoutSeconds", int(cfg.Timeout.Seconds())).Str("smtp_addr", cfg.SMTPAddr).Msg("net.Dial")
+		return nil, fmt.Errorf("net.DialTimeout: %w", err)
+	}
+	smtpConn.tcpConn = tcpConn
+	return smtpConn.dialAndAuth()
 }
 
-func (smtpConn *smtpConn) Dial() (*smtpConn, error) {
+func (sender *Sender) dialAndAuth() (*Sender, error) {
 
-	tcpConn, err := net.DialTimeout("tcp", smtpConn.cfg.SMTPAddr, smtpConn.cfg.timeout)
+	logger.Info().Str("smtp_addr", sender.cfg.SMTPAddr).Int("timeoutSeconds", int(sender.cfg.Timeout.Seconds())).Msg("connected")
+	smtpClient, err := smtp.NewClient(sender.tcpConn, sender.cfg.SMTPHost)
 	if err != nil {
-		return nil, errors.Wrap(err, "Dial")
-	}
-	logger.Info().Str("host", smtpConn.cfg.SMTPAddr).Msg("Connected.")
-	client, err := smtp.NewClient(tcpConn, smtpConn.cfg.SMTPHost)
-	if err != nil {
-		return nil, errors.Wrap(err, "NewClient")
+		return nil, fmt.Errorf("smtp.NewClient: %w", err)
 	}
 
-	if ok, _ := client.Extension("STARTTLS"); ok {
-		if err := client.StartTLS(&tls.Config{ServerName: smtpConn.cfg.SMTPHost}); err != nil {
-			client.Close()
-			return nil, errors.Wrap(err, "StartTLS")
+	if ok, tlsInfo := smtpClient.Extension("STARTTLS"); ok {
+		if err := smtpClient.StartTLS(&tls.Config{ServerName: sender.cfg.SMTPHost}); err != nil {
+			smtpClient.Close()
+			return nil, fmt.Errorf("smtpClient.StartTLS: %w", err)
 		}
-		logger.Debug().Msg("StartTLS.")
+		logger.Info().Str("tls.info", tlsInfo).Msg("client.StartTLS")
 	}
 
-	auth := smtp.PlainAuth("", smtpConn.cfg.Username, smtpConn.cfg.Password, smtpConn.cfg.SMTPHost)
-	err = client.Auth(auth)
+	auth := smtp.PlainAuth("", sender.cfg.Username, sender.cfg.Password, sender.cfg.SMTPHost)
+	err = smtpClient.Auth(auth)
 	if err != nil {
-		logger.Error(err).Str("username", smtpConn.cfg.Username).Msg("PlainAuth")
-		return nil, errors.Wrap(err, "Auth")
+		logger.Error(err).Str("username", sender.cfg.Username).Msg("PlainAuth")
+		return nil, fmt.Errorf("smtpClient.Auth: %w", err)
 	}
 
-	smtpConn.client = client
-	return smtpConn, nil
+	sender.smtpClient = smtpClient
+	return sender, nil
 }
 
-func (a *smtpConn) Send(email *Msg) error {
+func (a *Sender) Send(email *Msg) error {
 	var err error
-	err = a.client.Mail(email.from.Mail)
+	err = a.smtpClient.Mail(email.from.Mail)
 	if err != nil {
-		return errors.Wrap(err, "Mail")
+		return fmt.Errorf("smtpClient.Mail[%s]: %w", email.from.Mail, err)
 	}
 
 	for _, t := range email.to {
-		if err := a.client.Rcpt(t.Mail); err != nil {
-			return errors.Wrap(err, "Rcpt")
+		if err := a.smtpClient.Rcpt(t.Mail); err != nil {
+			return fmt.Errorf("smtpClient.to[].Rcpt[%s]: %w", t.Mail, err)
 		}
 	}
 
-	w, err := a.client.Data()
+	w, err := a.smtpClient.Data()
 	if err != nil {
-		return errors.Wrap(err, "Data")
+		return fmt.Errorf("smtpClient.Data: %w", err)
 	}
 	defer w.Close()
 	err = email.writerTo(w)
 	if err != nil {
-		return errors.Wrap(err, "WriterTo")
+		return fmt.Errorf("email.writeTo[%s]: %w", email.to[0].Mail, err)
 	}
 	logger.Info().Str("to", email.to[0].Mail).Msg("Send")
 	return nil
 }
 
-func (conn *smtpConn) Close() error {
-	if err := conn.client.Quit(); err != nil {
+func (conn *Sender) Close() error {
+	if err := conn.smtpClient.Quit(); err != nil {
 		logger.Error(err).Msg("Close")
 	}
-	return conn.client.Close()
+	return conn.smtpClient.Close()
 }

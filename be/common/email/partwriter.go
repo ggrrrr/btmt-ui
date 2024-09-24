@@ -19,16 +19,6 @@ var (
 	newLine []byte = []byte("\r\n")
 )
 
-// Implements io.Writer interface
-func (w *partWriter) Write(bytes []byte) (int, error) {
-	return w.w.Write(bytes)
-}
-
-func (w *partWriter) writeString(str string) error {
-	_, err := w.w.Write([]byte(str))
-	return err
-}
-
 func (w *partWriter) writeBoundaryStart() error {
 	return w.writeString(fmt.Sprintf("%s--%s%s", newLine, w.boundary, newLine))
 }
@@ -124,4 +114,22 @@ func (w *partWriter) writeAttachment(part *attachment) error {
 	wc := base64.NewEncoder(base64.StdEncoding, w)
 	defer wc.Close()
 	return part.copier(wc)
+}
+
+func (w *partWriter) writeMimeVer10() error {
+	return w.writeHeader(headerMimeVer, "1.0")
+}
+
+func (w *partWriter) writeMultipart(multipart string) error {
+	return w.writeHeader(headerContentType, fmt.Sprintf("%s; boundary=%s", multipart, w.boundary))
+}
+
+// Implements io.Writer interface
+func (w *partWriter) Write(bytes []byte) (int, error) {
+	return w.w.Write(bytes)
+}
+
+func (w *partWriter) writeString(str string) error {
+	_, err := w.w.Write([]byte(str))
+	return err
 }

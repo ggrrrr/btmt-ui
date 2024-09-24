@@ -1,29 +1,15 @@
 package email
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/smtp"
 )
 
 type (
 	headerName  string
 	encoding    string
 	contentType string
-
-	extSmtpClient interface {
-		Hello(string) error
-		Extension(string) (bool, string)
-		StartTLS(*tls.Config) error
-		Auth(smtp.Auth) error
-		Mail(string) error
-		Rcpt(string) error
-		Data() (io.WriteCloser, error)
-		Quit() error
-		Close() error
-	}
 )
 
 const (
@@ -59,45 +45,38 @@ func (e *Msg) writerTo(w io.Writer) error {
 		return fmt.Errorf("msg.parts is empty")
 	}
 	var err error
-	rootPart := &partWriter{
+	e.rootWriter = &partWriter{
 		w: w,
 	}
-	mpWriter := multipart.NewWriter(rootPart.w)
+	mpWriter := multipart.NewWriter(e.rootWriter.w)
 
 	for k, v := range e.headers {
-		err = rootPart.writeHeader(k, v...)
+		err = e.rootWriter.writeHeader(k, v...)
 		if err != nil {
-			return err
+			return fmt.Errorf("msg.writeHeaders: %w", err)
 		}
 	}
-	err = rootPart.writeMimeVer10()
+
+	err = e.rootWriter.writeMimeVer10()
 	if err != nil {
-		return err
+		return fmt.Errorf("msg.writeMimeVer:1.0: %w", err)
 	}
-	rootPart.boundary = mpWriter.Boundary()
-	err = rootPart.writeMultipart(multipartRelated)
+	e.rootWriter.boundary = mpWriter.Boundary()
+	err = e.rootWriter.writeMultipart(multipartRelated)
 	if err != nil {
-		return err
+		return fmt.Errorf("msg.writeMultipart: %w", err)
 	}
 
-	err = rootPart.writePart(e.parts[0])
+	err = e.rootWriter.writePart(e.parts[0])
 	if err != nil {
-		return err
+		return fmt.Errorf("msg.writePart[0]: %w", err)
 	}
 
 	for _, a := range e.attachments {
-		err = rootPart.writeAttachment(a)
+		err = e.rootWriter.writeAttachment(a)
 		if err != nil {
-			return err
+			return fmt.Errorf("msg.writeAttachment[...]: %w", err)
 		}
 	}
-	return rootPart.writeBoundaryClose()
-}
-
-func (w *partWriter) writeMimeVer10() error {
-	return w.writeHeader(headerMimeVer, "1.0")
-}
-
-func (w *partWriter) writeMultipart(multipart string) error {
-	return w.writeHeader(headerContentType, fmt.Sprintf("%s; boundary=%s", multipart, w.boundary))
+	return e.rootWriter.writeBoundaryClose()
 }

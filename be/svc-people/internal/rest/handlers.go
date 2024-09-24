@@ -75,7 +75,7 @@ func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 	p, err := s.app.GetById(r.Context(), req.Id)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("Get")
-		web.SendError(w, err)
+		web.SendSystemError(w, "system error, please try again later", err, nil)
 		return
 	}
 	web.SendPayload(w, "ok", p)

@@ -16,6 +16,7 @@ type (
 		attachments []*attachment
 		encoding    encoding
 		charset     string
+		rootWriter  *partWriter
 	}
 
 	headers map[headerName][]string
