@@ -35,6 +35,8 @@ func loadConfig() {
 }
 
 func TestDialAndSend(t *testing.T) {
+	newLine = []byte("\r\n")
+
 	loadConfig()
 	t.Skip("NO Addr CONFIG")
 	if cfg.SMTPAddr == "" {
@@ -71,6 +73,7 @@ func TestDialAndSend(t *testing.T) {
 }
 
 func TestMultipleMsg(t *testing.T) {
+	newLine = []byte("\r\n")
 	loadConfig()
 	t.Skip("NO Addr CONFIG")
 	if cfg.SMTPAddr == "" {
@@ -113,6 +116,7 @@ func TestMultipleMsg(t *testing.T) {
 }
 
 func TestAuth(t *testing.T) {
+	newLine = []byte("\r\n")
 
 	testSender := &Sender{
 		cfg:        Config{},
@@ -185,6 +189,8 @@ func TestAuth(t *testing.T) {
 
 func TestSend(t *testing.T) {
 
+	newLine = []byte("\n")
+
 	smtpClientMock := NewSmtpClientMock()
 
 	testSender := &Sender{
@@ -217,7 +223,8 @@ Content-Type: multipart/related; boundary=ce82d13b7cf05644c1a5c74b4c700dae854b12
 Content-Type: text/plain
 
 mail body
---ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910--`
+--ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910--
+`
 
 	err = testSender.Send(email)
 	require.NoError(t, err)
@@ -228,7 +235,7 @@ mail body
 }
 
 func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData string) {
-	expectedData = strings.ReplaceAll(actualData, "ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910", email.rootWriter.boundary)
+	expected := strings.ReplaceAll(expectedData, "ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910", email.rootWriter.boundary)
 	require.True(t, actualData != "", "actual data is empty")
-	require.Equal(t, expectedData, actualData, "data dont match")
+	require.Equal(t, expected, actualData, "data dont match")
 }

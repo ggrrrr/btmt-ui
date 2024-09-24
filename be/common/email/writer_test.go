@@ -11,8 +11,9 @@ import (
 )
 
 func Test_WriteTo(t *testing.T) {
-	pwd := os.Getenv("PWD")
 	newLine = []byte("\n")
+
+	pwd := os.Getenv("PWD")
 	mail, _ := CreateMsg(
 		Rcpt{Mail: "asd@asd", Name: "From name"},
 		RcptList{Rcpt{Mail: "to@to", Name: "To name"}},

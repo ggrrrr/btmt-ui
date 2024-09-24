@@ -10,6 +10,8 @@ import (
 )
 
 func TestWrites(t *testing.T) {
+	newLine = []byte("\r\n")
+
 	type tst struct {
 		name     string
 		want     string
