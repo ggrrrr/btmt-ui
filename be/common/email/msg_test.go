@@ -27,9 +27,9 @@ func TestCreateMsg(t *testing.T) {
 				from: Rcpt{Mail: "from@me", Name: "c"},
 				to:   RcptList{Rcpt{Mail: "to@me", Name: "to"}, {Mail: "to1@me", Name: "to1"}},
 				headers: []smtpHeader{
-					smtpHeader{key: headerFrom, values: []string{"\"c\" <from@me>"}},
-					smtpHeader{key: headerTo, values: []string{"\"to\" <to@me>", "\"to1\" <to1@me>"}},
-					smtpHeader{key: headerSubject, values: []string{"subject1"}},
+					{key: headerFrom, values: []string{"\"c\" <from@me>"}},
+					{key: headerTo, values: []string{"\"to\" <to@me>", "\"to1\" <to1@me>"}},
+					{key: headerSubject, values: []string{"subject1"}},
 				},
 				parts:       []*mailPart{},
 				attachments: []*attachmentPart{},
