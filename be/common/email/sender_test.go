@@ -35,7 +35,7 @@ func loadConfig() {
 
 }
 
-func TestDialAndSend(t *testing.T) {
+func TestIntDialAndSend(t *testing.T) {
 	newLine = []byte("\r\n")
 
 	loadConfig()
@@ -74,7 +74,7 @@ func TestDialAndSend(t *testing.T) {
 
 }
 
-func TestMultipleMsg(t *testing.T) {
+func TestIntMultipleMsg(t *testing.T) {
 	newLine = []byte("\r\n")
 	loadConfig()
 	t.Skip("NO Addr CONFIG")
@@ -200,7 +200,24 @@ func TestSend(t *testing.T) {
 		name      string
 		prep      func(t *testing.T)
 		dataBlock string
+		sendErrAs error
 	}{
+		{
+			name: "error empty body",
+			prep: func(t *testing.T) {
+				var err error
+				testMsg, err = createMsg(
+					Rcpt{addr: "mail@from", name: "name from"},
+					[]Rcpt{{addr: "mail@to", name: "name to"}},
+					"mail subject",
+				)
+				testMsg.AddCc(RcptList{Rcpt{addr: "cc@cc.cc", name: "cc name"}})
+				testMsg.AddBcc(RcptList{Rcpt{addr: "bcc@bcc.bcc", name: "bcc name"}})
+				assert.NoError(t, err, "prep email")
+			},
+			dataBlock: ``,
+			sendErrAs: &MailFormatError{},
+		},
 		{
 			name: "single text email",
 			prep: func(t *testing.T) {
@@ -305,8 +322,12 @@ c2VjcmV0
 
 			tc.prep(t)
 			err := testSender.Send(testMsg)
-			require.NoError(t, err)
-			testMockedEmail(t, testMsg, tc.dataBlock, smtpClientMock)
+			if tc.sendErrAs == nil {
+				require.NoError(t, err)
+				testMockedEmail(t, testMsg, tc.dataBlock, smtpClientMock)
+			} else {
+				assert.ErrorAs(t, err, &tc.sendErrAs)
+			}
 		})
 	}
 
@@ -324,13 +345,13 @@ func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *
 
 func TestCreateSender(t *testing.T) {
 
-	tcpServerMock, err := NewTCPServerMock(":12345")
+	tcpServerMock, err := NewTCPServerMock(":12346")
 	require.NoError(t, err)
 	go tcpServerMock.Start()
 
 	cfg := Config{
 		SMTPHost: "localhost",
-		SMTPAddr: ":12345",
+		SMTPAddr: ":12346",
 		Username: "user",
 		Password: "pass",
 		AuthType: "",
