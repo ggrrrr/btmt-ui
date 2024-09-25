@@ -41,18 +41,11 @@ type (
 		tcpConn    net.Conn
 		smtpClient extSmtpClient
 	}
-
-	SenderCloser interface {
-		Send(msg *Msg) error
-		io.Closer
-	}
 )
 
 const (
 	AuthTypePlain AuthType = "plain"
 )
-
-var _ (SenderCloser) = (*Sender)(nil)
 
 func NewSender(cfg Config) (*Sender, error) {
 	if cfg.AuthType == "" {
