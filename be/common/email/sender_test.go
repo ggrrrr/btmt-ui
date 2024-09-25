@@ -339,8 +339,6 @@ func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *
 	assert.Equal(t, expected, actualData.dataBlocks[0], "data dont match")
 	assert.Equal(t, email.from.addr, actualData.from, "from dont match")
 	assert.Equal(t, strings.Split(email.to.AddressList(), ","), actualData.to, "to dont match")
-
-	// fmt.Printf("mail.to: %+v\n", actualData.to)
 }
 
 func TestCreateSender(t *testing.T) {
@@ -386,9 +384,5 @@ func TestCreateSenderError(t *testing.T) {
 	require.Error(t, err)
 	authErr := &SmtpAuthError{}
 	assert.ErrorAs(t, err, &authErr)
-	fmt.Printf("%+v \n", err)
-	// err = smtp.smtpClient.Quit()
-	// require.NoError(t, err)
-	// smtp.Close()
 
 }
