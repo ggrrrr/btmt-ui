@@ -45,7 +45,8 @@ const (
 func (e *Msg) writerTo(w io.Writer) error {
 	if len(e.parts) == 0 {
 		return &MailFormatError{
-			err: fmt.Errorf("body is empty"),
+			msg: "body",
+			err: fmt.Errorf("is empty"),
 		}
 	}
 

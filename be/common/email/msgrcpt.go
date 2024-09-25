@@ -20,6 +20,7 @@ func RcptFromString(addr string) (Rcpt, error) {
 	fromAddr, err := mail.ParseAddress(addr)
 	if err != nil {
 		return Rcpt{}, &MailFormatError{
+			msg: "email address",
 			err: err,
 		}
 	}
@@ -34,7 +35,7 @@ func RcptListFromString(addr []string) (list RcptList, err error) {
 	for _, v := range addr {
 		rcpt, err := RcptFromString(v)
 		if err != nil {
-			return nil, fmt.Errorf("rcpt address: %w", err)
+			return nil, fmt.Errorf("rcpt list: %w", err)
 		}
 		list = append(list, rcpt)
 

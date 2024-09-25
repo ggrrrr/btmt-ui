@@ -49,6 +49,7 @@ func TestRcptMail(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, tc.testFunc)
 	}
+
 }
 
 func TestCreateMsg(t *testing.T) {
@@ -114,4 +115,5 @@ func TestCreateMsg(t *testing.T) {
 			}
 		})
 	}
+
 }

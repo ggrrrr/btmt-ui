@@ -178,7 +178,7 @@ func TestAuth(t *testing.T) {
 			err := testSender.smtpAuth()
 			if tc.respErr != nil {
 				// assert.Equal(t, tc.respErr, err)
-				fmt.Printf("error: %v\n", err)
+				// fmt.Printf("error: %v\n", err)
 				assert.ErrorAs(t, err, &tc.respErr)
 				assert.ErrorAs(t, err, &tc.respErrAs)
 			} else {
@@ -319,6 +319,55 @@ func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *
 	assert.Equal(t, email.from.addr, actualData.from, "from dont match")
 	assert.Equal(t, strings.Split(email.to.AddressList(), ","), actualData.to, "to dont match")
 
-	fmt.Printf("mail.to: %+v\n", actualData.to)
+	// fmt.Printf("mail.to: %+v\n", actualData.to)
+}
+
+func TestCreateSender(t *testing.T) {
+
+	tcpServerMock, err := NewTCPServerMock(":12345")
+	require.NoError(t, err)
+	go tcpServerMock.Start()
+
+	cfg := Config{
+		SMTPHost: "localhost",
+		SMTPAddr: ":12345",
+		Username: "user",
+		Password: "pass",
+		AuthType: "",
+		Timeout:  time.Second * 2,
+	}
+
+	smtp, err := NewSender(cfg)
+	require.NoError(t, err)
+
+	err = smtp.smtpClient.Quit()
+	require.NoError(t, err)
+	smtp.Close()
+
+}
+
+func TestCreateSenderError(t *testing.T) {
+
+	tcpServerMock, err := NewTCPServerMock(":12345")
+	require.NoError(t, err)
+	go tcpServerMock.Start()
+
+	cfg := Config{
+		SMTPHost: "localhost",
+		SMTPAddr: ":12345",
+		Username: "user",
+		Password: "passasdasd",
+		AuthType: "",
+		Timeout:  time.Second * 2,
+	}
+
+	_, err = NewSender(cfg)
+	require.Error(t, err)
+	authErr := &SmtpAuthError{}
+	assert.ErrorAs(t, err, &authErr)
+	fmt.Printf("%+v \n", err)
+	// err = smtp.smtpClient.Quit()
+	// require.NoError(t, err)
+	// smtp.Close()
 
 }

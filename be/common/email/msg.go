@@ -37,55 +37,21 @@ type (
 	}
 )
 
-func CreateMsgFromString(fromStr string, toStr []string, subject string) (*Msg, error) {
-	from, err := RcptFromString(fromStr)
+func CreateMsgFromString(from string, toList []string, subject string) (*Msg, error) {
+	rcptFrom, err := RcptFromString(from)
 	if err != nil {
 		return nil, fmt.Errorf("from address: %w", err)
 	}
-	to := RcptList{}
-	for _, v := range toStr {
+	rcptTo := RcptList{}
+	for _, v := range toList {
 		rcpt, err := RcptFromString(v)
 		if err != nil {
 			return nil, fmt.Errorf("to address: %w", err)
 		}
-		to = append(to, rcpt)
+		rcptTo = append(rcptTo, rcpt)
 	}
 
-	return createMsg(from, to, subject)
-}
-
-func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
-	if from.addr == "" {
-		return nil, fmt.Errorf("from is empty")
-	}
-	if to == nil {
-		return nil, fmt.Errorf("to list is nil")
-	}
-	if len(to) == 0 {
-		return nil, fmt.Errorf("to list is empty")
-	}
-	if to[0].addr == "" {
-		return nil, fmt.Errorf("to[0] is empty")
-	}
-	if subject == "" {
-		return nil, fmt.Errorf("subject is empty")
-	}
-	msg := &Msg{
-		from:        from,
-		to:          to,
-		headers:     []smtpHeader{},
-		parts:       []*bodyPart{},
-		attachments: []*attachmentPart{},
-		charset:     "UTF-8",
-		encoding:    QuotedPrintable,
-	}
-
-	msg.setHeader(headerFrom, from.Formatted())
-	msg.setHeader(headerTo, to.Formatted()...)
-	//return "=?utf-8?q?" + subject + "?="
-	msg.setHeader(headerSubject, subject)
-
-	return msg, nil
+	return createMsg(rcptFrom, rcptTo, subject)
 }
 
 func (e *Msg) AddCc(cc RcptList) {
@@ -147,6 +113,40 @@ func (e *Msg) AddFile(fileName string) {
 		},
 	}
 	e.attachments = append(e.attachments, f)
+}
+
+func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
+	if from.addr == "" {
+		return nil, fmt.Errorf("from is empty")
+	}
+	if to == nil {
+		return nil, fmt.Errorf("to list is nil")
+	}
+	if len(to) == 0 {
+		return nil, fmt.Errorf("to list is empty")
+	}
+	if to[0].addr == "" {
+		return nil, fmt.Errorf("to[0] is empty")
+	}
+	if subject == "" {
+		return nil, fmt.Errorf("subject is empty")
+	}
+	msg := &Msg{
+		from:        from,
+		to:          to,
+		headers:     []smtpHeader{},
+		parts:       []*bodyPart{},
+		attachments: []*attachmentPart{},
+		charset:     "UTF-8",
+		encoding:    QuotedPrintable,
+	}
+
+	msg.setHeader(headerFrom, from.Formatted())
+	msg.setHeader(headerTo, to.Formatted()...)
+	//return "=?utf-8?q?" + subject + "?="
+	msg.setHeader(headerSubject, subject)
+
+	return msg, nil
 }
 
 func (m *Msg) setHeader(field headerName, value ...string) {

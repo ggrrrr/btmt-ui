@@ -16,6 +16,7 @@ type (
 	}
 
 	MailFormatError struct {
+		msg string
 		err error
 	}
 )
@@ -37,7 +38,7 @@ func (a *SmtpConnError) Unwrap() error {
 }
 
 func (a *MailFormatError) Error() string {
-	return fmt.Sprintf("incorrect email format: %v", a.err)
+	return fmt.Sprintf("mail %s: %v", a.msg, a.err)
 }
 
 func (a *MailFormatError) Unwrap() error {

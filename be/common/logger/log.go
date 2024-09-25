@@ -73,7 +73,11 @@ func init() {
 }
 
 func console(level zerolog.Level) zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+	logger := zerolog.New(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.RFC3339,
+		NoColor:    false,
+	}).
 		Level(level).
 		With().
 		Timestamp().

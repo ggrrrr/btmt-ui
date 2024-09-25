@@ -79,6 +79,8 @@ func NewSender(cfg Config) (*Sender, error) {
 	logger.Info().Str("smtp_addr", sender.cfg.SMTPAddr).Int("timeoutSeconds", int(sender.cfg.Timeout.Seconds())).Msg("connected")
 	smtpClient, err := smtp.NewClient(sender.tcpConn, sender.cfg.SMTPHost)
 	if err != nil {
+		tcpConn.Close()
+		sender.tcpConn = nil
 		// return nil, fmt.Errorf("smtp.NewClient: %w", err)
 		return nil, &SmtpConnError{
 			host: cfg.SMTPHost,
@@ -87,22 +89,29 @@ func NewSender(cfg Config) (*Sender, error) {
 		}
 	}
 
+	sender.smtpClient = smtpClient
+
+	logger.Info().Str("smtpClient", "smtpClient").Msg("smtpClient")
 	err = sender.smtpAuth()
 	if err != nil {
 		e := smtpClient.Quit()
+		tcpConn.Close()
+		sender.tcpConn = nil
+		sender.smtpClient = nil
+
 		if e != nil {
 			logger.Warn().Err(e).Msg("smtpClient.Quit")
 		}
 		return nil, err
 	}
-	sender.smtpClient = smtpClient
 	return sender, err
 }
 
 func (a *Sender) Send(email *Msg) error {
 	if len(email.parts) == 0 {
 		return &MailFormatError{
-			err: fmt.Errorf("body is empty"),
+			msg: "body",
+			err: fmt.Errorf("is empty"),
 		}
 	}
 
@@ -134,15 +143,28 @@ func (a *Sender) Send(email *Msg) error {
 }
 
 func (conn *Sender) Close() error {
-	if err := conn.smtpClient.Quit(); err != nil {
+	var err error
+	if conn.smtpClient != nil {
+		err = conn.smtpClient.Quit()
+		conn.smtpClient = nil
+	}
+	if err != nil {
 		logger.Error(err).Msg("Close")
 	}
-	return conn.smtpClient.Close()
+	if conn.tcpConn != nil {
+		err = conn.tcpConn.Close()
+		conn.tcpConn = nil
+	}
+	if err != nil {
+		logger.Error(err).Msg("Close")
+	}
+	return nil
 }
 
 func (sender *Sender) smtpAuth() error {
 	var err error
 
+	logger.Debug().Msg("smtpAuth.start")
 	ok, tlsInfo := sender.smtpClient.Extension("STARTTLS")
 	if ok {
 		err = sender.smtpClient.StartTLS(&tls.Config{ServerName: sender.cfg.SMTPHost})
@@ -154,9 +176,9 @@ func (sender *Sender) smtpAuth() error {
 				msg:  "STARTTLS",
 			}
 		}
-		logger.Info().Str("tls.info", tlsInfo).Msg("client.StartTLS")
+		logger.Debug().Str("tls.info", tlsInfo).Msg("client.StartTLS")
 	} else {
-		logger.Info().
+		logger.Debug().
 			Str("tls.info", tlsInfo).
 			Bool("STARTTLS", ok).
 			Msg("client.StartTLS")
@@ -172,6 +194,8 @@ func (sender *Sender) smtpAuth() error {
 			msg:  "Auth",
 		}
 	}
+	logger.Debug().
+		Msg("Auth.ok.")
 
 	return nil
 }

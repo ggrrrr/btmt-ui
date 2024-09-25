@@ -60,6 +60,7 @@ func TestRcptCreate(t *testing.T) {
 			}
 		})
 	}
+
 }
 
 func TestRcptList(t *testing.T) {
@@ -123,4 +124,5 @@ func TestRcptList(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, tc.testFunc)
 	}
+
 }
