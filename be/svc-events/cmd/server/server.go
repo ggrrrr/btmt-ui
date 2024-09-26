@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	events "github.com/ggrrrr/btmt-ui/be/svc-events"
 )
@@ -14,7 +13,6 @@ func Server() error {
 	var cfg config.AppConfig
 
 	err := config.InitConfig(&cfg)
-	logger.Init(cfg.Log)
 	if err != nil {
 		return err
 	}

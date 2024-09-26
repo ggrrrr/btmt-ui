@@ -8,7 +8,6 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
 	"github.com/ggrrrr/btmt-ui/be/common/cmd"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 )
@@ -34,7 +33,6 @@ type (
 		Aws             awsdb.AwsConfig
 		Grpc            GrpcConfig
 		Jwt             JwtConfig
-		Log             logger.Config
 		Rest            RestConfig
 		Mgo             mgo.Config
 		ShutdownTimeout time.Duration `default:"10s"`

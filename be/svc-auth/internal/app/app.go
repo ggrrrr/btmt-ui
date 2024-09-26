@@ -16,7 +16,7 @@ import (
 type (
 	AuthToken string
 
-	AppCfgFunc func(a *application) error
+	AppCfgFunc func(a *Application) error
 
 	App interface {
 		UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
@@ -32,17 +32,17 @@ type (
 		// DisableAuth(ctx context.Context, email string) (a.Result[string], error)
 	}
 
-	application struct {
+	Application struct {
 		appPolices roles.AppPolices
 		authRepo   ddd.AuthPasswdRepo
 		signer     token.Signer
 	}
 )
 
-var _ (App) = (*application)(nil)
+var _ (App) = (*Application)(nil)
 
-func New(cfgs ...AppCfgFunc) (*application, error) {
-	a := &application{}
+func New(cfgs ...AppCfgFunc) (*Application, error) {
+	a := &Application{}
 	for _, c := range cfgs {
 		err := c(a)
 		if err != nil {
@@ -57,7 +57,7 @@ func New(cfgs ...AppCfgFunc) (*application, error) {
 }
 
 func WithAuthRepo(repo ddd.AuthPasswdRepo) AppCfgFunc {
-	return func(a *application) error {
+	return func(a *Application) error {
 		if repo == nil {
 			return fmt.Errorf("repo is nil")
 		}
@@ -67,7 +67,7 @@ func WithAuthRepo(repo ddd.AuthPasswdRepo) AppCfgFunc {
 }
 
 func WithTokenSigner(s token.Signer) AppCfgFunc {
-	return func(a *application) error {
+	return func(a *Application) error {
 		a.signer = s
 		return nil
 	}
@@ -93,7 +93,7 @@ func checkPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func (ap *application) findEmail(ctx context.Context, email string) (*ddd.AuthPasswd, error) {
+func (ap *Application) findEmail(ctx context.Context, email string) (*ddd.AuthPasswd, error) {
 	auths, err := ap.authRepo.Get(ctx, email)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInternalServerError, err.Error())

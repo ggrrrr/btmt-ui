@@ -17,7 +17,13 @@ import (
 
 type Module struct{}
 
-func (Module) Startup(ctx context.Context, s *system.System) (err error) {
+var _ (system.Module) = (*Module)(nil)
+
+func (*Module) Name() string {
+	return "svc-auth"
+}
+
+func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
 	return Root(ctx, s)
 }
 
@@ -44,7 +50,8 @@ func InitApp(ctx context.Context, cfg config.AppConfig) (app.App, []waiter.Clean
 	return a, closeFns, nil
 }
 
-func Root(ctx context.Context, s *system.System) error {
+func Root(ctx context.Context, s system.Service) error {
+	logger.Info().Msg("svc-auth")
 	a, fns, err := InitApp(ctx, s.Config())
 	s.Waiter().Cleanup(fns...)
 	if err != nil {
@@ -53,7 +60,7 @@ func Root(ctx context.Context, s *system.System) error {
 	}
 
 	restApp := rest.New(a)
-	s.Mux().Mount("/rest", restApp.Router())
+	s.Mux().Mount("/people", restApp.Router())
 
 	if s.Mux() == nil {
 		return fmt.Errorf("system.Mux is nil")
@@ -61,9 +68,9 @@ func Root(ctx context.Context, s *system.System) error {
 
 	grpc.RegisterServer(a, s.RPC())
 
-	logger.Info().Msg("starting...")
-	if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8021"); err != nil {
-		return err
-	}
+	// logger.Info().Msg("starting...")
+	// if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8021"); err != nil {
+	// 	return err
+	// }
 	return nil
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
-func (a *application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error {
+func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserCreate_FullMethodName, authInfo); err != nil {
 		return err
@@ -33,7 +33,7 @@ func (a *application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
 	return err
 }
 
-func (ap *application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {
+func (ap *Application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
 		return app.Result[[]ddd.AuthPasswd]{}, err
@@ -46,7 +46,7 @@ func (ap *application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPassw
 	return app.ResultWithPayload[[]ddd.AuthPasswd]("ok", out), err
 }
 
-func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) error {
+func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserUpdate_FullMethodName, authInfo); err != nil {
 		return err
@@ -64,7 +64,7 @@ func (ap *application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) erro
 	return ap.authRepo.Update(ctx, update)
 }
 
-func (a *application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
+func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo); err != nil {
 		return err

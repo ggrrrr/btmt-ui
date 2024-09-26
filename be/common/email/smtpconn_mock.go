@@ -45,7 +45,7 @@ func (m *TCPServerMock) Start() {
 				m.handle(sess)
 				err := sess.conn.Close()
 				if err != nil {
-					fmt.Printf("MOCK.server.start.Close.error: %v", err)
+					fmt.Printf("MOCK.server.start.Close.error: %v\n", err)
 				}
 			}()
 		}
@@ -90,7 +90,7 @@ func (*TCPServerMock) handle(sess *tcpSession) {
 			sess.write("250-SIZE 1000000")
 			sess.write("250 AUTH LOGIN PLAIN CRAM-MD5")
 		case "AUTH":
-			fmt.Printf("[%+v]\n", commandStr)
+			fmt.Printf("MOCK.server.sess.C.AUTH: %+v\n", commandStr[1:])
 			if commandStr[2] == "AHVzZXIAcGFzcw==" {
 				sess.write("235 2.7.0 Authentication successful")
 			} else {

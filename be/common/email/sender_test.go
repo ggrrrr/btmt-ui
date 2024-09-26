@@ -375,7 +375,7 @@ func TestCreateSenderError(t *testing.T) {
 		SMTPHost: "localhost",
 		SMTPAddr: ":12345",
 		Username: "user",
-		Password: "passasdasd",
+		Password: "apassasdasd",
 		AuthType: "",
 		Timeout:  time.Second * 2,
 	}

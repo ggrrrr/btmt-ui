@@ -7,10 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ggrrrr/btmt-ui/be/common/cmd"
 	"github.com/ggrrrr/btmt-ui/be/common/config"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
@@ -104,11 +103,6 @@ func runUpdateEmail() error {
 }
 
 func prepCli() (context.Context, app.App, error) {
-	var cfg config.AppConfig
-	logger.Init(logger.Config{
-		Level:  cmd.GlobalFlags.LogLevel,
-		Format: "console",
-	})
 	hostname, _ := os.Hostname()
 	ctx := roles.CtxWithAuthInfo(context.Background(), roles.CreateSystemAdminUser(
 		roles.SystemTenant,
@@ -118,12 +112,20 @@ func prepCli() (context.Context, app.App, error) {
 			RemoteAddr: "localhost",
 		},
 	))
+
+	var cfg config.AppConfig
+
 	err := config.InitConfig(&cfg)
 	if err != nil {
 		return nil, nil, err
 	}
+	system, err := system.NewSystem(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// InitApp/
-	app, err := auth.InitApp(ctx, w, cfg)
+	app, err := auth.InitApp(ctx, system)
 	if err != nil {
 		return nil, nil, err
 	}

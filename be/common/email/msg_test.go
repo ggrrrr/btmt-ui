@@ -104,6 +104,7 @@ func TestCreateMsg(t *testing.T) {
 			err:     fmt.Errorf(""),
 		},
 	}
+
 	for _, tc := range tst {
 		t.Run(tc.name, func(t *testing.T) {
 			m, gotErr := createMsg(tc.from, tc.to, tc.subject)

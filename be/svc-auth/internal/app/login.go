@@ -8,7 +8,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
-func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (app.Result[AuthToken], error) {
+func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (app.Result[AuthToken], error) {
 	if email == "" {
 		return app.Result[AuthToken]{}, ErrAuthEmailEmpty
 	}
@@ -41,7 +41,7 @@ func (ap *application) LoginPasswd(ctx context.Context, email, passwd string) (a
 	return app.ResultWithPayload[AuthToken]("ok", AuthToken(jwt)), nil
 }
 
-func (ap *application) TokenValidate(ctx context.Context) error {
+func (ap *Application) TokenValidate(ctx context.Context) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if authInfo.User == "" {
 		return app.ErrAuthUnauthenticated

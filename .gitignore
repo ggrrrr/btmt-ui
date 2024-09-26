@@ -2,6 +2,8 @@
 node_modules
 /dist
 
+jwt.crt
+jwt.key
 .terraform
 .terraform.lock.hcl
 *.tfstate

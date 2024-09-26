@@ -10,11 +10,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Config struct {
-	Level  string `env:"LOG_LEVEL"`
-	Format string `env:"LOG_FORMAT"`
-}
-
 var log zerolog.Logger
 
 func traceMap(ctx context.Context) map[string]any {
@@ -66,10 +61,23 @@ func ErrorCtx(ctx context.Context, err error) *zerolog.Event {
 }
 
 func init() {
-	out := zerolog.NewConsoleWriter()
-	out.NoColor = true
-	l := zerolog.New(out).Level(zerolog.TraceLevel)
-	log = l
+	format := os.Getenv("LOG_FORMAT")
+	levelStr := os.Getenv("LOG_LEVEL")
+
+	level := strToLevel(levelStr)
+
+	switch format {
+	case "json":
+		log = json(level)
+	case "console":
+		log = console(level)
+	default:
+		out := zerolog.NewConsoleWriter()
+		out.NoColor = true
+		l := zerolog.New(out).Level(zerolog.TraceLevel)
+		log = l
+	}
+
 }
 
 func console(level zerolog.Level) zerolog.Logger {
@@ -110,15 +118,5 @@ func strToLevel(l string) zerolog.Level {
 		return zerolog.TraceLevel
 	default:
 		return zerolog.DebugLevel
-	}
-}
-
-func Init(cfg Config) {
-	level := strToLevel(cfg.Level)
-	switch strings.ToLower(cfg.Format) {
-	case "json":
-		log = json(level)
-	default:
-		log = console(level)
 	}
 }

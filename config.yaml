@@ -1,0 +1,34 @@
+# postgres:
+# host: postgres
+# port: 5432
+# username: initexample
+# password: initexample
+# database: test
+# sslmode:  string
+# preffix: dev
+# aws:
+# database:
+# prefix: module
+# region: us-east-1
+# endpoint: http://localhost:4566
+jwt:
+  ttl: 1m
+  crtFile: jwt.crt
+  keyFile: jwt.key
+  useMock: mock
+
+# useMock: mock
+rest:
+  address: 0.0.0.0:8010
+grpc:
+  address: 0.0.0.0:8011
+# prefix: module
+
+mgo:
+  # debug: debug
+  ttl: 10s
+  collection: people
+  user: admin
+  password: pass
+  database: people
+  uri: mongodb://localhost:27017/

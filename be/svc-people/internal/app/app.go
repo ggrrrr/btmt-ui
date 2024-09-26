@@ -120,7 +120,7 @@ func (a *application) GetById(ctx context.Context, id string) (*ddd.Person, erro
 func (a *application) List(ctx context.Context, filters Filters) ([]ddd.Person, error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
-		logger.ErrorCtx(ctx, err).Any("filters", filters).Msg("List")
+		logger.ErrorCtx(ctx, err).Msg("List")
 		return nil, err
 	}
 	logger.DebugCtx(ctx).Any("filters", filters).Msg("List")

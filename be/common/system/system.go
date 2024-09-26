@@ -12,6 +12,8 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 )
 
+var _ (Service) = (*System)(nil)
+
 func NewCli(cfg config.AppConfig) (*System, error) {
 	s := System{
 		cfg: cfg,

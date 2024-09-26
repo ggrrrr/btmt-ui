@@ -23,15 +23,25 @@ type System struct {
 	verifier token.Verifier
 }
 
-// type Service interface {
-// 	Config() config.AppConfig
-// 	Mux() *chi.Mux
-// 	Waiter() waiter.Waiter
-// 	RPC() *grpc.Server
+type Service interface {
+	Config() config.AppConfig
+	Mux() *chi.Mux
+	Waiter() waiter.Waiter
+	RPC() *grpc.Server
 
-// 	// DB() *sql.DB
-// 	// JS() nats.JetStreamContext
-// }
+	// Config() config.AppConfig
+	// DB() *sql.DB
+	// JS() nats.JetStreamContext
+	// Mux() *chi.Mux
+	// RPC() *grpc.Server
+	// Waiter() waiter.Waiter
+	// Logger() zerolog.Logger
+}
+
+type Module interface {
+	Startup(context.Context, Service) error
+	Name() string
+}
 
 // var _ interface = (*struct)(nil) // Compile error on missing methods
 // var _ Service = (*System)(nil)
@@ -57,8 +67,4 @@ func (s *System) Waiter() waiter.Waiter {
 
 func (s *System) Aws() *session.Session {
 	return s.aws
-}
-
-type Module interface {
-	Startup(context.Context, *System) error
 }

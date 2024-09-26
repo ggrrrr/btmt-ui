@@ -24,10 +24,10 @@ func New(a app.App) *server {
 
 func (s *server) Router() chi.Router {
 	router := chi.NewRouter()
-	router.Post("/v1/people/update", s.Update)
-	router.Post("/v1/people/save", s.Save)
-	router.Post("/v1/people/list", s.List)
-	router.Post("/v1/people/get", s.Get)
+	router.Post("/update", s.Update)
+	router.Post("/save", s.Save)
+	router.Post("/list", s.List)
+	router.Post("/get", s.Get)
 
 	return router
 }
