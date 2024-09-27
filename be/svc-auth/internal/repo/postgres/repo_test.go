@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -37,7 +38,13 @@ func TestSaveGetList(t *testing.T) {
 	require.NoError(t, err)
 
 	ts := time.Now()
-	testData := ddd.AuthPasswd{Email: "emai@asd.com", Passwd: "pass1", Status: "stat1", TenantRoles: map[string][]string{"localhost": {"admin"}}, SystemRoles: []string{"systemRoleAdmin"}}
+	testData := ddd.AuthPasswd{
+		Email:       "emai@asd.com",
+		Passwd:      "pass1",
+		Status:      "stat1",
+		TenantRoles: map[string][]string{"localhost": {"admin"}},
+		SystemRoles: []string{"systemRoleAdmin"},
+	}
 	err = testRepo.Save(ctx, testData)
 	require.NoError(t, err)
 
@@ -46,6 +53,9 @@ func TestSaveGetList(t *testing.T) {
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
 	testData.CreatedAt = rows[0].CreatedAt
+
+	fmt.Printf("----- %+v", rows[0])
+
 	require.Equal(t, testData, rows[0])
 
 	rows, err = testRepo.List(ctx, nil)

@@ -39,6 +39,7 @@ func traceMap(ctx context.Context) map[string]any {
 	out := map[string]any{}
 	out["device"] = d.Device.DeviceInfo
 	out["remote"] = d.Device.RemoteAddr
+	out["tenant"] = d.Tenant
 	out["user"] = d.User
 	if traceId.IsValid() {
 		out["trace"] = traceId.String()

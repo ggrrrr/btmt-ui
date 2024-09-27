@@ -5,10 +5,6 @@ const AuthSchemeBearer string = "Bearer"
 type (
 	ctxKeyType struct{}
 
-	RoleName string
-
-	Tenant string
-
 	AuthCredentials string
 
 	Authorization struct {
@@ -23,11 +19,11 @@ type (
 )
 
 const (
-	RoleAdmin    RoleName = "admin"
-	SystemTenant Tenant   = "localhost"
+	RoleAdmin    string = "admin"
+	SystemTenant string = "localhost"
 )
 
-func HasRole(role RoleName, roles []RoleName) bool {
+func HasRole(role string, roles []string) bool {
 	for r := range roles {
 		if roles[r] == role {
 			return true

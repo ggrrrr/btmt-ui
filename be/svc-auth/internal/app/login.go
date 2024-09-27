@@ -16,11 +16,11 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (a
 	}()
 
 	if email == "" {
-		err = errAuthEmailEmpty
+		err = ErrAuthEmailEmpty
 		return app.Result[AuthToken]{}, err
 	}
 	if passwd == "" {
-		err = errAuthPasswdEmpty
+		err = ErrAuthPasswdEmpty
 		return app.Result[AuthToken]{}, err
 	}
 
@@ -31,17 +31,17 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (a
 	}
 
 	if auth == nil {
-		err = errAuthEmailNotFound
+		err = ErrAuthEmailNotFound
 		return app.Result[AuthToken]{}, err
 	}
 
 	if !canLogin(auth) {
-		err = errAuthEmailLocked
+		err = ErrAuthEmailLocked
 		return app.Result[AuthToken]{}, err
 	}
 
 	if !checkPasswordHash(passwd, string(auth.Passwd)) {
-		err = errAuthBadPassword
+		err = ErrAuthBadPassword
 		return app.Result[AuthToken]{}, err
 	}
 
@@ -71,11 +71,11 @@ func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 		return app.SystemError("failed to fetch email", err)
 	}
 	if auth == nil {
-		err = errAuthEmailNotFound
+		err = ErrAuthEmailNotFound
 		return
 	}
 	if !canLogin(auth) {
-		err = errAuthEmailLocked
+		err = ErrAuthEmailLocked
 		return
 	}
 	return nil

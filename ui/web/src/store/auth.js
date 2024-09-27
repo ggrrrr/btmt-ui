@@ -36,7 +36,7 @@ export const useLoginStore = defineStore({
       localStorage.setItem("token", "");
     },
     async validateRequest() {
-      const url = config.BASE_URL + "/v1/auth/token/validate";
+      const url = config.BASE_URL + "/auth/token/validate";
       const requestOptions = {
         method: "POST",
         body: JSON.stringify({}),
@@ -49,7 +49,7 @@ export const useLoginStore = defineStore({
       }
     },
     async loginRequest(email, passwd) {
-      const url = config.BASE_URL + "/v1/auth/login/passwd";
+      const url = config.BASE_URL + "/auth/login/passwd";
       const requestOptions = {
         // mode: "no-cors",
         method: "POST",

@@ -14,7 +14,7 @@ type testCase struct {
 
 var err error
 
-var testTenant Tenant = Tenant("test-host")
+var testTenant string = "test-host"
 
 func Test_CanDo(t *testing.T) {
 	testCanDo := NewAppPolices()
@@ -37,28 +37,28 @@ func Test_CanDo(t *testing.T) {
 		{
 			test: "ok admin one role",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []RoleName{"admin"}})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"admin"}})
 				assert.NoError(tt, err)
 			},
 		},
 		{
 			test: "ok admin more roles",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []RoleName{"asd", "admin"}})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"asd", "admin"}})
 				assert.NoError(tt, err)
 			},
 		},
 		{
 			test: "ok system ErrForbidden",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []RoleName{"asd", "admin"}})
+				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"asd", "admin"}})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 			},
 		},
 		{
 			test: "ok system ok",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", SystemRoles: []RoleName{"asd", "admin"}})
+				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", SystemRoles: []string{"asd", "admin"}})
 				assert.NoError(tt, err)
 			},
 		},

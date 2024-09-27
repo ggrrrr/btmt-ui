@@ -19,7 +19,7 @@ func TestSignTTL(t *testing.T) {
 
 	apiClaims := roles.AuthInfo{
 		User:  "user1",
-		Roles: []roles.RoleName{},
+		Roles: []string{},
 	}
 
 	jwt, err := testSigner.Sign(apiClaims)
@@ -44,13 +44,13 @@ func TestSignVerify(t *testing.T) {
 	apiClaims := roles.AuthInfo{
 		User:   "user1",
 		Tenant: "localhost",
-		Roles:  []roles.RoleName{"admin"},
+		Roles:  []string{"admin"},
 	}
 
 	expClaims := roles.AuthInfo{
 		User:   "user1",
 		Tenant: "localhost",
-		Roles:  []roles.RoleName{"admin"},
+		Roles:  []string{"admin"},
 	}
 
 	_, err = testVer.Verify(

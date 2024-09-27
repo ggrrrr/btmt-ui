@@ -48,7 +48,7 @@ func TestOtel(t *testing.T) {
 
 	authInfo := roles.AuthInfo{
 		User:   "user",
-		Tenant: roles.Tenant("btmt.io"),
+		Tenant: "btmt.io",
 		Device: roles.Device{
 			RemoteAddr: "localhost",
 			DeviceInfo: "curl",

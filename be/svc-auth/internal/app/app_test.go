@@ -98,28 +98,28 @@ func TestLogin(t *testing.T) {
 			test: "wrong pass",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, authItem.Email, "authItem.Passwd")
-				assert.ErrorIs(t, err, errAuthBadPassword)
+				assert.ErrorIs(t, err, ErrAuthBadPassword)
 			},
 		},
 		{
 			test: "EmailNotFound",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, "authItem.Email", "authItem.Passwd")
-				assert.ErrorIs(t, err, errAuthEmailNotFound)
+				assert.ErrorIs(t, err, ErrAuthEmailNotFound)
 			},
 		},
 		{
 			test: "empty email",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, "", "authItem.Passwd")
-				assert.ErrorIs(t, err, errAuthEmailEmpty)
+				assert.ErrorIs(t, err, ErrAuthEmailEmpty)
 			},
 		},
 		{
 			test: "account locked",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, authItemLocked.Email, "authItem.Passwd")
-				assert.ErrorIs(t, err, errAuthEmailLocked)
+				assert.ErrorIs(t, err, ErrAuthEmailLocked)
 			},
 		},
 	}
@@ -181,7 +181,7 @@ func TestValidate(t *testing.T) {
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
-				assert.ErrorIs(tt, err, errAuthEmailNotFound)
+				assert.ErrorIs(tt, err, ErrAuthEmailNotFound)
 			},
 		},
 		{
@@ -192,7 +192,7 @@ func TestValidate(t *testing.T) {
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
-				assert.ErrorIs(tt, err, errAuthEmailLocked)
+				assert.ErrorIs(tt, err, ErrAuthEmailLocked)
 			},
 		},
 		{
@@ -243,7 +243,7 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, jwt.Payload(), AuthToken("ok"))
 
 	err = testApp.UserChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
-	assert.ErrorIs(t, err, errAuthBadPassword)
+	assert.ErrorIs(t, err, ErrAuthBadPassword)
 
 	err = testApp.UserChangePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
 	assert.NoError(t, err)

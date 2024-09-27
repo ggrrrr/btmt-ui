@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -70,35 +71,29 @@ func runNewEmail() error {
 		f()
 		fmt.Println("Cancel")
 	}()
-	ctx, app, err := prepCli()
+	ctx, a, err := prepCli()
 	if err != nil {
 		return err
 	}
-	err = app.UserCreate(ctx, ddd.AuthPasswd{
-		Email:       newEmail,
-		Passwd:      newPasswd,
-		SystemRoles: []string{"admin"},
+	authPasswd, err := a.Get(ctx, newEmail)
+	if !errors.Is(err, app.ErrAuthEmailNotFound) {
+		currentUser := authPasswd.Payload()
+		currentUser.Passwd = newPasswd
+		if domain != "" {
+			currentUser.SystemRoles = []string{domain}
+		}
+		err = a.UserUpdate(ctx, currentUser)
+		return err
+	}
+	err = a.UserCreate(ctx, ddd.AuthPasswd{
+		Email:  newEmail,
+		Passwd: newPasswd,
+		TenantRoles: map[string][]string{
+			string(roles.SystemTenant): {roles.RoleAdmin},
+		},
+		SystemRoles: []string{roles.RoleAdmin},
 		Status:      ddd.StatusEnabled,
 	})
-	return err
-}
-
-// nolint: unused
-func runUpdateEmail() error {
-	defer func() {
-		// nolint: errcheck
-		w.Wait()
-		fmt.Println("Wait")
-	}()
-	defer func() {
-		w.CancelFunc()()
-		fmt.Println("Cancel")
-	}()
-	ctx, app, err := prepCli()
-	if err != nil {
-		return err
-	}
-	err = app.UserChangePasswd(ctx, newEmail, newPasswd, newPasswd)
 	return err
 }
 

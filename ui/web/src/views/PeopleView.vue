@@ -25,7 +25,8 @@
                             <InputTextsList :list="searchTextFields.list" @click="loadData" label="Names"
                                 hint="Email or names">
                             </InputTextsList>
-                            <InputTextsList :list="searchPhonesFields.list" @click="loadData" label="Phones" hint="Phones">
+                            <InputTextsList :list="searchPhonesFields.list" @click="loadData" label="Phones"
+                                hint="Phones">
                             </InputTextsList>
                             <InputTextsList :list="searchPINFields.list" @click="loadData" label="PIN" hint="ЕГН">
                             </InputTextsList>
@@ -40,8 +41,8 @@
                     </v-row>
                 </v-container>
             </v-card-text>
-            <v-data-table-server show-expand :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
-                :items="list.list" multi-sort class="elevation-1">
+            <v-data-table-server show-expand :loading="refs.loading" :items-length="refs.totalItems"
+                :headers="refs.headers" :items="list.list" multi-sort class="elevation-1">
                 <template v-slot:top>
                 </template>
                 <template v-slot:no-data>
@@ -256,7 +257,7 @@ async function loadData() {
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/v1/people/list";
+    const url = config.BASE_URL + "/people/list";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {

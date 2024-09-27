@@ -87,7 +87,7 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 	}
 
 	var tenant string
-	var listRoles []roles.RoleName
+	var listRoles []string
 	tmp, ok := (claims["roles"]).([]interface{})
 	if ok {
 		listRoles = listToRoles(tmp)
@@ -104,17 +104,17 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 
 	return roles.AuthInfo{
 		User:   user,
-		Tenant: roles.Tenant(tenant),
+		Tenant: tenant,
 		Roles:  listRoles,
 	}, nil
 }
 
-func listToRoles(l []interface{}) []roles.RoleName {
-	out := make([]roles.RoleName, 0, len(l))
+func listToRoles(l []interface{}) []string {
+	out := make([]string, 0, len(l))
 	for _, r := range l {
 		role, ok := r.(string)
 		if ok {
-			out = append(out, roles.RoleName(role))
+			out = append(out, role)
 		}
 	}
 	return out

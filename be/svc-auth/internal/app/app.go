@@ -19,6 +19,7 @@ type (
 	AppCfgFunc func(a *Application) error
 
 	App interface {
+		Get(ctx context.Context, email string) (app.Result[ddd.AuthPasswd], error)
 		UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
 		UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error)
 		UserUpdate(ctx context.Context, email ddd.AuthPasswd) error
@@ -103,7 +104,7 @@ func (ap *Application) findEmail(ctx context.Context, email string) (*ddd.AuthPa
 	}
 	if len(auths) > 1 {
 		logger.Error(fmt.Errorf("multiple result")).Str("email", string(email)).Msg("findEmail")
-		return nil, errAuthMultipleEmail
+		return nil, ErrAuthMultipleEmail
 	}
 	return &auths[0], nil
 }

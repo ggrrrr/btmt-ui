@@ -17,7 +17,7 @@ jwt:
   ttl: 1m
   crtFile: jwt.crt
   keyFile: jwt.key
-  useMock: mock
+  # useMock: mock
 
 # useMock: mock
 rest:

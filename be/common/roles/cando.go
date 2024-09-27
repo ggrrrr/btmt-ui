@@ -9,7 +9,7 @@ type (
 	}
 
 	AppPolices interface {
-		CanDo(tenant Tenant, FullMethodName string, authInfo AuthInfo) error
+		CanDo(tenant string, FullMethodName string, authInfo AuthInfo) error
 	}
 )
 
@@ -19,18 +19,12 @@ func NewAppPolices() *canDo {
 	return &canDo{}
 }
 
-func (*canDo) CanDo(tenant Tenant, FullMethodName string, authInfo AuthInfo) error {
+func (*canDo) CanDo(tenant string, fullMethodName string, authInfo AuthInfo) error {
 	if authInfo.User == "" {
 		return app.ErrAuthUnauthenticated
 	}
-	if tenant == SystemTenant {
-		if isSystemAdmin(authInfo) {
-			return nil
-		}
-		return app.ErrForbidden
-	}
-	if tenant != authInfo.Tenant {
-		return app.ErrForbidden
+	if isSystemAdmin(authInfo) {
+		return nil
 	}
 
 	if isAdmin(authInfo) {

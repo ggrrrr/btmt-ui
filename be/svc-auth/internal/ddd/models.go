@@ -36,19 +36,19 @@ type AuthPasswdRepo interface {
 	Update(ctx context.Context, auth AuthPasswd) error
 }
 
-func (a *AuthPasswd) ToAuthInfo(tenant roles.Tenant) roles.AuthInfo {
+func (a *AuthPasswd) ToAuthInfo(domain string) roles.AuthInfo {
 	out := roles.AuthInfo{
 		User:        a.Email,
-		Tenant:      tenant,
-		Roles:       []roles.RoleName{},
-		SystemRoles: []roles.RoleName{},
+		Tenant:      domain,
+		Roles:       []string{},
+		SystemRoles: []string{},
 	}
-	hostRoles := a.TenantRoles[string(tenant)]
-	for _, v := range hostRoles {
-		out.Roles = append(out.Roles, roles.RoleName(v))
+
+	hostRoles, ok := a.TenantRoles[domain]
+	if ok {
+		out.Roles = append(out.Roles, hostRoles...)
 	}
-	for _, v := range a.SystemRoles {
-		out.SystemRoles = append(out.SystemRoles, roles.RoleName(v))
-	}
+	out.SystemRoles = append(out.SystemRoles, a.SystemRoles...)
+
 	return out
 }

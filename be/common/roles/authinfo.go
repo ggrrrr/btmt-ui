@@ -5,19 +5,19 @@ import "context"
 type (
 	AuthInfo struct {
 		User        string
-		Tenant      Tenant
-		Roles       []RoleName
-		SystemRoles []RoleName
+		Tenant      string
+		Roles       []string
+		SystemRoles []string
 		Device      Device
 	}
 )
 
-func CreateSystemAdminUser(tenant Tenant, user string, device Device) AuthInfo {
+func CreateSystemAdminUser(tenant string, user string, device Device) AuthInfo {
 	return AuthInfo{
 		Tenant:      tenant,
 		User:        user,
-		Roles:       []RoleName{RoleAdmin},
-		SystemRoles: []RoleName{RoleAdmin},
+		Roles:       []string{RoleAdmin},
+		SystemRoles: []string{RoleAdmin},
 		Device:      device,
 	}
 }

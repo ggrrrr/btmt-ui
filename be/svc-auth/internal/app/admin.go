@@ -23,12 +23,12 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 	}
 
 	if auth.Email == "" {
-		err = errAuthEmailEmpty
+		err = ErrAuthEmailEmpty
 		return
 	}
 
 	if auth.Passwd == "" {
-		err = errAuthPasswdEmpty
+		err = ErrAuthPasswdEmpty
 		return err
 	}
 
@@ -46,6 +46,32 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 		return err
 	}
 	return nil
+}
+
+func (ap *Application) Get(ctx context.Context, email string) (result app.Result[ddd.AuthPasswd], err error) {
+	ctx, span := logger.Span(ctx, "Get", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	if err = ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
+		return
+	}
+
+	auth, err := ap.findEmail(ctx, email)
+	if err != nil {
+		logger.Error(err).Msg("ap.findEmail")
+		return app.Result[ddd.AuthPasswd]{}, err
+	}
+
+	if auth == nil {
+		err = ErrAuthEmailNotFound
+		return app.Result[ddd.AuthPasswd]{}, err
+	}
+
+	return app.ResultWithPayload[ddd.AuthPasswd]("ok", *auth), nil
+
 }
 
 func (ap *Application) UserList(ctx context.Context) (result app.Result[[]ddd.AuthPasswd], err error) {
@@ -86,7 +112,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 		return
 	}
 	if len(list) == 0 {
-		err = errAuthEmailNotFound
+		err = ErrAuthEmailNotFound
 		return
 	}
 	update := list[0]
@@ -113,12 +139,12 @@ func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, ne
 	}
 
 	if rec == nil {
-		err = errAuthEmailNotFound
+		err = ErrAuthEmailNotFound
 		return
 	}
 
 	if !checkPasswordHash(oldPasswd, string(rec.Passwd)) {
-		err = errAuthBadPassword
+		err = ErrAuthBadPassword
 		return
 	}
 
