@@ -43,7 +43,8 @@ func TestSave(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Nil(t, noRec)
 			}),
-		}, {
+		},
+		{
 			test: "happy save get",
 			run: func(t *testing.T) {
 				p1 := &ddd.Person{
@@ -72,7 +73,7 @@ func TestSave(t *testing.T) {
 
 				assert.True(t, !p2.CreatedTime.IsZero())
 				p1.CreatedTime = p2.CreatedTime
-				TestPerson(t, *p2, *p1, 10)
+				TestPerson(t, p2, p1, 10)
 				fmt.Printf("got %v \n", p2)
 			},
 		},
@@ -224,7 +225,7 @@ func TestList(t *testing.T) {
 				for _, p := range list {
 					fmt.Printf("%+v \n", p)
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -236,7 +237,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, 3, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -251,7 +252,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, 3, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -267,7 +268,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, 1, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -284,7 +285,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -301,7 +302,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 0)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -318,7 +319,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -335,7 +336,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -352,7 +353,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -369,7 +370,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -386,7 +387,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, p, *newData[p.Name], 0)
+					TestPerson(tt, &p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -443,7 +444,7 @@ func TestUpdate(t *testing.T) {
 				require.NoError(t, err)
 				require.True(t, !p2.CreatedTime.IsZero())
 				p1.CreatedTime = p2.CreatedTime
-				TestPerson(t, *p2, *p1, 10)
+				TestPerson(t, p2, p1, 10)
 				fmt.Printf("got %v \n", p2)
 			},
 		},

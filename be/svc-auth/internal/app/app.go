@@ -103,7 +103,7 @@ func (ap *Application) findEmail(ctx context.Context, email string) (*ddd.AuthPa
 	}
 	if len(auths) > 1 {
 		logger.Error(fmt.Errorf("multiple result")).Str("email", string(email)).Msg("findEmail")
-		return nil, ErrAuthMultipleEmail
+		return nil, errAuthMultipleEmail
 	}
 	return &auths[0], nil
 }

@@ -41,7 +41,7 @@ func init() {
 
 func run() {
 	ctx := context.Background()
-	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

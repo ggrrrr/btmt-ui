@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
@@ -37,7 +38,7 @@ func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) 
 	return []ddd.AuthPasswd{*a}, nil
 }
 
-func (r *repo) List(ctx context.Context) ([]ddd.AuthPasswd, error) {
+func (r *repo) List(ctx context.Context, filter app.FilterFactory) ([]ddd.AuthPasswd, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 

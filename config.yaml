@@ -1,9 +1,9 @@
-# postgres:
-# host: postgres
-# port: 5432
-# username: initexample
-# password: initexample
-# database: test
+postgres:
+  host: postgres
+  port: 5432
+  username: initexample
+  password: initexample
+  database: test
 # sslmode:  string
 # preffix: dev
 # aws:
@@ -11,6 +11,8 @@
 # prefix: module
 # region: us-east-1
 # endpoint: http://localhost:4566
+otel:
+  Enabled: true
 jwt:
   ttl: 1m
   crtFile: jwt.crt

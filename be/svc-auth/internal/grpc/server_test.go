@@ -107,7 +107,7 @@ func testServer(ctx context.Context, app app.App) (authpb.AuthSvcClient, func())
 		}
 	}()
 
-	conn, err := grpc.DialContext(ctx, "",
+	conn, err := grpc.NewClient("passthrough://bufnet",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
 			return lis.Dial()
 		}), grpc.WithTransportCredentials(insecure.NewCredentials()))

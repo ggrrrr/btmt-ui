@@ -14,7 +14,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/postgres"
+	repoPg "github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/postgres"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/rest"
 )
 
@@ -72,7 +72,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 		}
 	}
 	if pgCfg {
-		repo, err = initPgRepo(ctx, s.Waiter(), s.Config())
+		repo, err = initPgRepo(s)
 		if err != nil {
 			return nil, err
 		}
@@ -112,15 +112,13 @@ func initAwsRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (dd
 	return repo, nil
 }
 
-func initPgRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
-	repo, err := postgres.Connect(cfg.Postgres)
+func initPgRepo(s system.Service) (ddd.AuthPasswdRepo, error) {
+	repo, err := repoPg.Init(s.DB())
 	if err != nil {
 		logger.Error(err).Msg("initPgRepo error")
 		return nil, err
 	}
-	w.Cleanup(func() {
-		repo.Close()
-	})
+
 	return repo, nil
 }
 

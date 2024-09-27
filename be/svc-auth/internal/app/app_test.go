@@ -56,7 +56,8 @@ func TestLogin(t *testing.T) {
 	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
-	store, err := dynamodb.New(cfg())
+	// store, err := dynamodb.New(cfg())
+	store, err := mem.New()
 	require.NoError(t, err)
 
 	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
@@ -97,28 +98,28 @@ func TestLogin(t *testing.T) {
 			test: "wrong pass",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, authItem.Email, "authItem.Passwd")
-				assert.ErrorIs(t, err, ErrAuthBadPassword)
+				assert.ErrorIs(t, err, errAuthBadPassword)
 			},
 		},
 		{
 			test: "EmailNotFound",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, "authItem.Email", "authItem.Passwd")
-				assert.ErrorIs(t, err, ErrAuthEmailNotFound)
+				assert.ErrorIs(t, err, errAuthEmailNotFound)
 			},
 		},
 		{
 			test: "empty email",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, "", "authItem.Passwd")
-				assert.ErrorIs(t, err, ErrAuthEmailEmpty)
+				assert.ErrorIs(t, err, errAuthEmailEmpty)
 			},
 		},
 		{
 			test: "account locked",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, authItemLocked.Email, "authItem.Passwd")
-				assert.ErrorIs(t, err, ErrAuthEmailLocked)
+				assert.ErrorIs(t, err, errAuthEmailLocked)
 			},
 		},
 	}
@@ -180,7 +181,7 @@ func TestValidate(t *testing.T) {
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
-				assert.ErrorIs(tt, err, ErrAuthEmailNotFound)
+				assert.ErrorIs(tt, err, errAuthEmailNotFound)
 			},
 		},
 		{
@@ -191,7 +192,7 @@ func TestValidate(t *testing.T) {
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
-				assert.ErrorIs(tt, err, ErrAuthEmailLocked)
+				assert.ErrorIs(tt, err, errAuthEmailLocked)
 			},
 		},
 		{
@@ -242,7 +243,7 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, jwt.Payload(), AuthToken("ok"))
 
 	err = testApp.UserChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
-	assert.ErrorIs(t, err, ErrAuthBadPassword)
+	assert.ErrorIs(t, err, errAuthBadPassword)
 
 	err = testApp.UserChangePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
 	assert.NoError(t, err)

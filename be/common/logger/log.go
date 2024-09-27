@@ -3,8 +3,8 @@ package logger
 import (
 	"context"
 	"os"
-	"strings"
-	"time"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/rs/zerolog"
@@ -12,12 +12,37 @@ import (
 
 var log zerolog.Logger
 
+func initLog() {
+	format := os.Getenv("LOG_FORMAT")
+	levelStr := os.Getenv("LOG_LEVEL")
+
+	level := strToLevel(levelStr)
+
+	switch format {
+	case "json":
+		log = json(level)
+	case "console":
+		log = console(level)
+	default:
+		out := zerolog.NewConsoleWriter()
+		out.NoColor = true
+		l := zerolog.New(out).Level(zerolog.TraceLevel)
+		log = l
+	}
+
+}
+
 func traceMap(ctx context.Context) map[string]any {
+	span := trace.SpanFromContext(ctx)
+	traceId := span.SpanContext().TraceID()
 	d := roles.AuthInfoFromCtx(ctx)
 	out := map[string]any{}
 	out["device"] = d.Device.DeviceInfo
 	out["remote"] = d.Device.RemoteAddr
 	out["user"] = d.User
+	if traceId.IsValid() {
+		out["trace"] = traceId.String()
+	}
 	return out
 }
 
@@ -58,65 +83,4 @@ func WarnCtx(ctx context.Context) *zerolog.Event {
 func ErrorCtx(ctx context.Context, err error) *zerolog.Event {
 	l := log.Error().Err(err)
 	return addTrace(l, ctx)
-}
-
-func init() {
-	format := os.Getenv("LOG_FORMAT")
-	levelStr := os.Getenv("LOG_LEVEL")
-
-	level := strToLevel(levelStr)
-
-	switch format {
-	case "json":
-		log = json(level)
-	case "console":
-		log = console(level)
-	default:
-		out := zerolog.NewConsoleWriter()
-		out.NoColor = true
-		l := zerolog.New(out).Level(zerolog.TraceLevel)
-		log = l
-	}
-
-}
-
-func console(level zerolog.Level) zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.RFC3339,
-		NoColor:    false,
-	}).
-		Level(level).
-		With().
-		Timestamp().
-		Caller().
-		// Int("pid", os.Getpid()).
-		// Str("go_version", buildInfo.GoVersion).
-		Logger()
-	return logger
-}
-
-func json(level zerolog.Level) zerolog.Logger {
-	var logger = zerolog.New(os.Stdout).
-		Level(level).
-		With().
-		Timestamp().
-		Caller().
-		Logger()
-	return logger
-}
-
-func strToLevel(l string) zerolog.Level {
-	switch strings.ToLower(l) {
-	case "info":
-		return zerolog.InfoLevel
-	case "error":
-		return zerolog.ErrorLevel
-	case "warn":
-		return zerolog.WarnLevel
-	case "trace":
-		return zerolog.TraceLevel
-	default:
-		return zerolog.DebugLevel
-	}
 }

@@ -85,7 +85,7 @@ func TestSave(t *testing.T) {
 				require.NoError(tt, err)
 				assert.WithinDuration(tt, ts, p1.CreatedTime, 1+time.Second)
 				tt.Logf("p1: %v \n", p1)
-				repo.TestPerson(tt, *p2, *p1, 10)
+				repo.TestPerson(tt, p2, p1, 10)
 				list, err := testApp.List(ctxAdmin, nil)
 				require.NoError(tt, err)
 				require.True(tt, len(list) > 0)
@@ -140,7 +140,7 @@ func TestSave(t *testing.T) {
 				require.NoError(tt, err)
 				assert.Equal(tt, p2.Gender, "male")
 				assert.Equal(tt, p1.Gender, "male")
-				repo.TestPerson(tt, *p2, *p1, 10)
+				repo.TestPerson(tt, p2, p1, 10)
 			},
 		},
 		{
@@ -173,7 +173,7 @@ func TestSave(t *testing.T) {
 				p3, err := testApp.GetById(ctxAdmin, p2.Id)
 				p3.Age = nil
 				require.NoError(tt, err)
-				repo.TestPerson(tt, *p3, *p2, 5)
+				repo.TestPerson(tt, p3, p2, 5)
 			},
 		},
 	}

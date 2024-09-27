@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -17,31 +22,31 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 )
 
+// https://github.com/Ecostack/otelchi/blob/master/middleware.go
+func (s *System) httpMiddlewareOtel(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+
+		ctx, span := logger.Tracer().Start(
+			ctx, r.RequestURI,
+			oteltrace.WithAttributes(semconv.NetAttributesFromHTTPRequest("tcp", r)...),
+			oteltrace.WithAttributes(semconv.EndUserAttributesFromHTTPRequest(r)...),
+			oteltrace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest("rest", "", r)...),
+			oteltrace.WithSpanKind(oteltrace.SpanKindServer),
+		)
+		defer span.End()
+		r = r.WithContext(ctx)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *System) httpMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// if !strings.HasPrefix(r.RequestURI, "/rest") {
-		// 	next.ServeHTTP(w, r)
-		// 	return
-		// }
-
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Authorization")
 
 		if r.Method == http.MethodOptions {
-			// logger.Info().
-			// Any("headers", r.Header).
-			// Msg("OPTIONS")
-			// infoLog.Any("headers-r", r.Header.Get("Access-Control-Request-Headers"))
-			// origin := r.Header.Get("Origin")
-			// if len(origin) > 0 {
-			// }
-			// allowedHeaders := "Accept,Content-Type,content-type,Content-Length,Accept-Encoding,Authorization,X-Authorization,X-CSRF-Token,Origin,X-Requested-With"
-			// w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
-			// w.Header().Set("Access-Control-Allow-Origin", "*")
-			// w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
-
-			// w.Header().Set("Access-Control-Allow-Origin", "*")
-			// w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			out := "ok"
 			w.WriteHeader(200)
 			_, err := w.Write([]byte(out))
@@ -71,16 +76,14 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 					Any("Method", r.Method).
 					Any("request", userRequest).
 					Err(err)
-				web.SendError(w, app.UnauthenticatedError(err.Error(), nil))
+				web.SendError(r.Context(), w, app.UnauthenticatedError(err.Error(), nil))
 				return
-				// return req, status.Error(codes.Unauthenticated, err.Error())
-				// next.ServeHTTP(w, r)
 			}
 			infoLog.Str("user", authInfo.User)
 		}
 		infoLog.
 			Any("Method", r.Method).
-			Any("asd", r.Header.Get(roles.HttpUserAgent)).
+			Any("HttpUserAgent", r.Header.Get(roles.HttpUserAgent)).
 			Any("remoteAddr", r.RemoteAddr).
 			Any("device", userRequest.Device).
 			Str("AuthScheme", userRequest.Authorization.AuthScheme).
@@ -106,6 +109,11 @@ func (s *System) initMux() {
 	s.mux.Use(middleware.Heartbeat("/liveness"))
 	s.mux.Use(middleware.Logger)
 	s.mux.Use(s.httpMiddleware)
+
+	if s.cfg.Otel.Enabled {
+		// s.mux.Use(otelchi.Middleware("my-server", otelchi.WithChiRoutes(s.mux)))
+		s.mux.Use(s.httpMiddlewareOtel)
+	}
 
 	s.gateway = runtime.NewServeMux()
 

@@ -22,8 +22,11 @@ const (
 	contentTypeHtml  contentType = "text/html"
 	contentTypePlain contentType = "text/plain"
 
-	headerMimeVer                 headerName = "MIME-Version"
+	headerMimeVer headerName = "MIME-Version"
+	// headerMessageId               headerName = "X-Message-ID"
+	headerReplyTo                 headerName = "Reply-To"
 	headerSubject                 headerName = "Subject"
+	headerDate                    headerName = "Date"
 	headerTo                      headerName = "To"
 	headerFrom                    headerName = "From"
 	headerCc                      headerName = "Cc"

@@ -9,11 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
-func (r *repo) List(ctx context.Context) (out []ddd.AuthPasswd, err error) {
+func (r *repo) List(ctx context.Context, filter app.FilterFactory) (out []ddd.AuthPasswd, err error) {
+	ctx, span := logger.Span(ctx, "List", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	input := &dynamodb.ScanInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#E": aws.String("email"),
@@ -50,6 +56,11 @@ func (r *repo) List(ctx context.Context) (out []ddd.AuthPasswd, err error) {
 }
 
 func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
+	ctx, span := logger.Span(ctx, "Save", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	defer func() {
 		if err != nil {
 			logger.Error(err).Str("email", auth.Email).Err(err).Msg("ops")
@@ -67,6 +78,11 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 }
 
 func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err error) {
+	ctx, span := logger.Span(ctx, "Get", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	input := &dynamodb.QueryInput{
 		TableName: aws.String(r.table()),
 	}
@@ -98,7 +114,12 @@ func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err
 	return
 }
 
-func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) error {
+func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) (err error) {
+	ctx, span := logger.Span(ctx, "UpdatePassword", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	logger.DebugCtx(ctx).Str("email", email).Msg("UpdatePassword")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
@@ -119,7 +140,7 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) 
 	}
 	res, err := r.svc.UpdateItem(input)
 	if err != nil {
-		return err
+		return
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).
@@ -128,7 +149,12 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) 
 	return err
 }
 
-func (r *repo) EnableEmail(ctx context.Context, email string) error {
+func (r *repo) EnableEmail(ctx context.Context, email string) (err error) {
+	ctx, span := logger.Span(ctx, "EnableEmail", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":enabled": {
@@ -148,16 +174,21 @@ func (r *repo) EnableEmail(ctx context.Context, email string) error {
 	}
 	res, err := r.svc.UpdateItem(input)
 	if err != nil {
-		return err
+		return
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).
 		Str("email", email).
 		Msg("EnableEmail")
-	return err
+	return
 }
 
-func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.StatusType) error {
+func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.StatusType) (err error) {
+	ctx, span := logger.Span(ctx, "UpdateStatus", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	logger.DebugCtx(ctx).Str("email", email).Str("status", string(status)).Msg("UpdateStatus")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
@@ -178,13 +209,13 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 	}
 	res, err := r.svc.UpdateItem(input)
 	if err != nil {
-		return err
+		return
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).
 		Str("email", email).
 		Msg("UpdateStatus")
-	return err
+	return
 }
 
 func toAwsMap(src map[string][]string) map[string]*dynamodb.AttributeValue {
@@ -196,7 +227,12 @@ func toAwsMap(src map[string][]string) map[string]*dynamodb.AttributeValue {
 	return out
 }
 
-func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
+func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
+	ctx, span := logger.Span(ctx, "Update", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	logger.DebugCtx(ctx).Str("email", auth.Email).Msg("Update")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
@@ -225,7 +261,7 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 	}
 	res, err := r.svc.UpdateItem(input)
 	if err != nil {
-		return err
+		return
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).

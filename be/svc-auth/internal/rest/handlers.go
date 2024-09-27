@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -53,43 +52,60 @@ func json500(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.LoginPasswd", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	var req authpb.LoginPasswdRequest
-	err := web.DecodeJsonRequest(r, &req)
+	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	logger.InfoCtx(r.Context()).Any("email", &req.Email).Msg("LoginPasswd")
 	res, err := s.app.LoginPasswd(r.Context(), req.Email, req.Password)
 	if err != nil {
-		fmt.Printf("%+v \n", err)
 		logger.ErrorCtx(r.Context(), err).Msg("LoginPasswd")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	out := authpb.LoginTokenPayload{
 		Email: req.Email,
 		Token: string(res.Payload()),
 	}
-	web.SendPayload(w, "ok", &out)
+	web.SendPayload(ctx, w, "ok", &out)
 }
 
 func (s *server) TokenValidate(w http.ResponseWriter, r *http.Request) {
-	err := s.app.TokenValidate(r.Context())
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.TokenValidate", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	err = s.app.TokenValidate(r.Context())
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("TokenValidate")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	logger.InfoCtx(r.Context()).Msg("Validate")
-	web.SendPayload(w, "ok", nil)
+	web.SendPayload(ctx, w, "ok", nil)
 }
 
 func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.UserList", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	list, err := s.app.UserList(r.Context())
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("UserList")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	out := []authpb.UserListPayload{}
@@ -102,5 +118,5 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	logger.InfoCtx(r.Context()).Msg("UserList")
-	web.SendPayload(w, "ok", out)
+	web.SendPayload(r.Context(), w, "ok", out)
 }

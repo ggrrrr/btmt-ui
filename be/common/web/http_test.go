@@ -21,18 +21,17 @@ func myMux() http.Handler {
 
 		// We use `select` to execute a piece of code depending on which
 		// channel receives a message first
-		select {
-		case <-time.After(2 * time.Second):
-			// If we receive a message after 2 seconds
-			// that means the request has been processed
-			// We then write this as the response
-			w.Write([]byte("request processed"))
-			fmt.Printf("processing request.done.\n")
-			// case <-ctx.Done():
-			// 	// If the request gets cancelled, log it
-			// 	// to STDERR
-			// 	fmt.Printf("request cancelled\n")
-		}
+		<-time.After(2 * time.Second)
+		// If we receive a message after 2 seconds
+		// that means the request has been processed
+		// We then write this as the response
+		_, _ = w.Write([]byte("request processed"))
+		fmt.Printf("processing request.done.\n")
+		// case <-ctx.Done():
+		// 	// If the request gets cancelled, log it
+		// 	// to STDERR
+		// 	fmt.Printf("request cancelled\n")
+		// }
 		// fmt.Fprint(os.Stderr, "request cancelled\n")
 	})
 	return mux

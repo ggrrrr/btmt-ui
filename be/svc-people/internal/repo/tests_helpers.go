@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPerson(t *testing.T, got ddd.Person, want ddd.Person, duration int) {
+func TestPerson(t *testing.T, got *ddd.Person, want *ddd.Person, duration int) {
 	if duration > 0 {
 		assert.WithinDuration(t, want.CreatedTime, got.CreatedTime, 100+time.Millisecond)
 	}

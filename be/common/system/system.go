@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,6 +33,15 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	s := System{
 		cfg: cfg,
 	}
+
+	if cfg.Otel.Enabled {
+		// err := log.ConfigureOtel()
+		err := logger.ConfigureOtel(context.Background())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err := s.initJwt()
 	if err != nil {
 		return nil, err
@@ -40,6 +50,16 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	s.initGRPC()
 	s.initAws()
 	s.waiter = waiter.New(waiter.CatchSignals())
+	s.waiter.Cleanup(logger.Shutdown)
+
+	if cfg.Postgres.Host != "" {
+		err = s.initDB()
+		if err != nil {
+			logger.Error(err).Msg("init db.")
+			return nil, err
+		}
+	}
+
 	logger.Info().Msg("system init.")
 	return &s, nil
 }

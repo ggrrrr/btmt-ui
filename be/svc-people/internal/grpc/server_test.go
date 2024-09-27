@@ -110,7 +110,7 @@ func testServer(ctx context.Context, app app.App) (peoplepb.PeopleSvcClient, fun
 		}
 	}()
 
-	conn, err := grpc.DialContext(ctx, "",
+	conn, err := grpc.NewClient("passthrough://bufnet",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
 			return lis.Dial()
 		}), grpc.WithTransportCredentials(insecure.NewCredentials()))

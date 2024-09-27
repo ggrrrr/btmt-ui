@@ -53,24 +53,35 @@ func (r *repo) CreateIndex(ctx context.Context) {
 	}
 }
 
-func (r *repo) Save(ctx context.Context, p *ddd.Person) error {
+func (r *repo) Save(ctx context.Context, p *ddd.Person) (err error) {
+	ctx, span := logger.Span(ctx, "repo.Save", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	p.CreatedTime = time.Now()
 	newPerson, err := fromPerson(p)
 	if err != nil {
-		return err
+		return
 	}
 	_, err = r.db.InsertOne(ctx, r.collection, newPerson)
 	if err != nil {
-		return err
+		return
 	}
 	p.Id = newPerson.Id.Hex()
 
 	return nil
 }
 
-func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
+func (r *repo) Update(ctx context.Context, p *ddd.Person) (err error) {
+	_, span := logger.Span(ctx, "repo.Update", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	if len(p.Id) == 0 {
-		return app.BadRequestError("person.id is empty", nil)
+		err = app.BadRequestError("person.id is empty", nil)
+		return
 	}
 	newPerson, err := fromPerson(p)
 	if err != nil {
@@ -112,7 +123,8 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	}
 
 	if len(setReq) == 0 {
-		return app.BadRequestError("empty person", nil)
+		err = app.BadRequestError("empty person update", nil)
+		return
 	}
 	updateReq := bson.M{
 		"$set": setReq,
@@ -120,7 +132,7 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	logger.DebugCtx(ctx).Any("updateReq", updateReq).Msg("UpdateByID")
 	resp, err := r.db.UpdateByID(ctx, r.collection, newPerson.Id, updateReq)
 	if err != nil {
-		return err
+		return
 	}
 
 	logger.InfoCtx(ctx).
@@ -131,17 +143,29 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) error {
 	return nil
 }
 
-func (r *repo) List(ctx context.Context, filter ddd.FilterFactory) ([]ddd.Person, error) {
+func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd.Person, err error) {
+	_, span := logger.Span(ctx, "repo.List", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	if filter == nil {
-		return r.list(ctx, bson.M{})
+		result, err = r.list(ctx, bson.M{})
+		return
 	}
-	return r.list(ctx, filter.Create())
+	result, err = r.list(ctx, filter.Create())
+	return
 }
 
-func (r *repo) GetById(ctx context.Context, fromId string) (*ddd.Person, error) {
+func (r *repo) GetById(ctx context.Context, fromId string) (result *ddd.Person, err error) {
+	_, span := logger.Span(ctx, "repo.GetById", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	id, err := convertPersonId(fromId)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var out person
@@ -151,17 +175,19 @@ func (r *repo) GetById(ctx context.Context, fromId string) (*ddd.Person, error) 
 		if errors.As(res.Err(), &mongo.ErrNoDocuments) {
 			return nil, nil
 		}
-		return nil, res.Err()
+		err = res.Err()
+		return
 	}
 	err = res.Decode(&out)
 	if err != nil {
 		return nil, app.SystemError("unable to decode record", err)
 	}
-	d := out.toPerson()
-	return &d, nil
+	result = out.toPerson()
+	return
 }
 
 func (r *repo) list(ctx context.Context, filter any) ([]ddd.Person, error) {
+
 	cur, err := r.db.Find(ctx, r.collection, filter)
 	if err != nil {
 		return nil, errors.Wrap(err, "collection.Find")
@@ -176,13 +202,13 @@ func (r *repo) list(ctx context.Context, filter any) ([]ddd.Person, error) {
 		if cur.Err() != nil {
 			return nil, errors.Wrap(err, "cursor.Error")
 		}
-		var result person
+		var result *person
 		err := cur.Decode(&result)
 		if err != nil {
 			log.Println(err)
 			return nil, errors.Wrap(err, "Decode")
 		}
-		out = append(out, result.toPerson())
+		out = append(out, *result.toPerson())
 	}
 
 	return out, nil

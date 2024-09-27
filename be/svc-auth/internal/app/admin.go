@@ -10,53 +10,84 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
-func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) error {
+func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
+	ctx, span := logger.Span(ctx, "UserCreate", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserCreate_FullMethodName, authInfo); err != nil {
+	err = a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserCreate_FullMethodName, authInfo)
+	if err != nil {
 		return err
 	}
+
 	if auth.Email == "" {
-		return app.BadRequestError("email empty", nil)
+		err = errAuthEmailEmpty
+		return
 	}
+
 	if auth.Passwd == "" {
-		return app.BadRequestError("password empty", nil)
+		err = errAuthPasswdEmpty
+		return err
 	}
+
 	logger.InfoCtx(ctx).Any("email", auth.Email).Msg("CreateAuth")
 	if auth.Passwd != "" {
 		cryptPasswd, err := HashPassword(string(auth.Passwd))
 		if err != nil {
-			return err
+			logger.ErrorCtx(ctx, err).Msg("UserCreate.HashPassword")
+			return app.SystemError("Create password", err)
 		}
 		auth.Passwd = cryptPasswd
 	}
-	err := a.authRepo.Save(ctx, auth)
-	return err
-}
-
-func (ap *Application) UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error) {
-	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
-		return app.Result[[]ddd.AuthPasswd]{}, err
-	}
-	out, err := ap.authRepo.List(ctx)
+	err = a.authRepo.Save(ctx, auth)
 	if err != nil {
-		return app.Result[[]ddd.AuthPasswd]{}, err
-	}
-	logger.InfoCtx(ctx).Msg("ListAuth")
-	return app.ResultWithPayload[[]ddd.AuthPasswd]("ok", out), err
-}
-
-func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) error {
-	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserUpdate_FullMethodName, authInfo); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (ap *Application) UserList(ctx context.Context) (result app.Result[[]ddd.AuthPasswd], err error) {
+	ctx, span := logger.Span(ctx, "UserList", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	if err = ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
+		return
+	}
+
+	out, err := ap.authRepo.List(ctx, nil)
+	if err != nil {
+		return
+	}
+
+	logger.InfoCtx(ctx).Msg("UserList")
+	return app.ResultWithPayload[[]ddd.AuthPasswd]("ok", out), nil
+}
+
+func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
+	ctx, span := logger.Span(ctx, "UserUpdate", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	err = ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserUpdate_FullMethodName, authInfo)
+	if err != nil {
+		return
+	}
+
 	list, err := ap.authRepo.Get(ctx, auth.Email)
 	if err != nil {
-		return err
+		logger.ErrorCtx(ctx, err).Msg("authRepo.Get")
+		return
 	}
 	if len(list) == 0 {
-		return app.BadRequestError("email not found", nil)
+		err = errAuthEmailNotFound
+		return
 	}
 	update := list[0]
 	update.Status = auth.Status
@@ -64,33 +95,44 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) erro
 	return ap.authRepo.Update(ctx, update)
 }
 
-func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error {
+func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) (err error) {
+	ctx, span := logger.Span(ctx, "UserChangePasswd", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo); err != nil {
-		return err
+	err = a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo)
+	if err != nil {
+		return
 	}
+
 	rec, err := a.findEmail(ctx, email)
 	if err != nil {
-		return err
+		return
 	}
+
 	if rec == nil {
-		return ErrAuthEmailNotFound
+		err = errAuthEmailNotFound
+		return
 	}
+
 	if !checkPasswordHash(oldPasswd, string(rec.Passwd)) {
-		return ErrAuthBadPassword
+		err = errAuthBadPassword
+		return
 	}
 
 	var cryptPasswd string
 	if newPasswd != "" {
 		cryptPasswd, err = HashPassword(newPasswd)
 		if err != nil {
-			return err
+			return app.SystemError("HashPassword", err)
 		}
 	}
 	logger.InfoCtx(ctx).Any("email", email).Msg("UpdatePasswd")
 	err = a.authRepo.UpdatePassword(ctx, email, cryptPasswd)
 	if err != nil {
-		return err
+		return
 	}
 	return err
 }

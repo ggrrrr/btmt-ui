@@ -29,5 +29,5 @@ func (s *server) Router() chi.Router {
 }
 
 func (s *server) Tmpl(w http.ResponseWriter, r *http.Request) {
-	web.SendPayload(w, "ok", "tmpl")
+	web.SendPayload(r.Context(), w, "ok", "tmpl")
 }

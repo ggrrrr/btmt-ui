@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 )
 
@@ -18,9 +20,10 @@ type AppResponse struct {
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
 	Payload any    `json:"payload,omitempty"`
+	Trace   string `json:"trace,omitempty"`
 }
 
-func SendError(w http.ResponseWriter, e error) {
+func SendError(ctx context.Context, w http.ResponseWriter, e error) {
 	var httpCode int = 500
 	var msg string
 	var err error = e
@@ -43,30 +46,30 @@ func SendError(w http.ResponseWriter, e error) {
 			httpCode = 500
 		}
 	}
-	send(w, httpCode, msg, err, nil)
+	send(ctx, w, httpCode, msg, err, nil)
 }
 
 func MethodNotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	send(w, http.StatusNotFound, fmt.Sprintf("StatusNotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
+	send(r.Context(), w, http.StatusNotFound, fmt.Sprintf("StatusNotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
 func MethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
-	send(w, http.StatusMethodNotAllowed, fmt.Sprintf("StatusMethodNotAllowed: [%s] %s", r.Method, r.URL.Path), nil, nil)
+	send(r.Context(), w, http.StatusMethodNotAllowed, fmt.Sprintf("StatusMethodNotAllowed: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
 // HTTP CODE 200
-func SendPayload(w http.ResponseWriter, msg string, payload any) {
-	send(w, http.StatusOK, msg, nil, payload)
+func SendPayload(ctx context.Context, w http.ResponseWriter, msg string, payload any) {
+	send(ctx, w, http.StatusOK, msg, nil, payload)
 }
 
 // HTTP CODE 500
-func SendSystemError(w http.ResponseWriter, msg string, err error, payload any) {
-	send(w, http.StatusInternalServerError, msg, err, nil)
+func SendSystemError(ctx context.Context, w http.ResponseWriter, msg string, err error, payload any) {
+	send(ctx, w, http.StatusInternalServerError, msg, err, nil)
 }
 
 // HTTP CODE 400
-func SendErrorBadRequest(w http.ResponseWriter, msg string, err error) {
-	send(w, http.StatusBadRequest, msg, err, nil)
+func SendErrorBadRequest(ctx context.Context, w http.ResponseWriter, msg string, err error) {
+	send(ctx, w, http.StatusBadRequest, msg, err, nil)
 }
 
 // return system error on ReadAll
@@ -84,7 +87,13 @@ func DecodeJsonRequest(r *http.Request, payload any) error {
 	return nil
 }
 
-func send(w http.ResponseWriter, code int, msg string, err1 error, payload any) {
+func send(ctx context.Context, w http.ResponseWriter, code int, msg string, err1 error, payload any) {
+	traceID := ""
+	span := trace.SpanContextFromContext(ctx)
+	if span.HasTraceID() {
+		traceID = span.TraceID().String()
+	}
+
 	errStr := ""
 	if err1 != nil {
 		errStr = err1.Error()
@@ -94,7 +103,9 @@ func send(w http.ResponseWriter, code int, msg string, err1 error, payload any) 
 		Message: msg,
 		Error:   errStr,
 		Payload: payload,
+		Trace:   traceID,
 	}
+
 	b, err := json.Marshal(body)
 	if err != nil {
 		log.Printf("unable to write response body(%v) error: %v", body, err)

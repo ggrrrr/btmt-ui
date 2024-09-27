@@ -21,7 +21,7 @@ var rootCmd = &cobra.Command{
 	// Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cmd.Help()
+			_ = cmd.Help()
 			os.Exit(1)
 		}
 	},

@@ -37,7 +37,7 @@ func Test_FromPerson(t *testing.T) {
 
 	id1 := primitive.NewObjectID()
 
-	p1 := ddd.Person{
+	p1 := &ddd.Person{
 		Id:        id1.Hex(),
 		IdNumbers: map[string]string{"pin": "pin1"},
 		Emails:    map[string]string{"default": "asd@asd"},
@@ -55,7 +55,7 @@ func Test_FromPerson(t *testing.T) {
 		CreatedTime: time.Now(),
 	}
 
-	out1, err := fromPerson(&p1)
+	out1, err := fromPerson(p1)
 	assert.Equal(t, out1.Emails, []string{"default:asd@asd"})
 	require.NoError(t, err)
 	p11 := out1.toPerson()

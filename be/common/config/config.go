@@ -13,6 +13,9 @@ import (
 )
 
 type (
+	Otel struct {
+		Enabled bool
+	}
 	GrpcConfig struct {
 		Address string
 	}
@@ -29,6 +32,7 @@ type (
 	}
 
 	AppConfig struct {
+		Otel            Otel
 		Postgres        postgres.Config
 		Aws             awsdb.AwsConfig
 		Grpc            GrpcConfig

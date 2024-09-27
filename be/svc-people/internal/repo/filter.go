@@ -3,8 +3,8 @@ package repo
 import (
 	"fmt"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -21,7 +21,7 @@ type (
 	}
 )
 
-var _ (ddd.FilterFactory) = (*filter)(nil)
+var _ (app.FilterFactory) = (*filter)(nil)
 
 func NewFilter(cfgs ...AddFilterFunc) (*filter, error) {
 	out := &filter{}

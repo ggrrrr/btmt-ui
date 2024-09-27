@@ -31,12 +31,12 @@ func Test_List(t *testing.T) {
 
 	r, err := New(cfg())
 	require.NoError(t, err)
-	_, err = r.List(ctx)
+	_, err = r.List(ctx, nil)
 	require.NoError(t, err)
 
 	_ = r.createTableAuth()
 
-	list, err := r.List(ctx)
+	list, err := r.List(ctx, nil)
 	assert.NoError(t, err)
 	logger.Info().Any("asd", list)
 }

@@ -1,6 +1,37 @@
 version: "3.8"
 
 services:
+  # docker run --rm --name jaeger
+  #   -e COLLECTOR_ZIPKIN_HOST_PORT=:9411
+  #   -p 6831:6831/udp
+  #   -p 6832:6832/udp
+  #   -p 5778:5778
+  #   -p 16686:16686
+  #   -p 4317:4317
+  #   -p 4318:4318
+  #   -p 14250:14250
+  #   -p 14268:14268
+  #   -p 14269:14269
+  #   -p 9411:9411
+  #   jaegertracing/all-in-one:1.61.0
+  otel:
+    hostname: otel
+    container_name: otel
+    image: jaegertracing/all-in-one:1.61.0
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    ports:
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686
+      - 4317:4317
+      - 4318:4318
+      - 14250:14250
+      - 14268:14268
+      - 14269:14269
+      - 9411:9411
+
   proxy:
     # networks:
     # - apple
@@ -25,6 +56,9 @@ services:
     labels:
       # - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
       - "traefik.http.routers.whoami.rule=PathPrefix(`/whoami`)"
+
+    ports:
+      - 6831:6831/udp
 
   people:
     hostname: people

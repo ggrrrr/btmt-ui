@@ -133,7 +133,7 @@ func fromPerson(p *ddd.Person) (*person, error) {
 	return &out, nil
 }
 
-func (p person) toPerson() ddd.Person {
+func (p *person) toPerson() *ddd.Person {
 	var ts time.Time
 	if p.CreatedTime > 0 {
 		ts = p.CreatedTime.Time()
@@ -159,7 +159,7 @@ func (p person) toPerson() ddd.Person {
 			out.Age = &age
 		}
 	}
-	return out
+	return &out
 }
 
 // if at least one of the DOB fields set then return true

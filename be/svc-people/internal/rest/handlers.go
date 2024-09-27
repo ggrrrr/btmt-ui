@@ -33,18 +33,25 @@ func (s *server) Router() chi.Router {
 }
 
 func (s *server) List(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.List", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	var req peoplepb.ListRequest
-	err := web.DecodeJsonRequest(r, &req)
+	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("List")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
+
 	logger.InfoCtx(r.Context()).Any("filter", req.String()).Msg("List")
 	out, err := s.app.List(r.Context(), req.ToFilter())
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("List")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	people := []*peoplepb.Person{}
@@ -54,39 +61,51 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 		logger.DebugCtx(r.Context()).Any("person to", person).Msg("ListResult")
 		people = append(people, person)
 	}
-	web.SendPayload(w, "ok", people)
+	web.SendPayload(ctx, w, "ok", people)
 }
 
 func (s *server) Get(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.Get", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	var req peoplepb.GetRequest
-	err := web.DecodeJsonRequest(r, &req)
+	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("Get")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 
 	}
 	if req.Id == "" {
 		logger.ErrorCtx(r.Context(), err).Str("error", "empty id").Msg("Get")
-		web.SendErrorBadRequest(w, "empty id", nil)
+		web.SendErrorBadRequest(ctx, w, "empty id", nil)
 		return
 	}
 	logger.InfoCtx(r.Context()).Any("id", &req.Id).Msg("Get")
 	p, err := s.app.GetById(r.Context(), req.Id)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("Get")
-		web.SendSystemError(w, "system error, please try again later", err, nil)
+		web.SendSystemError(ctx, w, "system error, please try again later", err, nil)
 		return
 	}
-	web.SendPayload(w, "ok", p)
+	web.SendPayload(ctx, w, "ok", p)
 }
 
 func (s *server) Save(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.Save", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	var req peoplepb.SaveRequest
-	err := web.DecodeJsonRequest(r, &req)
+	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("Save")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	p := req.ToPerson()
@@ -94,18 +113,24 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("Save")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
-	web.SendPayload(w, "ok", peoplepb.SavePayload{Id: p.Id})
+	web.SendPayload(ctx, w, "ok", peoplepb.SavePayload{Id: p.Id})
 }
 
 func (s *server) Update(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.Update", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	var req peoplepb.UpdateRequest
-	err := web.DecodeJsonRequest(r, &req)
+	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 	p := req.ToPerson()
@@ -113,8 +138,8 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	err = s.app.Update(r.Context(), p)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
-		web.SendError(w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
-	web.SendPayload(w, "ok", nil)
+	web.SendPayload(ctx, w, "ok", nil)
 }

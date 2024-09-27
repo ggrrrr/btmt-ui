@@ -39,7 +39,7 @@ func TestIntDialAndSend(t *testing.T) {
 	newLine = []byte("\r\n")
 
 	loadConfig()
-	t.Skip("NO Addr CONFIG")
+	// t.Skip("NO Addr CONFIG")
 	if cfg.SMTPAddr == "" {
 		t.Skip("NO Addr CONFIG")
 	}

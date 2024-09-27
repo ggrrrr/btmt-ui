@@ -70,8 +70,12 @@ func WithAppPolicies(appPolices roles.AppPolices) AppConfiguration {
 	}
 }
 
-func (a *application) Save(ctx context.Context, p *ddd.Person) error {
-	var err error
+func (a *application) Save(ctx context.Context, p *ddd.Person) (err error) {
+	ctx, span := logger.Span(ctx, "Save", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return err
@@ -101,23 +105,36 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) error {
 	return nil
 }
 
-func (a *application) GetById(ctx context.Context, id string) (*ddd.Person, error) {
+func (a *application) GetById(ctx context.Context, id string) (person *ddd.Person, err error) {
+	ctx, span := logger.Span(ctx, "Save", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return nil, err
 	}
+
 	logger.InfoCtx(ctx).Str("id", id).Msg("GetById")
-	person, err := a.repoPeople.GetById(ctx, id)
+	person, err = a.repoPeople.GetById(ctx, id)
 	if err != nil {
-		return nil, err
+		return
 	}
+
 	if person == nil {
 		return nil, app.ItemNotFoundError("person", id)
 	}
+
 	return person, nil
 }
 
-func (a *application) List(ctx context.Context, filters Filters) ([]ddd.Person, error) {
+func (a *application) List(ctx context.Context, filters Filters) (result []ddd.Person, err error) {
+	ctx, span := logger.Span(ctx, "List", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		logger.ErrorCtx(ctx, err).Msg("List")
@@ -153,20 +170,31 @@ func (a *application) List(ctx context.Context, filters Filters) ([]ddd.Person, 
 	return out, nil
 }
 
-func (a *application) Update(ctx context.Context, p *ddd.Person) error {
+func (a *application) Update(ctx context.Context, p *ddd.Person) (err error) {
+	ctx, span := logger.Span(ctx, "Update", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
-		return err
+	err = a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo)
+	if err != nil {
+		return
 	}
 	logger.DebugCtx(ctx).Any("person", p).Msg("Update")
-	err := a.repoPeople.Update(ctx, p)
+	err = a.repoPeople.Update(ctx, p)
 	return err
 }
 
-func (*application) PinParse(ctx context.Context, number string) (*ddd.PinValidation, error) {
+func (*application) PinParse(ctx context.Context, number string) (result *ddd.PinValidation, err error) {
+	_, span := logger.Span(ctx, "PinParse", nil)
+	defer func() {
+		span.End(err)
+	}()
+
 	info, err := pin.Parse(number)
 	if err != nil {
-		return nil, err
+		return
 	}
 	return &ddd.PinValidation{
 		Dob:    info.Dob,

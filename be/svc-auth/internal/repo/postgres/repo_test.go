@@ -24,27 +24,31 @@ func cfg() postgres.Config {
 
 func TestSaveGetList(t *testing.T) {
 	ctx := context.Background()
-	conn, err := Connect(cfg())
+
+	db, err := postgres.Connect(cfg())
 	require.NoError(t, err)
 
-	_, err = conn.db.Exec(conn.table(`drop table if exists %s`))
+	testRepo, err := Init(db)
 	require.NoError(t, err)
-	err = conn.create()
+
+	_, err = testRepo.db.Exec(testRepo.table(`drop table if exists %s`))
+	require.NoError(t, err)
+	err = create(db, testRepo.table(createTable))
 	require.NoError(t, err)
 
 	ts := time.Now()
 	testData := ddd.AuthPasswd{Email: "emai@asd.com", Passwd: "pass1", Status: "stat1", TenantRoles: map[string][]string{"localhost": {"admin"}}, SystemRoles: []string{"systemRoleAdmin"}}
-	err = conn.Save(ctx, testData)
+	err = testRepo.Save(ctx, testData)
 	require.NoError(t, err)
 
-	rows, err := conn.Get(ctx, testData.Email)
+	rows, err := testRepo.Get(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
 	testData.CreatedAt = rows[0].CreatedAt
 	require.Equal(t, testData, rows[0])
 
-	rows, err = conn.List(ctx)
+	rows, err = testRepo.List(ctx, nil)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
@@ -52,9 +56,9 @@ func TestSaveGetList(t *testing.T) {
 	require.Equal(t, testData, rows[0])
 
 	testData1 := ddd.AuthPasswd{Email: "email2", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
-	err = conn.Save(ctx, testData1)
+	err = testRepo.Save(ctx, testData1)
 	require.NoError(t, err)
-	rows, err = conn.List(ctx)
+	rows, err = testRepo.List(ctx, nil)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 2)
 
@@ -62,36 +66,40 @@ func TestSaveGetList(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	conn, err := Connect(cfg())
+
+	db, err := postgres.Connect(cfg())
 	require.NoError(t, err)
 
-	_, err = conn.db.Exec(conn.table(`drop table if exists %s`))
+	testRepo, err := Init(db)
 	require.NoError(t, err)
-	err = conn.create()
+
+	_, err = testRepo.db.Exec(testRepo.table(`drop table if exists %s`))
+	require.NoError(t, err)
+	err = create(db, testRepo.table(createTable))
 	require.NoError(t, err)
 
 	ts := time.Now()
 	testData := ddd.AuthPasswd{Email: "email11", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
-	err = conn.Save(ctx, testData)
+	err = testRepo.Save(ctx, testData)
 	require.NoError(t, err)
 
-	rows, err := conn.Get(ctx, "email11")
+	rows, err := testRepo.Get(ctx, "email11")
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
 	testData.CreatedAt = rows[0].CreatedAt
 	require.Equal(t, testData, rows[0])
 
-	err = conn.UpdateStatus(ctx, testData.Email, "ok")
+	err = testRepo.UpdateStatus(ctx, testData.Email, "ok")
 	require.NoError(t, err)
-	rows, err = conn.Get(ctx, testData.Email)
+	rows, err = testRepo.Get(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, ddd.StatusType("ok"), rows[0].Status)
 
-	err = conn.UpdatePassword(ctx, testData.Email, "asdqweasdqwe")
+	err = testRepo.UpdatePassword(ctx, testData.Email, "asdqweasdqwe")
 	require.NoError(t, err)
-	rows, err = conn.Get(ctx, testData.Email)
+	rows, err = testRepo.Get(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, "asdqweasdqwe", rows[0].Passwd)
@@ -102,9 +110,9 @@ func TestUpdate(t *testing.T) {
 		SystemRoles: []string{"notadmin", "other"},
 		TenantRoles: map[string][]string{"t1": {"asd"}},
 	}
-	err = conn.Update(ctx, updateData)
+	err = testRepo.Update(ctx, updateData)
 	require.NoError(t, err)
-	rows, err = conn.Get(ctx, testData.Email)
+	rows, err = testRepo.Get(ctx, testData.Email)
 	require.NoError(t, err)
 	assert.True(t, len(rows) == 1)
 	got := rows[0]

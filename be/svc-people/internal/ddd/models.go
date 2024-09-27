@@ -3,6 +3,8 @@ package ddd
 import (
 	"context"
 	"time"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 type (
@@ -35,11 +37,7 @@ type (
 	PeopleRepo interface {
 		Save(ctx context.Context, p *Person) error
 		Update(ctx context.Context, p *Person) error
-		List(ctx context.Context, filter FilterFactory) ([]Person, error)
+		List(ctx context.Context, filter app.FilterFactory) ([]Person, error)
 		GetById(ctx context.Context, id string) (*Person, error)
-	}
-
-	FilterFactory interface {
-		Create() any
 	}
 )
