@@ -24,7 +24,5 @@ func (u *Client) Fetch(ctx context.Context, blobId string, version string) (*blo
 	if err != nil {
 		return nil, err
 	}
-	object.Metadata.Id = blobId
-	// object.Metadata.Version =
 	return object, nil
 }

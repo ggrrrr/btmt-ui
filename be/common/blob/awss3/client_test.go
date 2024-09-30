@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -61,11 +62,17 @@ func TestFetcher(t *testing.T) {
 					Name:        "name",
 					Version:     "",
 					Id:          "upload-1",
+					CreatedAt:   time.Now(),
 				}
 				err = client.Upload(ctx, data1, bytes.NewReader([]byte(testData1)))
 				require.NoError(t, err)
 				assert.Equal(t, data1.Version, "2")
 
+				res, err := client.Fetch(ctx, "upload-1", "")
+				require.NoError(t, err)
+				require.NotNil(t, res)
+
+				blob.TestBlob(t, res, data1, testData1, 100)
 			},
 		},
 	}
@@ -215,4 +222,11 @@ func TestGet(t *testing.T) {
 
 	}
 
+}
+
+func cfg() awsclient.AwsConfig {
+	return awsclient.AwsConfig{
+		Region:   "us-east-1",
+		Endpoint: "http://localhost:4566",
+	}
 }
