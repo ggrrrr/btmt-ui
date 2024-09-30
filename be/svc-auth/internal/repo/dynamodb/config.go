@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
 
-	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
+	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
@@ -23,7 +23,7 @@ type (
 
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
 
-func New(cfg awsdb.AwsConfig) (*repo, error) {
+func New(cfg awsclient.AwsConfig, dbCfg awsclient.DynamodbConfig) (*repo, error) {
 	// sess * session.Session,
 	sess, err := session.NewSession(&aws.Config{
 		Region:   aws.String(cfg.Region),
@@ -37,9 +37,9 @@ func New(cfg awsdb.AwsConfig) (*repo, error) {
 
 	logger.Info().
 		Str("table", tableNameName).
-		Str("prefix", cfg.Database.Prefix).Msg("New")
+		Str("prefix", dbCfg.Prefix).Msg("New")
 	return &repo{
-		prefix: cfg.Database.Prefix,
+		prefix: dbCfg.Prefix,
 		svc:    svc,
 	}, nil
 }

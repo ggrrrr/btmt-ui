@@ -9,6 +9,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
 	people "github.com/ggrrrr/btmt-ui/be/svc-people"
+	tmpl "github.com/ggrrrr/btmt-ui/be/svc-tmpl"
 )
 
 type monolith struct {
@@ -39,6 +40,7 @@ func run() error {
 		modules: []system.Module{
 			&auth.Module{},
 			&people.Module{},
+			&tmpl.Module{},
 		},
 	}
 

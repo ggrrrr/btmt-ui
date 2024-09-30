@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
+
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
@@ -74,7 +76,9 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 	}
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+
 	opts := options.Client()
+	opts.Monitor = otelmongo.NewMonitor()
 	opts.ApplyURI(uri).SetServerAPIOptions(serverAPI)
 
 	if len(credential.Username) > 0 {

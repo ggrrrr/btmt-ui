@@ -14,12 +14,11 @@ postgres:
 otel:
   Enabled: true
 jwt:
-  ttl: 1m
+  ttl: 1h
   crtFile: jwt.crt
   keyFile: jwt.key
   # useMock: mock
 
-# useMock: mock
 rest:
   address: 0.0.0.0:8010
 grpc:

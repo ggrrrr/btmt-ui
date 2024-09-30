@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
+	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
@@ -40,15 +40,15 @@ type testCase struct {
 	prep func(*testing.T)
 }
 
-func cfg() awsdb.AwsConfig {
-	return awsdb.AwsConfig{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:4566",
-		Database: awsdb.DynamodbConfig{
+func cfg() (awsclient.AwsConfig, awsclient.DynamodbConfig) {
+	return awsclient.AwsConfig{
+			Region:   "us-east-1",
+			Endpoint: "http://localhost:4566",
+		},
+		awsclient.DynamodbConfig{
 			Database: "",
 			Prefix:   "test",
-		},
-	}
+		}
 }
 
 func TestLogin(t *testing.T) {

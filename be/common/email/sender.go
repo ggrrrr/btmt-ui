@@ -1,6 +1,7 @@
 package email
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -47,7 +48,13 @@ const (
 	AuthTypePlain AuthType = "plain"
 )
 
-func NewSender(cfg Config) (*Sender, error) {
+func NewSender(ctx context.Context, cfg Config) (*Sender, error) {
+	var err error
+	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.AttributeString("smtp.host.addr", cfg.SMTPAddr))
+	defer func() {
+		span.End(err)
+	}()
+
 	if cfg.AuthType == "" {
 		cfg.AuthType = AuthTypePlain
 	}
@@ -100,7 +107,7 @@ func NewSender(cfg Config) (*Sender, error) {
 	return sender, err
 }
 
-func (a *Sender) Send(email *Msg) error {
+func (a *Sender) Send(ctx context.Context, email *Msg) error {
 	if len(email.parts) == 0 {
 		return &MailFormatError{
 			msg: "body",
@@ -109,6 +116,14 @@ func (a *Sender) Send(email *Msg) error {
 	}
 
 	var err error
+	_, span := logger.SpanWithAttributes(ctx, "email.Send", nil,
+		logger.AttributeString("email.from", email.from.addr),
+		logger.AttributeString("email.to", email.to.AddressList()),
+	)
+	defer func() {
+		span.End(err)
+	}()
+
 	err = a.smtpClient.Mail(email.from.addr)
 	if err != nil {
 		return fmt.Errorf("smtpClient.Mail[%s]: %w", email.from.addr, err)

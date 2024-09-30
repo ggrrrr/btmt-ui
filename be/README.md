@@ -1,6 +1,6 @@
 # Install
 
-- gRPC
+## gRPC
 
 ```sh
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
@@ -9,23 +9,32 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
-- buf generator https://buf.build/docs/installation/
+- buf generator <https://buf.build/docs/installation/>
 
-# Docs
+## Docs
 
-- gRPC Gateway https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/
-  - https://github.com/grpc-ecosystem/grpc-gateway#installation
-- gRPC auth with JWT https://dev.to/techschoolguru/use-grpc-interceptor-for-authorization-with-jwt-1c5h
+- gRPC Gateway <https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/>
+  - <https://github.com/grpc-ecosystem/grpc-gateway#installation>
+- gRPC auth with JWT <https://dev.to/techschoolguru/use-grpc-interceptor-for-authorization-with-jwt-1c5h>
 
 - Rule Engine or DSL or HCL ?
 
-# HTTP standards
+## HTTP standards
 
-- https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml
+- <https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml>
 
-# LOCALSTACK
+## LOCALSTACK
 
-## Create table in AWS dynamodb
+### S3
+
+add the following to your /etc/hosts
+
+```sh
+127.0.0.1       test-bucket-1.localhost
+
+```
+
+### Create table in AWS dynamodb
 
 ```
 awslocal dynamodb create-table \

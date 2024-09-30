@@ -92,6 +92,7 @@ func send(ctx context.Context, w http.ResponseWriter, code int, msg string, err1
 	span := trace.SpanContextFromContext(ctx)
 	if span.HasTraceID() {
 		traceID = span.TraceID().String()
+		// w.Header().Add("X-Trace-ID", traceID)
 	}
 
 	errStr := ""

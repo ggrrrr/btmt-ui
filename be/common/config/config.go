@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
+	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/cmd"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
@@ -34,7 +34,8 @@ type (
 	AppConfig struct {
 		Otel            Otel
 		Postgres        postgres.Config
-		Aws             awsdb.AwsConfig
+		Aws             awsclient.AwsConfig
+		Dynamodb        awsclient.DynamodbConfig
 		Grpc            GrpcConfig
 		Jwt             JwtConfig
 		Rest            RestConfig

@@ -32,9 +32,10 @@ func (s *server) Router() chi.Router {
 	router.Get("/v1/json500", json500)
 
 	router.Post("/login/passwd", s.LoginPasswd)
-	router.Get("/validate", s.TokenValidate)
-	router.Post("/validate", s.TokenValidate)
+	router.Get("/token/validate", s.TokenValidate)
+	router.Post("/token/validate", s.TokenValidate)
 	router.Post("/user/list", s.UserList)
+	router.Get("/user/list", s.UserList)
 
 	return router
 }

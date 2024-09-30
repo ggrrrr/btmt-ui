@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/awsdb"
+	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/stretchr/testify/assert"
@@ -15,15 +15,15 @@ var (
 	email1 string = "ggrrrr1@gmail.com"
 )
 
-func cfg() awsdb.AwsConfig {
-	return awsdb.AwsConfig{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:4566",
-		Database: awsdb.DynamodbConfig{
-			Database: "",
-			Prefix:   "test",
+func cfg() (awsclient.AwsConfig, awsclient.DynamodbConfig) {
+	return awsclient.AwsConfig{
+			Region:   "us-east-1",
+			Endpoint: "http://localhost:4566",
 		},
-	}
+		awsclient.DynamodbConfig{
+			Database: "testdb",
+			Prefix:   "test1",
+		}
 }
 
 func Test_List(t *testing.T) {
@@ -31,14 +31,15 @@ func Test_List(t *testing.T) {
 
 	r, err := New(cfg())
 	require.NoError(t, err)
-	_, err = r.List(ctx, nil)
-	require.NoError(t, err)
 
 	_ = r.createTableAuth()
 
+	_, err = r.List(ctx, nil)
+	require.NoError(t, err)
+
 	list, err := r.List(ctx, nil)
 	assert.NoError(t, err)
-	logger.Info().Any("asd", list)
+	logger.Info().Any("asda", list)
 }
 
 func TestSave(t *testing.T) {

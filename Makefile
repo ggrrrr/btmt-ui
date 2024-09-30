@@ -29,3 +29,6 @@ clean_docker:
 	docker rm $(docker ps -a -q)
 	docker image prune -a -f
 	docker volume prune -a -f
+
+lint:
+	golangci-lint run -v be/...

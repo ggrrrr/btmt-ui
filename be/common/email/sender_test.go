@@ -1,6 +1,7 @@
 package email
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -36,6 +37,7 @@ func loadConfig() {
 }
 
 func TestIntDialAndSend(t *testing.T) {
+	ctx := context.Background()
 	newLine = []byte("\r\n")
 
 	loadConfig()
@@ -65,16 +67,17 @@ func TestIntDialAndSend(t *testing.T) {
 		return tmpl.Execute(w, myData)
 	})
 
-	client, err := NewSender(cfg)
+	client, err := NewSender(ctx, cfg)
 	require.NoError(t, err)
 	defer client.Close()
 
-	err = client.Send(email)
+	err = client.Send(ctx, email)
 	assert.NoError(t, err)
 
 }
 
 func TestIntMultipleMsg(t *testing.T) {
+
 	newLine = []byte("\r\n")
 	loadConfig()
 	t.Skip("NO Addr CONFIG")
@@ -92,7 +95,8 @@ func TestIntMultipleMsg(t *testing.T) {
 	template_data := `<p>Hello: <b>{{ .Name }}</b>, time is: {{ .Time }} /></p>.`
 	tmpl := template.Must(template.New("template_data").Parse(template_data))
 
-	conn, err := NewSender(cfg)
+	ctx := context.Background()
+	conn, err := NewSender(ctx, cfg)
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -110,7 +114,7 @@ func TestIntMultipleMsg(t *testing.T) {
 		msg.AddHtmlBodyWriter(func(w io.Writer) error {
 			return tmpl.Execute(w, data)
 		})
-		err = conn.Send(msg)
+		err = conn.Send(ctx, msg)
 		assert.NoError(t, err)
 
 	}
@@ -191,6 +195,7 @@ func TestAuth(t *testing.T) {
 }
 
 func TestSend(t *testing.T) {
+	ctx := context.Background()
 	pwd := os.Getenv("PWD")
 	newLine = []byte("\n")
 
@@ -321,7 +326,7 @@ c2VjcmV0
 			}
 
 			tc.prep(t)
-			err := testSender.Send(testMsg)
+			err := testSender.Send(ctx, testMsg)
 			if tc.sendErrAs == nil {
 				require.NoError(t, err)
 				testMockedEmail(t, testMsg, tc.dataBlock, smtpClientMock)
@@ -342,6 +347,7 @@ func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *
 }
 
 func TestCreateSender(t *testing.T) {
+	ctx := context.Background()
 
 	tcpServerMock, err := NewTCPServerMock(":12346")
 	require.NoError(t, err)
@@ -356,7 +362,7 @@ func TestCreateSender(t *testing.T) {
 		Timeout:  time.Second * 2,
 	}
 
-	smtp, err := NewSender(cfg)
+	smtp, err := NewSender(ctx, cfg)
 	require.NoError(t, err)
 
 	err = smtp.smtpClient.Quit()
@@ -366,6 +372,7 @@ func TestCreateSender(t *testing.T) {
 }
 
 func TestCreateSenderError(t *testing.T) {
+	ctx := context.Background()
 
 	tcpServerMock, err := NewTCPServerMock(":12345")
 	require.NoError(t, err)
@@ -380,7 +387,7 @@ func TestCreateSenderError(t *testing.T) {
 		Timeout:  time.Second * 2,
 	}
 
-	_, err = NewSender(cfg)
+	_, err = NewSender(ctx, cfg)
 	require.Error(t, err)
 	authErr := &SmtpAuthError{}
 	assert.ErrorAs(t, err, &authErr)

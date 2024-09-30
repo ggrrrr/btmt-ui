@@ -1,10 +1,9 @@
-package awsdb
+package awsclient
 
 type (
 	AwsConfig struct {
 		Region   string
 		Endpoint string
-		Database DynamodbConfig
 	}
 
 	DynamodbConfig struct {

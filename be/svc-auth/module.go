@@ -42,7 +42,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 		Str("Postgres.User", s.Config().Postgres.Username).
 		Send()
 
-	if s.Config().Aws.Region != "" {
+	if s.Config().Dynamodb.Database != "" {
 		awsCfg = true
 	}
 
@@ -101,7 +101,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 }
 
 func initAwsRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
-	repo, err := dynamodb.New(cfg.Aws)
+	repo, err := dynamodb.New(cfg.Aws, cfg.Dynamodb)
 	if err != nil {
 		logger.Error(err).Msg("initAwsRepo error")
 		return nil, err

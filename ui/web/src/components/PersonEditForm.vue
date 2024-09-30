@@ -7,7 +7,7 @@
                     <v-chip v-if="refs.person.id.length > 0" color="">{{ refs.person.id.substring(0, 10) }} </v-chip>
                 </v-col>
                 <v-col class="d-flex justify-end"><v-btn rounded @click="submit">{{ refs.submitTitle
-                }}</v-btn></v-col>
+                        }}</v-btn></v-col>
             </v-row>
         </v-card-title>
         <v-container>
@@ -16,7 +16,8 @@
                     <v-text-field v-model="refs.person.name" label="Name" hint="Peter"></v-text-field>
                 </v-col>
                 <v-col class="ml-0 pl-1" cols="">
-                    <v-text-field v-model="refs.person.full_name" label="Full names" hint="Varban Krushev"></v-text-field>
+                    <v-text-field v-model="refs.person.full_name" label="Full names"
+                        hint="Varban Krushev"></v-text-field>
                 </v-col>
             </v-row>
             <v-row no-gutters>
@@ -140,7 +141,7 @@ async function addPerson(person) {
         body: JSON.stringify(data),
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/v1/people/save";
+    const url = config.BASE_URL + "/people/save";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
@@ -162,7 +163,7 @@ async function updatePerson(person) {
         method: "POST",
         body: JSON.stringify(data),
     };
-    const url = config.BASE_URL + "/v1/people/update";
+    const url = config.BASE_URL + "/people/update";
     console.log("url", url)
     refs.value.loading = true;
     await fetchAPI(url, request)

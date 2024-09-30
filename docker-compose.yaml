@@ -128,16 +128,27 @@ services:
     # networks:
     #   - dev
     container_name: "localstack-main"
-    image: localstack/localstack
+    image: localstack/localstack:3.7
     ports:
       - "4566:4566" # LocalStack Gateway
       - "4510-4559:4510-4559" # external services port range
+    # env_file:
+    # - .env.localstack
     environment:
       - DEBUG=DEBUG
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=s3,dynamodb
+      # - TRIES=30
+      # - HOSTNAME_EXTERNAL=localstack
+      - LOCALSTACK_HOST=localstack
+      - LOCALSTACK_API=http://localstack:4566
+      # - LOCALSTACK_API=http://localstack:4566
+      # - LOCALSTACK_HEALTH_ENDPOINT=http://localstack:4566/health
+      - BUCKET_NAMES=test1,test2
+      # - AWS_DEFAULT_PROFILE=localstack
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./aws:/etc/localstack/init/ready.d/"
+      - "./aws/ready:/etc/localstack/init/ready.d/"
       # - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
   # networks:
   # apple:
