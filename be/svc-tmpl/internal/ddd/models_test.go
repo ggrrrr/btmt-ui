@@ -13,7 +13,7 @@ import (
 func TestData(t *testing.T) {
 
 	testTmpl := Tmpl{
-		ContentType: "text/plain",
+		// ContentType: "text/plain",
 		Body: `# Header from: {{ .UserInfo.User }}
 # Header key 1: {{ .Items.key1.Item1 }} {{ .Items.key1.Item }}
 # List {{range index .Lists "list1"}}

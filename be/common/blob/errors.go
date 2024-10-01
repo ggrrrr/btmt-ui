@@ -55,3 +55,17 @@ func NewNotStoreError(store string, err error) *StoreNotFoundError {
 		err:   err,
 	}
 }
+
+type FolderInputError struct {
+}
+
+func (*FolderInputError) Error() string {
+	return "folder name incorrect example: 'folder-1'"
+}
+
+type IdInputError struct {
+}
+
+func (*IdInputError) Error() string {
+	return "ID incorrect example: 'my-file-1'"
+}
