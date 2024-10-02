@@ -7,18 +7,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestBasicTypes(t *testing.T) {
+	tests := []struct {
+		name string
+		f    func(t *testing.T)
+	}{
+		{
+			name: "blob id",
+			f: func(t *testing.T) {
+				id := BlobId{
+					folder:  "f",
+					id:      "id",
+					version: "ver",
+				}
+				assert.Equal(t, "f", id.Folder())
+				assert.Equal(t, "id", id.Id())
+				assert.Equal(t, "ver", id.Version())
+				assert.Equal(t, "f/id@ver", id.String())
+				assert.Equal(t, "f/id", id.Key())
+				id.SetVersion("")
+				assert.Equal(t, "f/id", id.String())
+
+				id2 := New("folder", "id", "ver")
+				assert.Equal(t, "folder/id@ver", id2.String())
+
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, tc.f)
+	}
+}
+
 func TestParseBlobId(t *testing.T) {
 	tests := []struct {
 		name    string
 		fromStr string
-		id      BlockId
+		id      BlobId
 		err     error
 		skip    bool
 	}{
 		{
 			name:    "ok",
 			fromStr: "Mydir-1/My-id@1",
-			id: BlockId{
+			id: BlobId{
 				folder:  "Mydir-1",
 				id:      "My-id",
 				version: "1",
@@ -28,7 +61,7 @@ func TestParseBlobId(t *testing.T) {
 		{
 			name:    "ok no ver",
 			fromStr: "Mydir-1/My-id",
-			id: BlockId{
+			id: BlobId{
 				folder:  "Mydir-1",
 				id:      "My-id",
 				version: "",
@@ -38,7 +71,7 @@ func TestParseBlobId(t *testing.T) {
 		{
 			name:    "ok empty ver",
 			fromStr: "Mydir-1/My-id@",
-			id: BlockId{
+			id: BlobId{
 				folder:  "Mydir-1",
 				id:      "My-id",
 				version: "",

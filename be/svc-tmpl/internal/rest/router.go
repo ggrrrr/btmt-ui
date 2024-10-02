@@ -39,7 +39,7 @@ func (s *server) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", attch.ContentType)
 	w.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename*=UTF-8''%s", attch.Name))
-	//
+
 	w.WriteHeader(http.StatusOK)
 
 	attch.WriterTo.WriteTo(w)
