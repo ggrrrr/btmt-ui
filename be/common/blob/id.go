@@ -5,6 +5,11 @@ import (
 	"regexp"
 )
 
+// https://yourbasic.org/golang/regexp-cheat-sheet/
+var NameRegExp = regexp.MustCompile(`^[a-zA-Z][0-9a-zA-Z\-]`)
+
+var BlockIdRefExp = regexp.MustCompile(`(^[a-zA-Z][a-zA-Z0-9\-]*)/([a-zA-Z][a-zA-Z0-9\-]*)[\@]?([a-zA-Z0-9\-]*)*`)
+
 type BlockId struct {
 	folder  string
 	id      string
@@ -38,10 +43,6 @@ func (id *BlockId) String() string {
 	}
 	return fmt.Sprintf("%s/%s@%s", id.folder, id.id, id.version)
 }
-
-var NameRegExp = regexp.MustCompile(`^[a-zA-Z][0-9a-zA-Z\-]`)
-
-var BlockIdRefExp = regexp.MustCompile(`(^[a-zA-Z][a-zA-Z0-9\-]*)/([a-zA-Z][a-zA-Z0-9\-]*)[\@]?([a-zA-Z0-9\-]*)*`)
 
 func New(folder, id, ver string) BlockId {
 	return BlockId{
