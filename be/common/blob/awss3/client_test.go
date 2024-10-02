@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -14,252 +13,214 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFetcher(t *testing.T) {
-	testBucketName := "test-bucket-1"
-	ctx := context.Background()
+var testBucket string = "test-bucket-1"
+
+func TestListPushFetch(t *testing.T) {
+	ctx := context.TODO()
 
 	tests := []struct {
 		name     string
-		prepFunc func(t *testing.T)
+		testFunc func(t *testing.T)
 	}{
 		{
-			name: "not found",
-			prepFunc: func(t *testing.T) {
-				client, err := NewClient(testBucketName, cfg())
-				require.NoError(t, err)
-				res, err := client.Fetch(ctx, "folder", "not-fond-2", "")
+			name: "ok tenent not found",
+			testFunc: func(t *testing.T) {
+				testClient := &Client{
+					s3Clients: map[string]*s3Client{},
+				}
+				_, err := testClient.Push(ctx, "notfound", "asd/asd", &blob.BlobMetadata{}, nil)
 				require.Error(t, err)
-				notFount := &blob.NotFoundError{}
-				require.ErrorAs(t, err, &notFount)
-				require.Nil(t, res)
+				tenantNotFound := &blob.TenantNotFoundError{}
+				assert.ErrorAs(t, err, &tenantNotFound)
+
+				_, err = testClient.Fetch(ctx, "notfound", "asd/asd")
+				require.Error(t, err)
+				// tenantNotFound := &blob.TenantNotFoundError{}
+				assert.ErrorAs(t, err, &tenantNotFound)
 			},
 		},
 		{
-			name: "blobKey folder error",
-			prepFunc: func(t *testing.T) {
-				client, err := NewClient(testBucketName, cfg())
+			name: "ok Push parsing id err",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
 				require.NoError(t, err)
-				res, err := client.Fetch(ctx, "1folder", "not-fond-2", "")
+				s3c.bucketName = testBucket
+
+				testClient := &Client{
+					s3Clients: map[string]*s3Client{
+						"localhost": s3c,
+					},
+				}
+				_, err = testClient.Push(ctx, "localhost", "123asd/asd", &blob.BlobMetadata{}, nil)
 				require.Error(t, err)
-				notFount := blob.FolderInputError{}
-				require.ErrorIs(t, err, &notFount)
-				require.Nil(t, res)
+				tenantNotFound := &blob.BlobIdInputError{}
+				assert.ErrorAsf(t, err, &tenantNotFound, "%#v, %+v", err, err)
+
+				_, err = testClient.Fetch(ctx, "localhost", "123ad/asd")
+				require.Error(t, err)
+				assert.ErrorAsf(t, err, &tenantNotFound, "%#v, %+v", err, err)
+
 			},
 		},
 		{
-			name: "blobKey id error",
-			prepFunc: func(t *testing.T) {
-				client, err := NewClient(testBucketName, cfg())
+			name: "ok Push not found",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
 				require.NoError(t, err)
-				res, err := client.Fetch(ctx, "folder", " not-fond-2", "")
+				s3c.bucketName = testBucket
+
+				testClient := &Client{
+					s3Clients: map[string]*s3Client{
+						"localhost": s3c,
+					},
+				}
+				_, err = testClient.Fetch(ctx, "localhost", "ad/asd")
 				require.Error(t, err)
-				notFount := blob.IdInputError{}
-				require.ErrorIs(t, err, &notFount)
-				require.Nil(t, res)
+				notFound := &blob.NotFoundError{}
+				assert.ErrorAsf(t, err, &notFound, "%#v, %+v", err, err)
+
 			},
 		},
 		{
-			name: "not upload ver1",
-			prepFunc: func(t *testing.T) {
-				client, err := NewClient(testBucketName, cfg())
+			name: "ok Push/Fetch",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				require.NoError(t, err)
+				s3c.bucketName = testBucket
+				testClient := &Client{
+					s3Clients: map[string]*s3Client{
+						"localhost": s3c,
+					},
+				}
+
+				md := blob.BlobMetadata{
+					Type:        "some_type",
+					ContentType: "text/plain",
+					Name:        "some-name",
+					Owner:       "user-1",
+				}
+
+				data := "my data"
+
+				newID, err := testClient.Push(ctx, "localhost", "folder-1/id-1", &md, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+				defer deleteAll(ctx, s3c, awsId{folder: "folder-1", id: "id-1"})
+				verID := blob.New("folder-1", "id-1", "1")
+				assert.Equal(t, &verID, newID)
+
+				blobTest, err := testClient.Fetch(ctx, "localhost", "folder-1/id-1@1")
+				require.NoError(t, err)
+				blob.TestBlob(t, blobTest, &md, data, 1000)
+
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, tc.testFunc)
+	}
+}
+
+func TestListGetPutDelete(t *testing.T) {
+	ctx := context.TODO()
+
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name: "ok list",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				require.NoError(t, err)
+				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+				result, err := list(ctx, s3c, blockId)
+				require.NoError(t, err)
+				assert.Equal(t, 0, len(result))
+			},
+		},
+		{
+			name: "ok list bucket not found",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				require.NoError(t, err)
+				s3c.bucketName = "notfound"
+				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+				_, err = list(ctx, s3c, blockId)
+				require.Error(t, err)
+				storErr := &blob.StoreNotFoundError{}
+				assert.ErrorAs(t, err, &storErr)
+			},
+		},
+		{
+			name: "ok get bucket not found",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				require.NoError(t, err)
+				s3c.bucketName = "notfound"
+				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+				_, err = get(ctx, s3c, blockId)
+				require.Error(t, err)
+				// storErr := &blob.StoreNotFoundError{}
+				// assert.ErrorAsf(t, err, &storErr, "%+v", err)
+			},
+		},
+		{
+			name: "ok list 1",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
 				require.NoError(t, err)
 
-				testData := "testData"
-				data := &blob.BlobMetadata{
-					Type:        "me",
-					ContentType: "no",
-					Name:        "name",
-					Version:     "",
-					Id:          "upload-1",
-					Owner:       "some user",
-				}
-				err = client.Upload(ctx, "folder", data, bytes.NewReader([]byte(testData)))
+				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+
+				result, err := list(ctx, s3c, blockId)
 				require.NoError(t, err)
-				assert.Equal(t, data.Version, "1")
+				assert.True(t, len(result) == 0)
+			},
+		},
+		{
+			name: "ok push 1 list 1 get 1",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				require.NoError(t, err)
+				s3c.bucketName = testBucket
+
+				id := awsId{folder: "folder-1", id: "id-1"}
+				md := blob.BlobMetadata{
+					Type:        "some_type",
+					ContentType: "text/plain",
+					Name:        "some-name",
+					Owner:       "user1",
+				}
+				data := "mydata"
+				newId, err := put(ctx, s3c, id, &md, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
 
 				defer func() {
-					err := client.deleteBlob(ctx, "folder", "upload-1")
+					err := deleteAll(ctx, s3c, id)
 					assert.NoError(t, err)
+					listRes, err := list(ctx, s3c, id)
+					require.NoError(t, err)
+					assert.True(t, len(listRes) == 0)
 				}()
 
-				testData1 := "testData1"
-				data1 := &blob.BlobMetadata{
-					Owner:       "owner",
-					Type:        "me",
-					ContentType: "no",
-					Name:        "name",
-					Version:     "",
-					Id:          "upload-1",
-					CreatedAt:   time.Now(),
-				}
-				err = client.Upload(ctx, "folder", data1, bytes.NewReader([]byte(testData1)))
-				require.NoError(t, err)
-				assert.Equal(t, data1.Version, "2")
+				assert.Equal(t, id, newId)
 
-				res, err := client.Fetch(ctx, "folder", "upload-1", "")
+				listRes, err := list(ctx, s3c, id)
 				require.NoError(t, err)
-				require.NotNil(t, res)
+				assert.True(t, len(listRes) == 1)
 
-				blob.TestBlob(t, res, data1, testData1, 100)
+				blobResult, err := get(ctx, s3c, id)
+				require.NoError(t, err)
+				blob.TestBlob(t, blobResult, &md, data, 1000)
+				assert.Equal(t, id.folder, blobResult.Id.Folder())
+				assert.Equal(t, id.id, blobResult.Id.Id())
+				assert.Equal(t, id.ver, blobResult.Id.Version())
+
 			},
 		},
 	}
-
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.prepFunc(t)
-		})
-	}
-}
-
-func TestList(t *testing.T) {
-	testBucketName := "test-bucket-1"
-	ctx := context.Background()
-
-	tests := []struct {
-		name     string
-		prepFunc func(t *testing.T)
-	}{
-		{
-			name: "err list",
-			prepFunc: func(t *testing.T) {
-				client, err := NewClient("testBucketName", cfg())
-				require.NoError(t, err)
-				res, err := client.list(ctx, "folder/not-fond-2")
-				assert.Error(t, err)
-				assert.Nil(t, res)
-			},
-		},
-		{
-			name: "ok no list",
-			prepFunc: func(t *testing.T) {
-				client, err := NewClient(testBucketName, cfg())
-				require.NoError(t, err)
-				res, err := client.list(ctx, "folder/not-fond-2")
-				require.NoError(t, err)
-				require.NotNil(t, res)
-				assert.Equal(t, len(res), 0)
-			},
-		},
-		{
-			name: "ok list with 1rec",
-			prepFunc: func(t *testing.T) {
-
-				client, err := NewClient(testBucketName, cfg())
-				require.NoError(t, err)
-				testData := "testData"
-				err = client.Upload(ctx, "folder", &blob.BlobMetadata{
-					Type:        "me",
-					ContentType: "no",
-					Name:        "name",
-					Version:     "",
-					Id:          "id-1",
-				}, bytes.NewReader([]byte(testData)))
-				require.NoError(t, err)
-
-				res, err := client.list(ctx, "folder/id-1")
-				require.NoError(t, err)
-				require.NotNil(t, res)
-				assert.Equal(t, len(res), 1)
-
-				err = client.deleteBlob(ctx, "folder", "id-1")
-				require.NoError(t, err)
-
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.prepFunc(t)
-		})
-	}
-}
-
-func TestUploadGet(t *testing.T) {
-	testBucketName := "test-bucket-1"
-	ctx := context.Background()
-
-	tests := []struct {
-		name     string
-		awsId    string
-		prepFunc func(t *testing.T, data *blob.BlobMetadata) *Client
-		exptErr  error
-		exptBlob *blob.BlobMetadata
-	}{
-		{
-			name:  "not found key",
-			awsId: "not-found",
-			prepFunc: func(t *testing.T, _ *blob.BlobMetadata) *Client {
-				s3Client, err := NewClient(testBucketName, cfg())
-				require.NoError(t, err)
-				return s3Client
-			},
-			exptErr:  &blob.NotFoundError{},
-			exptBlob: nil,
-		},
-		{
-			name:  "not bucket",
-			awsId: "not-found",
-			prepFunc: func(t *testing.T, _ *blob.BlobMetadata) *Client {
-				s3Client, err := NewClient("testBucketName", cfg())
-				require.NoError(t, err)
-				return s3Client
-			},
-			// exptErr:  &blob.StoreNotFoundError{},
-			exptErr:  &blob.NotFoundError{},
-			exptBlob: nil,
-		},
-		{
-			name:  "upload get okasdasdasd",
-			awsId: "folder/some-id-1/1",
-			prepFunc: func(t *testing.T, data *blob.BlobMetadata) *Client {
-				s3Client, err := NewClient(testBucketName, cfg())
-				require.NoError(t, err)
-
-				testData := "testData"
-				err = s3Client.Upload(ctx, "folder", data, bytes.NewReader([]byte(testData)))
-				require.NoError(t, err)
-
-				return s3Client
-			},
-			exptErr: nil,
-			exptBlob: &blob.BlobMetadata{
-				Id:          "some-id-1",
-				ContentType: "text/plain",
-				Name:        "blob-name",
-				Type:        "my-type",
-				Version:     "1",
-				// CreatedAt:   time.Now(),
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			client := tc.prepFunc(t, tc.exptBlob)
-			resp, err := client.get(ctx, tc.awsId)
-			if tc.exptErr != nil {
-				// fmt.Printf("---- %T %v\n", tc.exptErr, tc.exptErr)
-				// fmt.Printf("---- %T %v\n", err, err)
-
-				require.Error(t, err)
-				// assert.ErrorAs(t, err, &tc.exptErr)
-			} else {
-				require.NoError(t, err)
-				require.NotNil(t, resp)
-				// fmt.Printf("-------: %+v\n", resp)
-				blob.TestBlob(t, resp, tc.exptBlob, "testData", 100)
-
-				defer func() {
-					asd := strings.Split(tc.awsId, "/")
-					client.delete(ctx, tc.awsId)
-					client.deleteBlob(ctx, "folder", asd[1])
-				}()
-
-			}
-		})
-
+		t.Run(tc.name, tc.testFunc)
 	}
 }
 
@@ -304,49 +265,6 @@ func TestInLocal(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.testFunc(t)
-		})
-	}
-}
-
-func TestBlobKey(t *testing.T) {
-	tests := []struct {
-		name   string
-		folder string
-		id     string
-		blobId string
-		err    error
-	}{
-		{
-			name:   "ok",
-			folder: "folder-1",
-			id:     "some-id",
-			blobId: "folder-1/some-id",
-			err:    nil,
-		},
-		{
-			name:   "bad folder",
-			folder: "1folder-1",
-			id:     "some-id",
-			blobId: "",
-			err:    &blob.FolderInputError{},
-		},
-		{
-			name:   "bad id",
-			folder: "folder-1",
-			id:     " some-id",
-			blobId: "",
-			err:    &blob.IdInputError{},
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			blobKey, err := blobKey(tc.folder, tc.id)
-			if tc.err != nil {
-				require.Error(t, err)
-				assert.ErrorIs(t, err, tc.err)
-			} else {
-				assert.Equalf(t, tc.blobId, blobKey, "from folder:%s id:%s -> result: %s != %s", tc.folder, tc.id, tc.id, blobKey)
-			}
 		})
 	}
 }

@@ -22,9 +22,47 @@ import (
 
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 type Client struct {
+	s3Clients map[string]*s3Client
+}
+
+type s3Client struct {
 	s3Client   *s3.Client
 	bucketName string
 	region     string
+}
+
+type awsId struct {
+	folder string
+	id     string
+	ver    string
+}
+
+func awsIdFromString(fromStr string) (awsId, error) {
+	blobId, err := blob.ParseBlobId(fromStr)
+	if err != nil {
+		return awsId{}, err
+	}
+	return awsId{
+		folder: blobId.Folder(),
+		id:     blobId.Id(),
+		ver:    blobId.Version(),
+	}, nil
+
+}
+
+// folder/id
+func (i awsId) idFolder() string {
+	return fmt.Sprintf("%s/%s", i.folder, i.id)
+}
+
+// folder/id/ver
+func (i awsId) keyVer() string {
+	return fmt.Sprintf("%s/%s/%s", i.folder, i.id, i.ver)
+}
+
+// folder/id/ver
+func (i awsId) String() string {
+	return i.keyVer()
 }
 
 func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
@@ -45,176 +83,248 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 				}, nil
 			}),
 		))
-
 	if err != nil {
-		return nil, fmt.Errorf("aws.session: %w", err)
+		return nil, fmt.Errorf("aws.config: %w", err)
 	}
 	// s3Client := s3.NewFromConfig(config)
 	s3client := s3.NewFromConfig(cfg)
+
+	res, err := s3client.HeadBucket(context.Background(), &s3.HeadBucketInput{
+		Bucket: &bucketName,
+	})
+	if err != nil {
+		return nil, blob.NewNotStoreError(bucketName, err)
+	}
+	logger.Info().
+		Any("bucket", bucketName).
+		Any("info", res).
+		Msg("bucket")
+
 	return &Client{
-		s3Client:   s3client,
-		bucketName: bucketName,
-		region:     cfg.Region,
+		s3Clients: map[string]*s3Client{
+			"localhost": {
+				s3Client:   s3client,
+				bucketName: bucketName,
+				region:     cfg.Region,
+			},
+		},
+	}, nil
+}
+
+func createS3Client(endpoint, region string) (*s3Client, error) {
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(region),
+		config.WithHTTPClient(
+			&http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}),
+		config.WithEndpointResolver(
+			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+				return aws.Endpoint{
+					PartitionID:       "aws",
+					URL:               endpoint,
+					SigningRegion:     region,
+					HostnameImmutable: true,
+				}, nil
+			}),
+		))
+	if err != nil {
+		return nil, fmt.Errorf("aws.config: %w", err)
+	}
+	return &s3Client{
+		s3Client: s3.NewFromConfig(cfg),
 	}, nil
 }
 
 var _ (blob.Fetcher) = (*Client)(nil)
-var _ (blob.Uploader) = (*Client)(nil)
+var _ (blob.Pusher) = (*Client)(nil)
 
-func (u *Client) Fetch(ctx context.Context, folder string, blobId string, version string) (*blob.FetchResult, error) {
+func (client *Client) Fetch(ctx context.Context, tenant string, idString string) (*blob.FetchResult, error) {
 	var err error
-	blobKey, err := blobKey(folder, blobId)
+
+	c, err := client.getClient(tenant)
 	if err != nil {
 		return nil, err
 	}
 
-	versions, err := u.list(ctx, blobKey)
+	id, err := awsIdFromString(idString)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list folder[%s], %w", blobId, err)
+		return nil, err
+	}
+
+	logger.InfoCtx(ctx).Str("id", id.String()).Msg("Fetch")
+	versions, err := list(ctx, c, id)
+	if err != nil {
+		return nil, err
 	}
 	if len(versions) == 0 {
-		return nil, blob.NewNotFoundError(blobId, nil)
+		return nil, blob.NewNotFoundError(id.idFolder(), nil)
 	}
 	lastVersion := versions[len(versions)-1]
-	object, err := u.get(ctx, lastVersion)
+	if id.ver != "" {
+		if lastVersion.ver != id.ver {
+			return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
+		}
+	}
+
+	object, err := get(ctx, c, id)
 	if err != nil {
 		return nil, err
 	}
 	return object, nil
 }
-
-func (u *Client) Upload(ctx context.Context, folder string, metadata *blob.BlobMetadata, reader io.ReadSeeker) error {
-	blobKey, err := blobKey(folder, metadata.Id)
+func (client *Client) Push(ctx context.Context, tenant string, idString string, metadata *blob.BlobMetadata, reader io.ReadSeeker) (*blob.BlockId, error) {
+	c, err := client.getClient(tenant)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	objects, err := u.list(ctx, blobKey)
+	id, err := awsIdFromString(idString)
 	if err != nil {
-		return fmt.Errorf("unable list objects: %w", err)
+		return nil, err
 	}
 
-	versionId := (1 + len(objects))
-	metadata.Version = fmt.Sprintf("%d", versionId)
+	objects, err := list(ctx, c, id)
+	if err != nil {
+		return nil, err
+	}
 
-	awsKey := fmt.Sprintf("%s/%d", blobKey, versionId)
+	// TODO: add error if we need to overwrite
+	newVer := fmt.Sprintf("%d", (1 + len(objects)))
+
+	id.ver = newVer
+
+	newId, err := put(ctx, c, id, metadata, reader)
+	blobId := blob.New(newId.folder, newId.id, newId.ver)
+	return &blobId, err
+}
+
+func put(ctx context.Context, c *s3Client, id awsId, metadata *blob.BlobMetadata, reader io.ReadSeeker) (awsId, error) {
 
 	md := map[string]string{
-		"version": metadata.Version,
-		"type":    metadata.Type,
-		"name":    metadata.Name,
-		"owner":   metadata.Owner,
+		"type":  metadata.Type,
+		"name":  metadata.Name,
+		"owner": metadata.Owner,
 	}
 
 	object := &s3.PutObjectInput{
-		Bucket:      aws.String(u.bucketName),
-		Key:         aws.String(awsKey),
+		Bucket:      aws.String(c.bucketName),
+		Key:         aws.String(id.keyVer()),
 		ContentType: aws.String(metadata.ContentType),
 		Metadata:    md,
 		Body:        reader,
 	}
 
-	_, err = u.s3Client.PutObject(ctx, object)
+	_, err := c.s3Client.PutObject(ctx, object)
+	if err != nil {
+		// logger.ErrorCtx(ctx, err).Any("asd", object).Send()
+		// noBucket := &types.NoSuchBucket{}
+		// if errors.As(err, &noBucket) {
+		// 	return awsId{}, blob.NewNotStoreError(c.bucketName, err)
+		// }
+		return awsId{}, fmt.Errorf("awss3.pub %w", err)
+	}
+
 	metadata.CreatedAt = time.Now()
+
 	logger.InfoCtx(ctx).
 		Str("ContentType", *object.ContentType).
 		Str("Key", *object.Key).
-		Msg("Uploaded")
+		Msg("Pushed")
 
-	return err
+	return id, nil
 }
 
 // result is slice of aws keys
-func (c *Client) list(ctx context.Context, blobKey string) ([]string, error) {
+func list(ctx context.Context, c *s3Client, id awsId) ([]awsId, error) {
 
 	result, err := c.s3Client.ListObjects(ctx, &s3.ListObjectsInput{
 		Bucket: aws.String(c.bucketName),
-		Prefix: aws.String(blobKey),
+		Prefix: aws.String(id.idFolder()),
 	})
 	if err != nil {
-		return nil, err
+		noBucket := &types.NoSuchBucket{}
+		if errors.As(err, &noBucket) {
+			return nil, blob.NewNotStoreError(c.bucketName, err)
+		}
+		return nil, fmt.Errorf("aws.ListObjects %w", err)
 	}
-	out := []string{}
+	out := []awsId{}
 	for _, v := range result.Contents {
-		out = append(out, *v.Key)
+
+		ver := strings.Replace(*v.Key, fmt.Sprintf("%s/%s/", id.folder, id.id), "", 1)
+		out = append(out, awsId{
+			folder: id.folder,
+			id:     id.id,
+			ver:    ver,
+		})
 	}
 	return out, nil
 }
 
-func (c *Client) get(ctx context.Context, awsKey string) (*blob.FetchResult, error) {
+func get(ctx context.Context, c *s3Client, id awsId) (*blob.FetchResult, error) {
 	result, err := c.s3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.bucketName),
-		Key:    aws.String(awsKey),
+		Key:    aws.String(id.keyVer()),
 	})
 	if err != nil {
-		noSuchKey := &types.NoSuchKey{}
-		if errors.As(err, &noSuchKey) {
-			return nil, blob.NewNotFoundError(awsKey, err)
-		}
-		return nil, err
+		// noBucket := &types.NoSuchBucket{}
+		// if errors.As(err, &noBucket) {
+		// return nil, blob.NewNotStoreError(c.bucketName, err)
+		// }
+		// noSuchKey := &types.NoSuchKey{}
+		// if errors.As(err, &noSuchKey) {
+		// 	return nil, blob.NewNotFoundError(id.keyVer(), err)
+		// }
+		return nil, fmt.Errorf("aws.GetObject[%s] %w", id.String(), err)
 	}
 
-	version := ""
-	versionSplit := strings.Split(awsKey, "/")
-	if len(versionSplit) > 1 {
-		version = versionSplit[len(versionSplit)-1]
-	}
-	blobId := strings.Join(versionSplit[1:len(versionSplit)-1], "/")
 	return &blob.FetchResult{
+		Id: blob.New(id.folder, id.id, id.ver),
 		Metadata: blob.BlobMetadata{
-			Id:          blobId,
 			ContentType: *result.ContentType,
 			CreatedAt:   timeInLocal(result.LastModified),
 			Type:        result.Metadata["type"],
 			Name:        result.Metadata["name"],
 			Owner:       result.Metadata["owner"],
-			Version:     version,
 		},
 		ReadCloser: result.Body,
 	}, nil
 }
 
-func (c *Client) delete(ctx context.Context, awsId string) error {
-	logger.InfoCtx(ctx).Str("awsId", awsId).Msg("delete")
+func delete(ctx context.Context, c *s3Client, id awsId) error {
+	logger.InfoCtx(ctx).Str("awsId", id.String()).Msg("delete")
 	_, err := c.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &c.bucketName,
-		Key:    aws.String(awsId),
+		Key:    aws.String(id.keyVer()),
 	})
 	return err
 }
 
-func (c *Client) deleteBlob(ctx context.Context, folder string, blobId string) error {
-	blobKey, err := blobKey(folder, blobId)
-	if err != nil {
-		return err
-	}
-	logger.InfoCtx(ctx).Str("blobId", blobId).Msg("deleteBlob")
-	result, err := c.list(ctx, blobKey)
+func deleteAll(ctx context.Context, c *s3Client, id awsId) error {
+	logger.InfoCtx(ctx).Str("blobId", id.idFolder()).Msg("deleteBlob")
+	result, err := list(ctx, c, id)
 	if err != nil {
 		return err
 	}
 	var lastErr error
 	for _, v := range result {
-		err = c.delete(ctx, v)
+		err = delete(ctx, c, v)
 		if err != nil {
 			lastErr = err
-			logger.WarnCtx(ctx).Err(err).Str("aws.key", v).Msg("delete.aws.object")
+			logger.WarnCtx(ctx).Err(err).Str("aws.key", v.String()).Msg("delete.aws.object")
 		}
 
 	}
 	return lastErr
 }
 
-func blobKey(folder, blobId string) (string, error) {
-	ok := blob.NameRegExp.MatchString(folder)
+func (c *Client) getClient(tenant string) (*s3Client, error) {
+	s3C, ok := c.s3Clients[tenant]
 	if !ok {
-		return "", &blob.FolderInputError{}
+		return nil, blob.NewTenantNotFoundError(tenant)
 	}
-	ok = blob.NameRegExp.MatchString(blobId)
-	if !ok {
-		return "", &blob.IdInputError{}
-	}
-	return fmt.Sprintf("%s/%s", folder, blobId), nil
+	return s3C, nil
 }
 
 func timeInLocal(from *time.Time) time.Time {

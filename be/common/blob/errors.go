@@ -56,6 +56,25 @@ func NewNotStoreError(store string, err error) *StoreNotFoundError {
 	}
 }
 
+type BlobIdInputEmptyError struct {
+}
+
+func (*BlobIdInputEmptyError) Error() string {
+	return "blob id is empty"
+}
+
+type BlobIdInputError struct {
+	from string
+}
+
+func NewBlobIdInputError(from string) *BlobIdInputError {
+	return &BlobIdInputError{from: from}
+}
+
+func (e *BlobIdInputError) Error() string {
+	return fmt.Sprintf("from id:%s is not format: dir/id@123 regex[%s]", e.from, BlockIdRefExp.String())
+}
+
 type FolderInputError struct {
 }
 
@@ -68,4 +87,18 @@ type IdInputError struct {
 
 func (*IdInputError) Error() string {
 	return "ID incorrect example: 'my-file-1'"
+}
+
+type TenantNotFoundError struct {
+	tenant string
+}
+
+func NewTenantNotFoundError(tenant string) *TenantNotFoundError {
+	return &TenantNotFoundError{
+		tenant: tenant,
+	}
+}
+
+func (e TenantNotFoundError) Error() string {
+	return fmt.Sprintf("tenant[%s] not found", e.tenant)
 }
