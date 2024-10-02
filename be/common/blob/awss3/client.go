@@ -143,10 +143,9 @@ func (client *Client) Head(ctx context.Context, tenant string, idString string) 
 		return nil, err
 	}
 	return md, nil
-
 }
 
-func (client *Client) Push(ctx context.Context, tenant string, idString string, metadata *blob.BlobInfo, reader io.ReadSeeker) (*blob.BlobId, error) {
+func (client *Client) Push(ctx context.Context, tenant string, idString string, blobInfo *blob.BlobInfo, reader io.ReadSeeker) (*blob.BlobId, error) {
 	c, err := client.getClient(tenant)
 	if err != nil {
 		return nil, err
@@ -167,7 +166,7 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 
 	id.ver = newVer
 
-	newId, err := put(ctx, c, id, metadata, reader)
+	newId, err := put(ctx, c, id, blobInfo, reader)
 	blobId := blob.New(newId.folder, newId.id, newId.ver)
 	return &blobId, err
 }

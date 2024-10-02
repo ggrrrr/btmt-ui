@@ -19,6 +19,6 @@ type (
 
 	Pusher interface {
 		// must apply NameRegExp for folder and Id
-		Push(ctx context.Context, tenant string, idString string, metadata *BlobInfo, reader io.ReadSeeker) (*BlobId, error)
+		Push(ctx context.Context, tenant string, idString string, blobInfo *BlobInfo, reader io.ReadSeeker) (*BlobId, error)
 	}
 )
