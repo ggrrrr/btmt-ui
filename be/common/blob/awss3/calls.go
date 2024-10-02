@@ -79,7 +79,7 @@ func get(ctx context.Context, c *s3Client, id awsId) (*blob.FetchResult, error) 
 	}
 
 	return &blob.FetchResult{
-		Id: blob.New(id.folder, id.id, id.ver),
+		Id: blob.NewBlobId(id.folder, id.id, id.ver),
 		Info: blob.BlobInfo{
 			ContentType:   *result.ContentType,
 			ContentLength: *result.ContentLength,

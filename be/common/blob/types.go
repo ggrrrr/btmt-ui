@@ -74,7 +74,7 @@ func (id *BlobId) String() string {
 	return fmt.Sprintf("%s/%s@%s", id.folder, id.id, id.version)
 }
 
-func New(folder, id, ver string) BlobId {
+func NewBlobId(folder, id, ver string) BlobId {
 	return BlobId{
 		folder:  folder,
 		id:      id,

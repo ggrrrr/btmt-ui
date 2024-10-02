@@ -167,7 +167,7 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 	id.ver = newVer
 
 	newId, err := put(ctx, c, id, blobInfo, reader)
-	blobId := blob.New(newId.folder, newId.id, newId.ver)
+	blobId := blob.NewBlobId(newId.folder, newId.id, newId.ver)
 	return &blobId, err
 }
 

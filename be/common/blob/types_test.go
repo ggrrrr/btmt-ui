@@ -28,7 +28,7 @@ func TestBasicTypes(t *testing.T) {
 				id.SetVersion("")
 				assert.Equal(t, "f/id", id.String())
 
-				id2 := New("folder", "id", "ver")
+				id2 := NewBlobId("folder", "id", "ver")
 				assert.Equal(t, "folder/id@ver", id2.String())
 
 			},

@@ -114,7 +114,7 @@ func TestListPushFetchHead(t *testing.T) {
 				newID, err := testClient.Push(ctx, "localhost", "folder-1/id-1", md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
 				defer deleteAll(ctx, s3c, awsId{folder: "folder-1", id: "id-1"})
-				verID := blob.New("folder-1", "id-1", "1")
+				verID := blob.NewBlobId("folder-1", "id-1", "1")
 				assert.Equal(t, &verID, newID)
 
 				blobTest, err := testClient.Fetch(ctx, "localhost", "folder-1/id-1@1")

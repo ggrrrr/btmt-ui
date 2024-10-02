@@ -5,14 +5,32 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
+type OptionsFunc func(a *App) error
+
 type App struct {
+	blobFetcher blob.Fetcher
 }
 
-func New() (*App, error) {
-	return &App{}, nil
+func New(opts ...OptionsFunc) (*App, error) {
+	a := &App{}
+	for _, optFunc := range opts {
+		err := optFunc(a)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return a, nil
+}
+
+func WithBlobFetcher(blobFetcher blob.Fetcher) OptionsFunc {
+	return func(a *App) error {
+		a.blobFetcher = blobFetcher
+		return nil
+	}
 }
 
 func (a *App) GetTmpl(ctx context.Context, tmpllId string, tmplVersion string) (ddd.Tmpl, error) {
