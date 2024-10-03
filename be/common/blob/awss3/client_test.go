@@ -139,6 +139,53 @@ func TestListGetPutDelete(t *testing.T) {
 		name     string
 		testFunc func(t *testing.T)
 	}{
+
+		{
+			name: "ok put list 2",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg())
+				require.NoError(t, err)
+				s3c.bucketName = testBucket
+
+				data := "mydata"
+
+				idV1 := awsId{folder: "folder-1", id: "id-1", ver: "1"}
+				idV2 := awsId{folder: "folder-1", id: "id-1", ver: "2"}
+				idV3 := awsId{folder: "folder-1", id: "id-2", ver: "1"}
+				blobInfo := &blob.BlobInfo{
+					Type:          "some_type",
+					ContentType:   "text/plain",
+					Name:          "some-name",
+					Owner:         "user1",
+					ContentLength: int64(len(data)),
+				}
+				_, err = put(ctx, s3c, idV1, blobInfo, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+
+				_, err = put(ctx, s3c, idV3, blobInfo, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+
+				defer func() {
+					err := deleteAll(ctx, s3c, idV1)
+					assert.NoError(t, err)
+					err = deleteAll(ctx, s3c, idV3)
+					assert.NoError(t, err)
+				}()
+
+				_, err = put(ctx, s3c, idV2, blobInfo, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+
+				_, err = list(ctx, s3c, awsId{folder: "folder-1"})
+				require.NoError(t, err)
+
+				list2, err := list(ctx, s3c, idV1)
+				require.NoError(t, err)
+				assert.Equal(t, 2, len(list2))
+				assert.Equal(t, idV1, list2[0])
+				assert.Equal(t, idV2, list2[1])
+
+			},
+		},
 		{
 			name: "ok list 0",
 			testFunc: func(t *testing.T) {
@@ -191,44 +238,6 @@ func TestListGetPutDelete(t *testing.T) {
 				require.Error(t, err)
 			},
 		},
-		{
-			name: "ok put list 2",
-			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg())
-				require.NoError(t, err)
-				s3c.bucketName = testBucket
-
-				data := "mydata"
-
-				idV1 := awsId{folder: "folder-1", id: "id-1", ver: "1"}
-				idV2 := awsId{folder: "folder-1", id: "id-1", ver: "2"}
-				blobInfo := &blob.BlobInfo{
-					Type:          "some_type",
-					ContentType:   "text/plain",
-					Name:          "some-name",
-					Owner:         "user1",
-					ContentLength: int64(len(data)),
-				}
-				_, err = put(ctx, s3c, idV1, blobInfo, bytes.NewReader([]byte(data)))
-				require.NoError(t, err)
-
-				defer func() {
-					err := deleteAll(ctx, s3c, idV1)
-					assert.NoError(t, err)
-				}()
-
-				_, err = put(ctx, s3c, idV2, blobInfo, bytes.NewReader([]byte(data)))
-				require.NoError(t, err)
-
-				list2, err := list(ctx, s3c, idV1)
-				require.NoError(t, err)
-				assert.Equal(t, 2, len(list2))
-				assert.Equal(t, idV1, list2[0])
-				assert.Equal(t, idV2, list2[1])
-
-			},
-		},
-
 		{
 			name: "ok push 1 list 1 get 1",
 			testFunc: func(t *testing.T) {

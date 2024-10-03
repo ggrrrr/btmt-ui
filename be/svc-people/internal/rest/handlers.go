@@ -42,15 +42,15 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.ListRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("List")
+		logger.ErrorCtx(ctx, err).Msg("List")
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	logger.InfoCtx(r.Context()).Any("filter", req.String()).Msg("List")
-	out, err := s.app.List(r.Context(), req.ToFilter())
+	logger.InfoCtx(ctx).Any("filter", req.String()).Msg("List")
+	out, err := s.app.List(ctx, req.ToFilter())
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("List")
+		logger.ErrorCtx(ctx, err).Msg("List")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -80,14 +80,14 @@ func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 
 	}
 	if req.Id == "" {
-		logger.ErrorCtx(r.Context(), err).Str("error", "empty id").Msg("Get")
+		logger.ErrorCtx(ctx, err).Str("error", "empty id").Msg("Get")
 		web.SendErrorBadRequest(ctx, w, "empty id", nil)
 		return
 	}
 	logger.InfoCtx(r.Context()).Any("id", &req.Id).Msg("Get")
-	p, err := s.app.GetById(r.Context(), req.Id)
+	p, err := s.app.GetById(ctx, req.Id)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("Get")
+		logger.ErrorCtx(ctx, err).Msg("Get")
 		web.SendSystemError(ctx, w, "system error, please try again later", err, nil)
 		return
 	}
@@ -104,15 +104,15 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.SaveRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("Save")
+		logger.ErrorCtx(ctx, err).Msg("Save")
 		web.SendError(ctx, w, err)
 		return
 	}
 	p := req.ToPerson()
-	logger.InfoCtx(r.Context()).Any("person", &req).Msg("Save")
+	logger.InfoCtx(ctx).Any("person", &req).Msg("Save")
 	err = s.app.Save(r.Context(), p)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("Save")
+		logger.ErrorCtx(ctx, err).Msg("Save")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -129,15 +129,15 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.UpdateRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
+		logger.ErrorCtx(ctx, err).Any("person", &req).Msg("Update")
 		web.SendError(ctx, w, err)
 		return
 	}
 	p := req.ToPerson()
-	logger.InfoCtx(r.Context()).Any("person", &req).Msg("Update")
+	logger.InfoCtx(ctx).Any("person", &req).Msg("Update")
 	err = s.app.Update(r.Context(), p)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Any("person", &req).Msg("Update")
+		logger.ErrorCtx(ctx, err).Any("person", &req).Msg("Update")
 		web.SendError(ctx, w, err)
 		return
 	}
