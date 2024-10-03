@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
 	"github.com/go-chi/chi"
@@ -22,23 +23,45 @@ func New(a *app.App) *server {
 func (s *server) Router() chi.Router {
 	router := chi.NewRouter()
 	router.Post("/render", s.Render)
-	router.Get("/attachment/get", s.GetAttachment)
+	router.Get("/file/{id}", s.GetFile)
+	router.Get("/tmpl/get", s.GetTmpl)
 
 	return router
+}
+
+func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
+	logger.InfoCtx(r.Context()).Msg("rest.GetTmpl")
+
+	web.SendError(r.Context(), w, fmt.Errorf("asdasd"))
 }
 
 func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 }
 
-func (s *server) GetAttachment(w http.ResponseWriter, r *http.Request) {
-	attch, err := s.app.GetAttachment(r.Context(), "", "")
+func (s *server) GetFile(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "rest.GetFile", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	fileId := chi.URLParam(r, "id")
+	download := r.URL.Query().Get("download")
+	logger.InfoCtx(ctx).
+		Str("id", fileId).
+		Msg("rest.GetFile")
+
+	attch, err := s.app.GetFile(ctx, fileId)
 	if err != nil {
-		web.SendError(r.Context(), w, err)
+		web.SendError(ctx, w, err)
 		return
 	}
 
 	w.Header().Add("Content-Type", attch.ContentType)
-	w.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename*=UTF-8''%s", attch.Name))
+
+	if download != "" {
+		w.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename*=UTF-8''%s", attch.Name))
+	}
 
 	w.WriteHeader(http.StatusOK)
 

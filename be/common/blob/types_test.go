@@ -3,6 +3,7 @@ package blob
 import (
 	"testing"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,13 +24,13 @@ func TestBasicTypes(t *testing.T) {
 				assert.Equal(t, "f", id.Folder())
 				assert.Equal(t, "id", id.Id())
 				assert.Equal(t, "ver", id.Version())
-				assert.Equal(t, "f/id@ver", id.String())
+				assert.Equal(t, "f/id:ver", id.String())
 				assert.Equal(t, "f/id", id.Key())
 				id.SetVersion("")
 				assert.Equal(t, "f/id", id.String())
 
 				id2 := NewBlobId("folder", "id", "ver")
-				assert.Equal(t, "folder/id@ver", id2.String())
+				assert.Equal(t, "folder/id:ver", id2.String())
 
 			},
 		},
@@ -50,7 +51,7 @@ func TestParseBlobId(t *testing.T) {
 	}{
 		{
 			name:    "ok",
-			fromStr: "Mydir-1/My-id@1",
+			fromStr: "Mydir-1/My-id:1",
 			id: BlobId{
 				folder:  "Mydir-1",
 				id:      "My-id",
@@ -82,44 +83,51 @@ func TestParseBlobId(t *testing.T) {
 			name:    "err empty str",
 			fromStr: "",
 			// id:      nil,
-			err: &BlobIdInputEmptyError{},
+			// err: &BlobIdInputEmptyError{},
+			err: &app.AppError{},
 		},
 		{
 			name:    "from",
 			fromStr: "from",
 			// id:      ,
-			err: &BlobIdInputError{},
+			// err: &BlobIdInputError{},
+			err: &app.AppError{},
 		},
 		{
 			name:    "123/123@123",
 			fromStr: "123/123@123",
 			// id:      nil,
-			err: &BlobIdInputError{},
+			// err: &BlobIdInputError{},
+			err: &app.AppError{},
 		},
 		{
 			name:    "123asdasd/asd@123",
 			fromStr: "123asdasd/asd@123",
 			// id:      nil,
-			err: &BlobIdInputError{},
+			// err: &BlobIdInputError{},
+			err: &app.AppError{},
 		},
 		{
 			name:    "asdasd  ",
 			fromStr: "asdasd  ",
 			// id:      nil,
-			err: &BlobIdInputError{},
+			// err: &BlobIdInputError{},
+			err: &app.AppError{},
 		},
 		{
 			name:    "asdasd/asdasd  ",
 			fromStr: "asdasd/asdasd  ",
 			// id:      nil,
-			err:  &BlobIdInputError{},
+			// err:  &BlobIdInputError{},
+			err:  &app.AppError{},
 			skip: true,
 		},
 		{
 			name:    "asd/asd asd",
 			fromStr: "asd/asd asd",
 			// id:      nil,
-			err:  &BlobIdInputError{},
+			// err:  &BlobIdInputError{},
+			err:  &app.AppError{},
 			skip: true,
 		},
 	}
@@ -140,8 +148,8 @@ func TestParseBlobId(t *testing.T) {
 		})
 	}
 
-	testId1, _ := ParseBlobId("folder1/id-1@ver1")
-	require.Equal(t, "folder1/id-1@ver1", testId1.String())
+	testId1, _ := ParseBlobId("folder1/id-1:ver1")
+	require.Equal(t, "folder1/id-1:ver1", testId1.String())
 
 	testId2, _ := ParseBlobId("folder1/id-1")
 	require.Equal(t, "folder1/id-1", testId2.String())
@@ -165,19 +173,19 @@ func TestBlockIdRefExp(t *testing.T) {
 			result:  []string{"asd/id", "asd", "id", ""},
 		},
 		{
-			fromStr: "folder/id@ver1",
-			result:  []string{"folder/id@ver1", "folder", "id", "ver1"},
+			fromStr: "folder/id:ver1",
+			result:  []string{"folder/id:ver1", "folder", "id", "ver1"},
 		},
 		{
-			fromStr: "folder/id@22",
-			result:  []string{"folder/id@22", "folder", "id", "22"},
+			fromStr: "folder/id:22",
+			result:  []string{"folder/id:22", "folder", "id", "22"},
 		},
 		{
-			fromStr: "1folder/id@2",
+			fromStr: "1folder/id:2",
 			result:  nil,
 		},
 		{
-			fromStr: "folder/1id@2",
+			fromStr: "folder/1id:2",
 			result:  nil,
 		},
 	}

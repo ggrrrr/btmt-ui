@@ -41,6 +41,9 @@ func (i awsId) idFolder() string {
 
 // folder/id/ver
 func (i awsId) keyVer() string {
+	if i.ver == "" {
+		return fmt.Sprintf("%s/%s", i.folder, i.id)
+	}
 	return fmt.Sprintf("%s/%s/%s", i.folder, i.id, i.ver)
 }
 

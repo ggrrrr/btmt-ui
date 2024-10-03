@@ -5,12 +5,14 @@ import (
 	"io"
 	"regexp"
 	"time"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 // https://yourbasic.org/golang/regexp-cheat-sheet/
 var NameRegExp = regexp.MustCompile(`^[a-zA-Z][0-9a-zA-Z\-]`)
 
-var BlockIdRefExp = regexp.MustCompile(`(^[a-zA-Z][a-zA-Z0-9\-]*)/([a-zA-Z][a-zA-Z0-9\-]*)[\@]?([a-zA-Z0-9\-]*)*`)
+var BlockIdRefExp = regexp.MustCompile(`(^[a-zA-Z][a-zA-Z0-9\-]*)/([a-zA-Z][a-zA-Z0-9\-]*)[\:]?([a-zA-Z0-9\-]*)*`)
 
 type (
 	// Id of each blob object with or without version
@@ -71,7 +73,7 @@ func (id *BlobId) String() string {
 	if id.version == "" {
 		return fmt.Sprintf("%s/%s", id.folder, id.id)
 	}
-	return fmt.Sprintf("%s/%s@%s", id.folder, id.id, id.version)
+	return fmt.Sprintf("%s/%s:%s", id.folder, id.id, id.version)
 }
 
 func NewBlobId(folder, id, ver string) BlobId {
@@ -84,12 +86,12 @@ func NewBlobId(folder, id, ver string) BlobId {
 
 func ParseBlobId(fromId string) (BlobId, error) {
 	if fromId == "" {
-		return BlobId{}, &BlobIdInputEmptyError{}
+		return BlobId{}, app.BadRequestError("id is empty", nil)
 	}
 
 	result := BlockIdRefExp.FindStringSubmatch(fromId)
 	if result == nil {
-		return BlobId{}, &BlobIdInputError{from: fromId}
+		return BlobId{}, app.BadRequestError("id format regex error", nil)
 	}
 
 	if len(result) == 4 {
@@ -100,5 +102,5 @@ func ParseBlobId(fromId string) (BlobId, error) {
 		}, nil
 	}
 
-	return BlobId{}, &BlobIdInputError{from: fromId}
+	return BlobId{}, app.BadRequestError("id format regex result error", nil)
 }

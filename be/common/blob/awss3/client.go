@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -55,7 +56,7 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 		Bucket: &bucketName,
 	})
 	if err != nil {
-		return nil, blob.NewNotStoreError(bucketName, err)
+		return nil, app.SystemError("aws bucket not found", err)
 	}
 	logger.Info().
 		Any("bucket", bucketName).
@@ -95,16 +96,20 @@ func (client *Client) Fetch(ctx context.Context, tenant string, idString string)
 		return nil, err
 	}
 	if len(versions) == 0 {
-		return nil, blob.NewNotFoundError(id.idFolder(), nil)
+		return nil, app.ItemNotFoundError("blob", id.idFolder())
 	}
+
+	fmt.Printf(" %+v \n\n", versions)
+
 	lastVersion := versions[len(versions)-1]
 	if id.ver != "" {
 		if lastVersion.ver != id.ver {
-			return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
+			return nil, app.ItemNotFoundError("blob.version", id.String())
+			// return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
 		}
 	}
 
-	object, err := get(ctx, c, id)
+	object, err := get(ctx, c, lastVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -124,21 +129,24 @@ func (client *Client) Head(ctx context.Context, tenant string, idString string) 
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).Str("id", id.String()).Msg("Fetch")
 	versions, err := list(ctx, c, id)
 	if err != nil {
 		return nil, err
 	}
 	if len(versions) == 0 {
-		return nil, blob.NewNotFoundError(id.idFolder(), nil)
+		return nil, app.ItemNotFoundError("blob", id.idFolder())
 	}
+
 	lastVersion := versions[len(versions)-1]
 	if id.ver != "" {
 		if lastVersion.ver != id.ver {
-			return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
+			return nil, app.ItemNotFoundError("blob version", id.String())
+			// return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
 		}
 	}
-	md, err := head(ctx, c, id)
+	logger.InfoCtx(ctx).Str("id", id.String()).Msg("Head")
+
+	md, err := head(ctx, c, lastVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +182,7 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 func (c *Client) getClient(tenant string) (*s3Client, error) {
 	s3C, ok := c.s3Clients[tenant]
 	if !ok {
-		return nil, blob.NewTenantNotFoundError(tenant)
+		return nil, app.SystemError("tenant not configured", nil)
 	}
 	return s3C, nil
 }

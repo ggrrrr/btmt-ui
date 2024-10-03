@@ -3,9 +3,10 @@ package app
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
@@ -33,8 +34,21 @@ func WithBlobFetcher(blobFetcher blob.Fetcher) OptionsFunc {
 	}
 }
 
-func (a *App) GetTmpl(ctx context.Context, tmpllId string, tmplVersion string) (ddd.Tmpl, error) {
-	return ddd.Tmpl{
+func (a *App) GetTmpl(ctx context.Context, tmplId string, tmplVersion string) (*ddd.Tmpl, error) {
+	var err error
+	ctx, span := logger.Span(ctx, "GetTmpl", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	logger.InfoCtx(ctx).Str("tmeplId", tmplId).Msg("GetTmpl")
+
+	result, err := a.blobFetcher.Head(ctx, "localhost", "images/beer1")
+	if err != nil {
+		return nil, err
+	}
+	logger.InfoCtx(ctx).Any("info", result).Msg("got")
+	return &ddd.Tmpl{
 		ContentType: "text/markdown",
 		Body: `# Header1 {{ .UserInfo.User }}
 		## item 1 {{  }}
@@ -42,19 +56,50 @@ func (a *App) GetTmpl(ctx context.Context, tmpllId string, tmplVersion string) (
 	}, nil
 }
 
-func (a *App) GetAttachment(ctx context.Context, tmpllId string, tmplVersion string) (*ddd.AttachmentWriterTo, error) {
-	fileName := "glass-mug-variant.png"
-	p := "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui"
-	file, err := os.Open(fmt.Sprintf("%s/%s", p, fileName))
+type filePipe struct {
+	reader io.ReadCloser
+}
+
+func (f *filePipe) WriteTo(w io.Writer) (int64, error) {
+	defer f.reader.Close()
+	return io.Copy(w, f.reader)
+}
+
+func (a *App) GetFile(ctx context.Context, fileId string) (*ddd.AttachmentWriterTo, error) {
+	var err error
+	ctx, span := logger.Span(ctx, "GetFile", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	// fileName := "glass-mug-variant.png"
+	// p := "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui"
+	// file, err := os.Open(fmt.Sprintf("%s/%s", p, fileName))
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	logger.InfoCtx(ctx).
+		Any("info", fileId).
+		Msg("Fetch")
+
+	res, err := a.blobFetcher.Fetch(ctx, "localhost", fmt.Sprintf("images/%s", fileId))
 	if err != nil {
+		logger.ErrorCtx(ctx, err).Msg("Fetch")
 		return nil, err
 	}
+	logger.InfoCtx(ctx).
+		Any("info", res).
+		Any("id", fileId).
+		Msg("Fetch")
 
 	return &ddd.AttachmentWriterTo{
 			ContentType: "image/png",
-			Version:     "v1",
-			Name:        "glass-mug-variant.png",
-			WriterTo:    file,
+			Version:     res.Id.Version(),
+			Name:        res.Info.Name,
+			WriterTo: &filePipe{
+				reader: res.ReadCloser,
+			},
 		},
 		nil
 }
