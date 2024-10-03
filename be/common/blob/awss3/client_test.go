@@ -25,7 +25,7 @@ func TestListPushFetchHead(t *testing.T) {
 		{
 			name: "ok Push/Fetch",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				testClient := &Client{
@@ -83,7 +83,7 @@ func TestListPushFetchHead(t *testing.T) {
 		{
 			name: "ok Push parsing id err",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 
@@ -110,7 +110,7 @@ func TestListPushFetchHead(t *testing.T) {
 		{
 			name: "ok Fetch not found",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 
@@ -142,7 +142,7 @@ func TestListGetPutDelete(t *testing.T) {
 		{
 			name: "ok list 0",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				blockId := awsId{folder: "not", id: "no", ver: "asd"}
 				result, err := list(ctx, s3c, blockId)
@@ -153,7 +153,7 @@ func TestListGetPutDelete(t *testing.T) {
 		{
 			name: "ok list bucket not found",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = "notfound"
 				blockId := awsId{folder: "not", id: "no", ver: "asd"}
@@ -166,7 +166,7 @@ func TestListGetPutDelete(t *testing.T) {
 		{
 			name: "ok get bucket not found",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = "notfound"
 				blockId := awsId{folder: "not", id: "no", ver: "asd"}
@@ -177,7 +177,7 @@ func TestListGetPutDelete(t *testing.T) {
 		{
 			name: "ok get put head id.ver empty",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				blockId := awsId{folder: "not", id: "no", ver: ""}
@@ -194,7 +194,7 @@ func TestListGetPutDelete(t *testing.T) {
 		{
 			name: "ok put list 2",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 
@@ -232,7 +232,7 @@ func TestListGetPutDelete(t *testing.T) {
 		{
 			name: "ok push 1 list 1 get 1",
 			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg().Endpoint, cfg().Region)
+				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 
@@ -396,10 +396,12 @@ func TestNameRegExp(t *testing.T) {
 	}
 }
 
-func cfg() awsclient.AwsConfig {
-	return awsclient.AwsConfig{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:4566",
+func cfg() awsclient.S3Client {
+	return awsclient.S3Client{
+		AwsConfig: awsclient.AwsConfig{
+			Region:   "us-east-1",
+			Endpoint: "http://localhost:4566",
+		},
 	}
 }
 

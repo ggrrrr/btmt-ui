@@ -10,4 +10,14 @@ type (
 		Database string
 		Prefix   string
 	}
+
+	//
+	S3Client struct {
+		AwsConfig
+		BucketName string
+	}
+
+	S3Config struct {
+		Tenants map[string]S3Client
+	}
 )

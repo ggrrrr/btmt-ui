@@ -35,20 +35,6 @@ func Root(ctx context.Context, s system.Service) error {
 		return err
 	}
 
-	// fileName := "glass-mug-variant.png"
-	// beerFile, err := os.Open(fileName)
-
-	// pushInfo, err := blobClient.Push(s.Waiter().Context(), "localhost", "images/beer1",
-	// 	&blob.BlobInfo{
-	// 		Type:        "image",
-	// 		ContentType: "image/png",
-	// 		Name:        "beer.png",
-	// 		Owner:       "me",
-	// 	},
-	// 	beerFile,
-	// )
-	// fmt.Printf("asdasdasdasd %+v \n", pushInfo)
-
 	a, _ := app.New(app.WithBlobFetcher(blobClient))
 
 	restApp := rest.New(a)

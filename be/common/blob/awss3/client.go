@@ -187,9 +187,9 @@ func (c *Client) getClient(tenant string) (*s3Client, error) {
 	return s3C, nil
 }
 
-func createS3Client(endpoint, region string) (*s3Client, error) {
-	cfg, err := config.LoadDefaultConfig(context.Background(),
-		config.WithRegion(region),
+func createS3Client(appCfg awsclient.S3Client) (*s3Client, error) {
+	awsCfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(appCfg.Region),
 		config.WithHTTPClient(
 			&http.Client{
 				Transport: &http.Transport{
@@ -198,8 +198,8 @@ func createS3Client(endpoint, region string) (*s3Client, error) {
 			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					PartitionID:       "aws",
-					URL:               endpoint,
-					SigningRegion:     region,
+					URL:               appCfg.Endpoint,
+					SigningRegion:     appCfg.Region,
 					HostnameImmutable: true,
 				}, nil
 			}),
@@ -208,6 +208,6 @@ func createS3Client(endpoint, region string) (*s3Client, error) {
 		return nil, fmt.Errorf("aws.config: %w", err)
 	}
 	return &s3Client{
-		s3Client: s3.NewFromConfig(cfg),
+		s3Client: s3.NewFromConfig(awsCfg),
 	}, nil
 }
