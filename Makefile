@@ -37,7 +37,9 @@ go_clean:
 	# go clean -modcache
 
 go_test:
-	go test -coverprofile cover.out
+	docker-compose start postgres mongo localstack
+	go test -cover  ./be/...
+	# go test -coverprofile cover.out
 	# go test -cover -coverprofile cover.out ./be/...
 
 lint:
