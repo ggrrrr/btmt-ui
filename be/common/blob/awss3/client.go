@@ -19,7 +19,7 @@ import (
 
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 type Client struct {
-	s3Clients map[string]*s3Client
+	s3Clients map[string]s3Client
 }
 
 type s3Client struct {
@@ -27,6 +27,9 @@ type s3Client struct {
 	bucketName string
 	region     string
 }
+
+var _ (blob.Fetcher) = (*Client)(nil)
+var _ (blob.Pusher) = (*Client)(nil)
 
 func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 	//nolint:staticcheck
@@ -64,7 +67,7 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 		Msg("bucket")
 
 	return &Client{
-		s3Clients: map[string]*s3Client{
+		s3Clients: map[string]s3Client{
 			"localhost": {
 				s3Client:   s3client,
 				bucketName: bucketName,
@@ -74,11 +77,12 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 	}, nil
 }
 
-var _ (blob.Fetcher) = (*Client)(nil)
-var _ (blob.Pusher) = (*Client)(nil)
-
 func (client *Client) Fetch(ctx context.Context, tenant string, idString string) (*blob.FetchResult, error) {
 	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Fetch", nil, logger.AttributeString("id", idString))
+	defer func() {
+		span.End(err)
+	}()
 
 	c, err := client.getClient(tenant)
 	if err != nil {
@@ -90,7 +94,10 @@ func (client *Client) Fetch(ctx context.Context, tenant string, idString string)
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).Str("id", id.String()).Msg("Fetch")
+	logger.InfoCtx(ctx).
+		Str("id", id.String()).
+		Msg("blob.Fetch")
+
 	versions, err := list(ctx, c, id)
 	if err != nil {
 		return nil, err
@@ -99,13 +106,10 @@ func (client *Client) Fetch(ctx context.Context, tenant string, idString string)
 		return nil, app.ItemNotFoundError("blob", id.idFolder())
 	}
 
-	fmt.Printf(" %+v \n\n", versions)
-
 	lastVersion := versions[len(versions)-1]
 	if id.ver != "" {
 		if lastVersion.ver != id.ver {
 			return nil, app.ItemNotFoundError("blob.version", id.String())
-			// return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
 		}
 	}
 
@@ -118,6 +122,10 @@ func (client *Client) Fetch(ctx context.Context, tenant string, idString string)
 
 func (client *Client) Head(ctx context.Context, tenant string, idString string) (*blob.BlobInfo, error) {
 	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Head", nil, logger.AttributeString("id", idString))
+	defer func() {
+		span.End(err)
+	}()
 
 	c, err := client.getClient(tenant)
 	if err != nil {
@@ -128,6 +136,10 @@ func (client *Client) Head(ctx context.Context, tenant string, idString string) 
 	if err != nil {
 		return nil, err
 	}
+
+	logger.InfoCtx(ctx).
+		Str("id", id.String()).
+		Msg("blob.Head")
 
 	versions, err := list(ctx, c, id)
 	if err != nil {
@@ -141,10 +153,8 @@ func (client *Client) Head(ctx context.Context, tenant string, idString string) 
 	if id.ver != "" {
 		if lastVersion.ver != id.ver {
 			return nil, app.ItemNotFoundError("blob version", id.String())
-			// return nil, blob.NewNotFoundError(id.String(), fmt.Errorf("version not found"))
 		}
 	}
-	logger.InfoCtx(ctx).Str("id", id.String()).Msg("Head")
 
 	md, err := head(ctx, c, lastVersion)
 	if err != nil {
@@ -154,6 +164,12 @@ func (client *Client) Head(ctx context.Context, tenant string, idString string) 
 }
 
 func (client *Client) Push(ctx context.Context, tenant string, idString string, blobInfo *blob.BlobInfo, reader io.ReadSeeker) (*blob.BlobId, error) {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Push", nil, logger.AttributeString("id", idString))
+	defer func() {
+		span.End(err)
+	}()
+
 	c, err := client.getClient(tenant)
 	if err != nil {
 		return nil, err
@@ -163,6 +179,10 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 	if err != nil {
 		return nil, err
 	}
+
+	logger.InfoCtx(ctx).
+		Str("id", id.String()).
+		Msg("blob.Push")
 
 	objects, err := list(ctx, c, id)
 	if err != nil {
@@ -179,16 +199,16 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 	return &blobId, err
 }
 
-func (c *Client) getClient(tenant string) (*s3Client, error) {
+func (c *Client) getClient(tenant string) (s3Client, error) {
 	s3C, ok := c.s3Clients[tenant]
 	if !ok {
-		return nil, app.SystemError("tenant not configured", nil)
+		return s3Client{}, app.SystemError("tenant not configured", nil)
 	}
 	return s3C, nil
 }
 
-func createS3Client(appCfg awsclient.S3Client) (*s3Client, error) {
-	awsCfg, err := config.LoadDefaultConfig(context.Background(),
+func createS3Client(awsCfg awsclient.AwsConfig, appCfg awsclient.S3Client) (s3Client, error) {
+	clientCfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(appCfg.Region),
 		config.WithHTTPClient(
 			&http.Client{
@@ -198,16 +218,16 @@ func createS3Client(appCfg awsclient.S3Client) (*s3Client, error) {
 			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					PartitionID:       "aws",
-					URL:               appCfg.Endpoint,
+					URL:               awsCfg.Endpoint,
 					SigningRegion:     appCfg.Region,
 					HostnameImmutable: true,
 				}, nil
 			}),
 		))
 	if err != nil {
-		return nil, fmt.Errorf("aws.config: %w", err)
+		return s3Client{}, fmt.Errorf("aws.config: %w", err)
 	}
-	return &s3Client{
-		s3Client: s3.NewFromConfig(awsCfg),
+	return s3Client{
+		s3Client: s3.NewFromConfig(clientCfg),
 	}, nil
 }

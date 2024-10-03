@@ -13,7 +13,7 @@ type (
 
 	//
 	S3Client struct {
-		AwsConfig
+		Region     string
 		BucketName string
 	}
 

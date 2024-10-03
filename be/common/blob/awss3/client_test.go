@@ -29,7 +29,7 @@ func TestListPushFetchHead(t *testing.T) {
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				testClient := &Client{
-					s3Clients: map[string]*s3Client{
+					s3Clients: map[string]s3Client{
 						"localhost": s3c,
 					},
 				}
@@ -62,7 +62,7 @@ func TestListPushFetchHead(t *testing.T) {
 			name: "ok tenent not found",
 			testFunc: func(t *testing.T) {
 				testClient := &Client{
-					s3Clients: map[string]*s3Client{},
+					s3Clients: map[string]s3Client{},
 				}
 				_, err := testClient.Push(ctx, "notfound", "asd/asd", &blob.BlobInfo{}, nil)
 				require.Error(t, err)
@@ -88,7 +88,7 @@ func TestListPushFetchHead(t *testing.T) {
 				s3c.bucketName = testBucket
 
 				testClient := &Client{
-					s3Clients: map[string]*s3Client{
+					s3Clients: map[string]s3Client{
 						"localhost": s3c,
 					},
 				}
@@ -115,7 +115,7 @@ func TestListPushFetchHead(t *testing.T) {
 				s3c.bucketName = testBucket
 
 				testClient := &Client{
-					s3Clients: map[string]*s3Client{
+					s3Clients: map[string]s3Client{
 						"localhost": s3c,
 					},
 				}
@@ -396,13 +396,15 @@ func TestNameRegExp(t *testing.T) {
 	}
 }
 
-func cfg() awsclient.S3Client {
-	return awsclient.S3Client{
-		AwsConfig: awsclient.AwsConfig{
+func cfg() (awsclient.AwsConfig, awsclient.S3Client) {
+	return awsclient.AwsConfig{
 			Region:   "us-east-1",
 			Endpoint: "http://localhost:4566",
 		},
-	}
+		awsclient.S3Client{
+			Region:     "us-east-1",
+			BucketName: testBucket,
+		}
 }
 
 func timePrint(name string, t time.Time) {
