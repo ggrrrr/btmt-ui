@@ -10,9 +10,10 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/riandyrn/otelchi"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 
@@ -110,9 +111,13 @@ func (s *System) initMux() {
 	s.mux.Use(middleware.Logger)
 	s.mux.Use(s.httpMiddleware)
 
+	// if s.cfg.Otel.Enabled {
+	// 	// s.mux.Use(otelchi.Middleware("my-server", otelchi.WithChiRoutes(s.mux)))
+	// 	s.mux.Use(s.httpMiddlewareOtel)
+	// }
 	if s.cfg.Otel.Enabled {
-		// s.mux.Use(otelchi.Middleware("my-server", otelchi.WithChiRoutes(s.mux)))
-		s.mux.Use(s.httpMiddlewareOtel)
+		s.mux.Use(otelchi.Middleware("rest"))
+		// s.mux.Use(s.httpMiddlewareOtel)
 	}
 
 	s.gateway = runtime.NewServeMux()

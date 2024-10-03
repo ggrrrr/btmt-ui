@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 

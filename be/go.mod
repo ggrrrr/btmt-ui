@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.31.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.39
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.3
+	github.com/go-chi/chi/v5 v5.1.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0
 	github.com/stackus/errors v0.1.5
 	go.opentelemetry.io/otel v1.30.0
@@ -38,6 +39,7 @@ require (
 	github.com/aws/smithy-go v1.21.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -79,10 +81,10 @@ require (
 
 require (
 	github.com/XSAM/otelsql v0.34.0
-	github.com/go-chi/chi v1.5.5
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/lib/pq v1.10.9
 	github.com/mileusna/useragent v1.3.4
+	github.com/riandyrn/otelchi v0.10.0
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0

@@ -7,7 +7,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 type (

@@ -7,7 +7,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 type server struct {

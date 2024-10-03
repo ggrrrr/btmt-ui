@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"

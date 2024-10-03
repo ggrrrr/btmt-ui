@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-events/internal/app"
