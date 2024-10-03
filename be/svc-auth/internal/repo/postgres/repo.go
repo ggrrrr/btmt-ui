@@ -136,6 +136,9 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 			return
 		}
 		row.TenantRoles = m
+
+		fmt.Printf("\t\t %v \n", row)
+
 		out = append(out, row)
 	}
 	return out, nil

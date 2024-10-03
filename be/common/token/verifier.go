@@ -35,6 +35,11 @@ type (
 var _ (Verifier) = (*verifier)(nil)
 
 func NewVerifier(crtFile string) (*verifier, error) {
+	logger.Info().
+		Str("crtFile", crtFile).
+		Str("schema", roles.AuthSchemeBearer).
+		Msg("NewVerifier")
+
 	crtBytes, err := os.ReadFile(crtFile)
 	if err != nil {
 		return nil, err
@@ -43,10 +48,6 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Info().
-		Str("crtFile", crtFile).
-		Str("schema", roles.AuthSchemeBearer).
-		Msg("Verifier")
 	return &verifier{
 		signMethod: "RS256",
 		verifyKey:  verifyKey,

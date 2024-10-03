@@ -257,7 +257,7 @@
             "type": "string"
           }
         },
-        "loginEmail": {
+        "login_email": {
           "type": "string"
         },
         "name": {

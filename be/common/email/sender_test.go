@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ggrrrr/btmt-ui/be/help"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,14 +20,13 @@ var (
 	email_from = ""
 	email1     = ""
 	email2     = ""
-	repoFolder = ""
+	repoFolder = help.RepoDir()
 )
 
 func loadConfig() {
 	email_from = os.Getenv("EMAIL_FROM1")
 	email1 = os.Getenv("EMAIL_EMAIL1")
 	email2 = os.Getenv("EMAIL_EMAIL2")
-	repoFolder = os.Getenv("REPO_FOLDER")
 	cfg = Config{
 		SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
 		SMTPAddr: os.Getenv("EMAIL_SMTP_ADDR"),
@@ -37,11 +37,11 @@ func loadConfig() {
 }
 
 func TestIntDialAndSend(t *testing.T) {
-	ctx := context.Background()
 	newLine = []byte("\r\n")
 
 	loadConfig()
-	// t.Skip("NO Addr CONFIG")
+	t.Skip("NO Addr CONFIG")
+	ctx := context.Background()
 	if cfg.SMTPAddr == "" {
 		t.Skip("NO Addr CONFIG")
 	}
@@ -196,7 +196,6 @@ func TestAuth(t *testing.T) {
 
 func TestSend(t *testing.T) {
 	ctx := context.Background()
-	pwd := os.Getenv("PWD")
 	newLine = []byte("\n")
 
 	var testMsg *Msg
@@ -266,7 +265,7 @@ mail body
 				tmpl := template.Must(template.New("template_data").Parse(template_data))
 
 				assert.NoError(t, err, "prep email")
-				testMsg.AddFile(fmt.Sprintf("%s/../../../test.txt", pwd))
+				testMsg.AddFile(fmt.Sprintf("%s/test.txt", repoFolder))
 				testMsg.AddAttachment("myfile.png", func(w io.Writer) error {
 					fileBody := "secret"
 					_, err := w.Write([]byte(fileBody))

@@ -46,6 +46,11 @@ func fromAuthInfo(from roles.AuthInfo) *appJwt {
 var _ (Signer) = (*signer)(nil)
 
 func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
+	logger.Info().
+		Str("key_file", keyFile).
+		Str("ttl", ttl.String()).
+		Msg("NewSigner")
+
 	signKeyBytes, err := os.ReadFile(keyFile)
 	if err != nil {
 		return nil, err
@@ -56,9 +61,6 @@ func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
 		return nil, err
 	}
 
-	logger.Info().
-		Str("key_file", keyFile).
-		Str("ttl", ttl.String()).Send()
 	return &signer{
 		ttl:        ttl,
 		signMethod: "RS256",

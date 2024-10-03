@@ -8,7 +8,8 @@ export class User {
   constructor() {
     this.email = "";
     this.status = "";
-    // this.system_roles;
+    this.tenant_roles;
+    this.system_roles;
   }
 }
 

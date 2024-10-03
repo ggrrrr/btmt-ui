@@ -51,7 +51,7 @@ func Test_CanDo(t *testing.T) {
 		{
 			test: "ok system ErrForbidden",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"asd", "admin"}})
+				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"asd", "adasdmin"}})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 			},
 		},

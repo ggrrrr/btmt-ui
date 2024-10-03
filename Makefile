@@ -24,11 +24,21 @@ build_tag_people: build_svc_people tag_svc_people
 
 tag_web:
 	docker tag "${DOCKER_REPO}/ui/web:${GIT_HASH}" "${DOCKER_REPO}/ui/web:latest"
-	
+
 clean_docker:
 	docker rm $(docker ps -a -q)
 	docker image prune -a -f
 	docker volume prune -a -f
+
+go_clean:
+	# go clean -cache
+	go clean -testcache
+	# go clean -fuzzcache
+	# go clean -modcache
+
+go_test:
+	go test -coverprofile cover.out
+	# go test -cover -coverprofile cover.out ./be/...
 
 lint:
 	golangci-lint run -v be/...

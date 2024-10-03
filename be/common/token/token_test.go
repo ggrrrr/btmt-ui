@@ -1,21 +1,26 @@
 package token
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/help"
 )
 
 func TestSignTTL(t *testing.T) {
-	testSigner, err := NewSigner(1*time.Second, "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.key")
-	assert.NoError(t, err)
+	pwd := help.RepoDir()
 
-	testVer, err := NewVerifier("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt")
-	assert.NoError(t, err)
+	testSigner, err := NewSigner(1*time.Second, fmt.Sprintf("%s/jwt.key", pwd))
+	require.NoError(t, err)
+
+	testVer, err := NewVerifier(fmt.Sprintf("%s/jwt.crt", pwd))
+	require.NoError(t, err)
 
 	apiClaims := roles.AuthInfo{
 		User:  "user1",
@@ -35,11 +40,11 @@ func TestSignTTL(t *testing.T) {
 }
 
 func TestSignVerify(t *testing.T) {
-	testSigner, err := NewSigner(1*time.Second, "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.key")
-	assert.NoError(t, err)
+	testSigner, err := NewSigner(1*time.Second, "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/jwt.key")
+	require.NoError(t, err)
 
-	testVer, err := NewVerifier("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/be/jwt.crt")
-	assert.NoError(t, err)
+	testVer, err := NewVerifier("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/jwt.crt")
+	require.NoError(t, err)
 
 	apiClaims := roles.AuthInfo{
 		User:   "user1",

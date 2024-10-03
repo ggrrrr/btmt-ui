@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -109,14 +110,26 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	out := []authpb.UserListPayload{}
+	out := []*authpb.UserListPayload{}
 	for _, a := range list.Payload() {
-		out = append(out, authpb.UserListPayload{
+		line := &authpb.UserListPayload{
 			Email:       a.Email,
 			Status:      string(a.Status),
 			SystemRoles: a.SystemRoles,
 			CreatedAt:   timestamppb.New(a.CreatedAt),
-		})
+		}
+		fmt.Printf("\t\t handler %v \n", a)
+		if len(a.TenantRoles) > 0 {
+			line.TenantRoles = map[string]*authpb.ListText{}
+			for k := range a.TenantRoles {
+				roles := authpb.ListText{
+					List: a.TenantRoles[k],
+				}
+				line.TenantRoles[k] = &roles
+			}
+		}
+		fmt.Printf("\t\t %v \n", line)
+		out = append(out, line)
 	}
 	logger.InfoCtx(r.Context()).Msg("UserList")
 	web.SendPayload(r.Context(), w, "ok", out)

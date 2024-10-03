@@ -3,12 +3,14 @@ package email
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
+	"github.com/ggrrrr/btmt-ui/be/help"
 	"github.com/stretchr/testify/assert"
 )
+
+var pwd = help.RepoDir()
 
 func Test_WriteTo(t *testing.T) {
 	newLine = []byte("\n")
@@ -25,7 +27,6 @@ func Test_WriteTo(t *testing.T) {
 	err1 := &MailFormatError{}
 	assert.ErrorAs(t, err, &err1)
 
-	pwd := os.Getenv("PWD")
 	mail, _ := createMsg(
 		Rcpt{addr: "asd@asd", name: "From name"},
 		RcptList{Rcpt{addr: "to@to", name: "To name"}},
@@ -52,7 +53,7 @@ MQoyCg==
 --c306cfe3a93593b66e74fae51429f45917f23e2a74f3e70aa042fdec2891--
 `
 	mail.AddHtmlBodyString("asd")
-	mail.AddFile(fmt.Sprintf("%s/../../../test.txt", pwd))
+	mail.AddFile(fmt.Sprintf("%s/test.txt", pwd))
 
 	buf := new(bytes.Buffer)
 	err = mail.writerTo(buf)

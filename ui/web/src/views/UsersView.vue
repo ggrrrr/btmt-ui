@@ -102,7 +102,8 @@ const refs = ref({
     headers: [
         { title: 'Email', key: 'email', align: 'end', sortable: false },
         { title: 'Status', key: 'status', align: 'end' },
-        { title: 'Roles', key: 'system_roles', align: 'end' },
+        { title: 'System Roles', key: 'system_roles', align: 'end' },
+        { title: 'Tenant Roles', key: 'tenant_roles', align: 'end' },
 
         { title: 'Created', key: 'created_at', align: 'end', sortable: false },
         { title: 'Actions', key: 'actions', sortable: false },

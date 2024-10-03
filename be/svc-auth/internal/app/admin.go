@@ -91,6 +91,9 @@ func (ap *Application) UserList(ctx context.Context) (result app.Result[[]ddd.Au
 	}
 
 	logger.InfoCtx(ctx).Msg("UserList")
+	logger.DebugCtx(ctx).
+		Any("list", out).
+		Msg("UserList")
 	return app.ResultWithPayload[[]ddd.AuthPasswd]("ok", out), nil
 }
 

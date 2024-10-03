@@ -142,7 +142,6 @@ func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 	}
 
 	msg.setHeader(headerFrom, from.Formatted())
-	msg.setHeader(headerFrom, from.Formatted())
 	msg.setHeader(headerTo, to.Formatted()...)
 	msg.setHeader(headerSubject, subject)
 
