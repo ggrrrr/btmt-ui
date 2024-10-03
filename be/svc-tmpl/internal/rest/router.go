@@ -47,7 +47,7 @@ func (s *server) GetFile(w http.ResponseWriter, r *http.Request) {
 
 	fileId := chi.URLParam(r, "id")
 	download := r.URL.Query().Get("download")
-	logger.InfoCtx(ctx).
+	logger.DebugCtx(ctx).
 		Str("id", fileId).
 		Msg("rest.GetFile")
 
