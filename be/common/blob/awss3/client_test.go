@@ -23,6 +23,54 @@ func TestListPushFetchHead(t *testing.T) {
 		testFunc func(t *testing.T)
 	}{
 		{
+			name: "ok Push/List",
+			testFunc: func(t *testing.T) {
+				s3c, err := createS3Client(cfg())
+				require.NoError(t, err)
+				s3c.bucketName = testBucket
+				testClient := &Client{
+					s3Clients: map[string]s3Client{
+						"localhost": s3c,
+					},
+				}
+
+				data := "my data"
+				md := blob.BlobInfo{
+					Type:        "some_type",
+					ContentType: "text/plain",
+					Name:        "some-name",
+					Owner:       "user-1",
+					CreatedAt:   time.Now(),
+					ImageInfo: blob.ImageInfo{
+						Width:  10,
+						Height: 123,
+					},
+					ContentLength: int64(len(data)),
+				}
+
+				folderName := "root/folder-1"
+				file1v1 := fmt.Sprintf("%s/file-1:1", folderName)
+				file1v2 := fmt.Sprintf("%s/file-1:2", folderName)
+				file2v1 := fmt.Sprintf("%s/file-2:1", folderName)
+
+				_, err = testClient.Push(ctx, "localhost", file1v1, md, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+				_, err = testClient.Push(ctx, "localhost", file1v2, md, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+				_, err = testClient.Push(ctx, "localhost", file2v1, md, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
+
+				defer deleteAll(ctx, s3c, awsId{path: folderName, id: "file-1"})
+				defer deleteAll(ctx, s3c, awsId{path: folderName, id: "file-2"})
+
+				blobList, err := testClient.List(ctx, "localhost", folderName)
+				require.NoError(t, err)
+				blob.TestBlobInfo("List dir1", t, blobList[0].Info, md, 1000)
+				blob.TestBlobInfo("List dir2", t, blobList[1].Info, md, 1000)
+				blob.TestBlobInfo("List dir3", t, blobList[2].Info, md, 1000)
+
+			},
+		}, {
 			name: "ok Push/Fetch",
 			testFunc: func(t *testing.T) {
 				s3c, err := createS3Client(cfg())
@@ -35,19 +83,25 @@ func TestListPushFetchHead(t *testing.T) {
 				}
 
 				data := "my data"
-				md := &blob.BlobInfo{
-					Type:          "some_type",
-					ContentType:   "text/plain",
-					Name:          "some-name",
-					Owner:         "user-1",
+				md := blob.BlobInfo{
+					Type:        "some_type",
+					ContentType: "text/plain",
+					Name:        "some-name",
+					Owner:       "user-1",
+					CreatedAt:   time.Now(),
+					ImageInfo: blob.ImageInfo{
+						Width:  10,
+						Height: 123,
+					},
 					ContentLength: int64(len(data)),
 				}
 
 				newID, err := testClient.Push(ctx, "localhost", "folder-1/id-1", md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
-				defer deleteAll(ctx, s3c, awsId{folder: "folder-1", id: "id-1"})
-				verID := blob.NewBlobId("folder-1", "id-1", "1")
-				assert.Equal(t, &verID, newID)
+				defer deleteAll(ctx, s3c, awsId{path: "folder-1", id: "id-1"})
+				verID, err := blob.NewBlobId("folder-1", "id-1", "1")
+				require.NoError(t, err)
+				assert.Equal(t, verID, newID)
 
 				blobTest, err := testClient.Fetch(ctx, "localhost", "folder-1/id-1")
 				require.NoError(t, err)
@@ -55,16 +109,17 @@ func TestListPushFetchHead(t *testing.T) {
 
 				blobInfo, err := testClient.Head(ctx, "localhost", "folder-1/id-1:1")
 				require.NoError(t, err)
-				blob.TestBlobInfo(t, blobInfo, md, 1000)
+				blob.TestBlobInfo("head", t, blobInfo, md, 1000)
 
 			},
-		}, {
+		},
+		{
 			name: "ok tenent not found",
 			testFunc: func(t *testing.T) {
 				testClient := &Client{
 					s3Clients: map[string]s3Client{},
 				}
-				_, err := testClient.Push(ctx, "notfound", "asd/asd", &blob.BlobInfo{}, nil)
+				_, err := testClient.Push(ctx, "notfound", "asd/asd", blob.BlobInfo{}, nil)
 				require.Error(t, err)
 				// tenantNotFound := &blob.TenantNotFoundError{}
 				// assert.ErrorAs(t, err, &tenantNotFound)
@@ -92,7 +147,7 @@ func TestListPushFetchHead(t *testing.T) {
 						"localhost": s3c,
 					},
 				}
-				_, err = testClient.Push(ctx, "localhost", "123asd/asd", &blob.BlobInfo{}, nil)
+				_, err = testClient.Push(ctx, "localhost", "123asd/asd", blob.BlobInfo{}, nil)
 				require.Error(t, err)
 				// tenantNotFound := &blob.BlobIdInputError{}
 				// assert.ErrorAsf(t, err, &tenantNotFound, "%#v, %+v", err, err)
@@ -129,6 +184,7 @@ func TestListPushFetchHead(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, tc.testFunc)
+		// return
 	}
 }
 
@@ -149,15 +205,16 @@ func TestListGetPutDelete(t *testing.T) {
 
 				data := "mydata"
 
-				idV1 := awsId{folder: "folder-1", id: "id-1", ver: "1"}
-				idV2 := awsId{folder: "folder-1", id: "id-1", ver: "2"}
-				idV3 := awsId{folder: "folder-1", id: "id-2", ver: "1"}
-				blobInfo := &blob.BlobInfo{
+				idV1 := awsId{path: "folder-1", id: "id-1", ver: "1"}
+				idV2 := awsId{path: "folder-1", id: "id-1", ver: "2"}
+				idV3 := awsId{path: "folder-1", id: "id-2", ver: "1"}
+				blobInfo := blob.BlobInfo{
 					Type:          "some_type",
 					ContentType:   "text/plain",
 					Name:          "some-name",
 					Owner:         "user1",
 					ContentLength: int64(len(data)),
+					CreatedAt:     time.Now(),
 				}
 				_, err = put(ctx, s3c, idV1, blobInfo, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
@@ -175,7 +232,7 @@ func TestListGetPutDelete(t *testing.T) {
 				_, err = put(ctx, s3c, idV2, blobInfo, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
 
-				_, err = list(ctx, s3c, awsId{folder: "folder-1"})
+				_, err = list(ctx, s3c, awsId{path: "folder-1"})
 				require.NoError(t, err)
 
 				list2, err := list(ctx, s3c, idV1)
@@ -191,7 +248,7 @@ func TestListGetPutDelete(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
-				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+				blockId := awsId{path: "not", id: "no", ver: "asd"}
 				result, err := list(ctx, s3c, blockId)
 				require.NoError(t, err)
 				assert.Equal(t, 0, len(result))
@@ -203,7 +260,7 @@ func TestListGetPutDelete(t *testing.T) {
 				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = "notfound"
-				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+				blockId := awsId{path: "not", id: "no", ver: "asd"}
 				_, err = list(ctx, s3c, blockId)
 				require.Error(t, err)
 				// storErr := &blob.StoreNotFoundError{}
@@ -216,7 +273,7 @@ func TestListGetPutDelete(t *testing.T) {
 				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = "notfound"
-				blockId := awsId{folder: "not", id: "no", ver: "asd"}
+				blockId := awsId{path: "not", id: "no", ver: "asd"}
 				_, err = get(ctx, s3c, blockId)
 				require.Error(t, err)
 			},
@@ -227,14 +284,14 @@ func TestListGetPutDelete(t *testing.T) {
 				s3c, err := createS3Client(cfg())
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
-				blockId := awsId{folder: "not", id: "no", ver: ""}
+				blockId := awsId{path: "not", id: "no", ver: ""}
 				_, err = get(ctx, s3c, blockId)
 				require.Error(t, err)
 
 				_, err = head(ctx, s3c, blockId)
 				require.Error(t, err)
 
-				_, err = put(ctx, s3c, blockId, &blob.BlobInfo{}, nil)
+				_, err = put(ctx, s3c, blockId, blob.BlobInfo{}, nil)
 				require.Error(t, err)
 			},
 		},
@@ -247,13 +304,14 @@ func TestListGetPutDelete(t *testing.T) {
 
 				data := "mydata"
 
-				id := awsId{folder: "folder-1", id: "id-1", ver: "1"}
-				blobInfo := &blob.BlobInfo{
+				id := awsId{path: "folder-1", id: "id-1", ver: "1"}
+				blobInfo := blob.BlobInfo{
 					Type:          "some_type",
 					ContentType:   "text/plain",
 					Name:          "some-name",
 					Owner:         "user1",
 					ContentLength: int64(len(data)),
+					CreatedAt:     time.Now(),
 				}
 				newId, err := put(ctx, s3c, id, blobInfo, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
@@ -275,13 +333,13 @@ func TestListGetPutDelete(t *testing.T) {
 				blobResult, err := get(ctx, s3c, id)
 				require.NoError(t, err)
 				blob.TestBlobInfoData(t, blobResult, blobInfo, data, 1000)
-				assert.Equal(t, id.folder, blobResult.Id.Folder())
-				assert.Equal(t, id.id, blobResult.Id.Id())
+				assert.Equal(t, id.path, blobResult.Id.Path())
+				assert.Equal(t, id.id, blobResult.Id.Name())
 				assert.Equal(t, id.ver, blobResult.Id.Version())
 
 				headMd, err := head(ctx, s3c, id)
 				require.NoError(t, err)
-				blob.TestBlobInfo(t, headMd, blobInfo, 1000)
+				blob.TestBlobInfo("head", t, headMd, blobInfo, 1000)
 
 			},
 		},

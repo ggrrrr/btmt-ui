@@ -1,6 +1,7 @@
 package blob
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
@@ -8,7 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestFileNameFilter(t *testing.T) {
+	newName := FileNameFilter("file cdfile ASD (12) .png")
+	require.Equal(t, "filecdfileASD12.png", newName)
+}
+
 func TestBasicTypes(t *testing.T) {
+	id := BlobId{
+		path:    "f",
+		name:    "id",
+		version: "ver",
+	}
+	assert.Equal(t, "f", id.Path())
+	assert.Equal(t, "id", id.Name())
+	assert.Equal(t, "ver", id.Version())
+	assert.Equal(t, "f/id:ver", id.String())
+	assert.Equal(t, "f/id", id.Key())
+	id.SetVersion("")
+	assert.Equal(t, "f/id", id.String())
+
 	tests := []struct {
 		name string
 		f    func(t *testing.T)
@@ -16,22 +35,48 @@ func TestBasicTypes(t *testing.T) {
 		{
 			name: "blob id",
 			f: func(t *testing.T) {
-				id := BlobId{
-					folder:  "f",
-					id:      "id",
-					version: "ver",
-				}
-				assert.Equal(t, "f", id.Folder())
-				assert.Equal(t, "id", id.Id())
-				assert.Equal(t, "ver", id.Version())
-				assert.Equal(t, "f/id:ver", id.String())
-				assert.Equal(t, "f/id", id.Key())
-				id.SetVersion("")
-				assert.Equal(t, "f/id", id.String())
-
-				id2 := NewBlobId("folder", "id", "ver")
+				id2, err := NewBlobId("folder", "id", "ver")
+				require.NoError(t, err)
 				assert.Equal(t, "folder/id:ver", id2.String())
 
+			},
+		},
+		{
+			name: "err folder",
+			f: func(t *testing.T) {
+				_, err := NewBlobId("folder ", "id", "ver")
+				require.Error(t, err)
+				// assert.Equal(t, "folder/id:ver", id2.String())
+				_, err = NewBlobId(" folder", "id", "ver")
+				require.Error(t, err)
+				// assert.Equal(t, "folder/id:ver", id2.String())
+				_, err = NewBlobId("fol:der", "id", "ver")
+				require.Error(t, err)
+				_, err = NewBlobId("fol der", "id", "ver")
+				require.Error(t, err)
+
+			},
+		},
+		{
+			name: "err name",
+			f: func(t *testing.T) {
+				_, err := NewBlobId("folder", "asd/asd", "ver")
+				require.Error(t, err)
+				_, err = NewBlobId("folder", "asd asd", "ver")
+				require.Error(t, err)
+				_, err = NewBlobId("folder", "asd_asd", "ver")
+				require.Error(t, err)
+			},
+		},
+		{
+			name: "err folder",
+			f: func(t *testing.T) {
+				_, err := NewBlobId("folde", "id", "ver:")
+				require.Error(t, err)
+				_, err = NewBlobId("folde", "id", "ver asd")
+				require.Error(t, err)
+				_, err = NewBlobId("folde", "id", "ver/asd")
+				require.Error(t, err)
 			},
 		},
 	}
@@ -42,6 +87,7 @@ func TestBasicTypes(t *testing.T) {
 }
 
 func TestParseBlobId(t *testing.T) {
+
 	tests := []struct {
 		name    string
 		fromStr string
@@ -51,10 +97,10 @@ func TestParseBlobId(t *testing.T) {
 	}{
 		{
 			name:    "ok",
-			fromStr: "Mydir-1/My-id:1",
+			fromStr: "Mydir-1/Mydir-2/My-id:1",
 			id: BlobId{
-				folder:  "Mydir-1",
-				id:      "My-id",
+				path:    "Mydir-1/Mydir-2",
+				name:    "My-id",
 				version: "1",
 			},
 			err: nil,
@@ -63,18 +109,18 @@ func TestParseBlobId(t *testing.T) {
 			name:    "ok no ver",
 			fromStr: "Mydir-1/My-id",
 			id: BlobId{
-				folder:  "Mydir-1",
-				id:      "My-id",
+				path:    "Mydir-1",
+				name:    "My-id",
 				version: "",
 			},
 			err: nil,
 		},
 		{
 			name:    "ok empty ver",
-			fromStr: "Mydir-1/My-id@",
+			fromStr: "Mydir-1/My-id:",
 			id: BlobId{
-				folder:  "Mydir-1",
-				id:      "My-id",
+				path:    "Mydir-1",
+				name:    "My-id",
 				version: "",
 			},
 			err: nil,
@@ -89,9 +135,9 @@ func TestParseBlobId(t *testing.T) {
 		{
 			name:    "from",
 			fromStr: "from",
-			// id:      ,
+			id:      BlobId{path: "from", name: "", version: ""},
 			// err: &BlobIdInputError{},
-			err: &app.AppError{},
+			err: nil,
 		},
 		{
 			name:    "123/123@123",
@@ -120,15 +166,15 @@ func TestParseBlobId(t *testing.T) {
 			// id:      nil,
 			// err:  &BlobIdInputError{},
 			err:  &app.AppError{},
-			skip: true,
+			skip: false,
 		},
 		{
 			name:    "asd/asd asd",
 			fromStr: "asd/asd asd",
 			// id:      nil,
 			// err:  &BlobIdInputError{},
-			err:  &app.AppError{},
-			skip: true,
+			err: &app.AppError{},
+			// skip: true,
 		},
 	}
 	for _, tc := range tests {
@@ -139,7 +185,8 @@ func TestParseBlobId(t *testing.T) {
 				t.Skipf("skip from:%s  err[%s]: toId:%v \n", tc.fromStr, err, toId.String())
 			}
 			if tc.err != nil {
-				require.Error(t, err)
+				require.Errorf(t, err, "result: %+v", toId)
+
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tc.id, toId)
@@ -155,42 +202,81 @@ func TestParseBlobId(t *testing.T) {
 	require.Equal(t, "folder1/id-1", testId2.String())
 }
 
-func TestBlockIdRefExp(t *testing.T) {
+func TestNameRegExp(t *testing.T) {
 	tests := []struct {
-		fromStr string
-		result  []string
+		fromStr  string
+		expected bool
 	}{
 		{
-			fromStr: "",
-			result:  nil,
+			fromStr:  "asdasda/sdas/d123-123.png:123",
+			expected: false,
 		},
 		{
-			fromStr: "asd",
-			result:  nil,
+			fromStr:  "asdasdasdasd123123-/asdea123asd123:123123",
+			expected: false,
 		},
 		{
-			fromStr: "asd/id",
-			result:  []string{"asd/id", "asd", "id", ""},
+			fromStr:  "asdas123123ASD/asASDd-asd123:aASDsd123123",
+			expected: false,
 		},
 		{
-			fromStr: "folder/id:ver1",
-			result:  []string{"folder/id:ver1", "folder", "id", "ver1"},
+			fromStr:  " asd",
+			expected: true,
 		},
 		{
-			fromStr: "folder/id:22",
-			result:  []string{"folder/id:22", "folder", "id", "22"},
+			fromStr:  "asd ",
+			expected: true,
+		},
+		//
+		{
+			fromStr:  "a sd/a sd asd",
+			expected: true,
 		},
 		{
-			fromStr: "1folder/id:2",
-			result:  nil,
+			fromStr:  "as#d",
+			expected: true,
 		},
 		{
-			fromStr: "folder/1id:2",
-			result:  nil,
+			fromStr:  `as%dasd`,
+			expected: true,
 		},
+		{
+			fromStr:  "as`d",
+			expected: true,
+		},
+		{
+			fromStr:  "as[d",
+			expected: true,
+		},
+		{
+			fromStr:  "as]d",
+			expected: true,
+		},
+		{
+			fromStr:  `as\d`,
+			expected: true,
+		},
+		{
+			fromStr:  `as=d`,
+			expected: true,
+		},
+		{
+			fromStr:  `folder1/folder2 /name.png:1`,
+			expected: true,
+		},
+		//
+		// {
+		// fromStr:  "a sdasdasdasd123123-/asdea123asd123:123123",
+		// expected: false,
+		// },
 	}
+
 	for _, tc := range tests {
-		result := BlockIdRefExp.FindStringSubmatch(tc.fromStr)
-		assert.Equalf(t, tc.result, result, "fromStr: %s\n\t\t%#v\n\t\t%#v", tc.fromStr, tc.result, result)
+		result := NotAllowedCharRegEx.MatchString(tc.fromStr)
+		// result := NameRegExp.FindAllStringSubmatch(tc.fromStr, 10)
+		if !assert.Equalf(t, tc.expected, result, "input string:[%s] dost not Match %+v", tc.fromStr, tc.expected) {
+			submatch := NotAllowedCharRegEx.FindAllStringSubmatch(tc.fromStr, 10)
+			fmt.Printf("\n\t\tsubmatch: %+v \n", submatch)
+		}
 	}
 }

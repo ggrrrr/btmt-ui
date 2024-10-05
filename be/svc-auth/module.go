@@ -123,6 +123,7 @@ func initPgRepo(s system.Service) (ddd.AuthPasswdRepo, error) {
 }
 
 func Root(ctx context.Context, s system.Service) error {
+	logger.Info().Msg("Root")
 	a, err := InitApp(ctx, s)
 	if err != nil {
 		return err

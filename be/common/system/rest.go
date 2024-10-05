@@ -80,7 +80,7 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 				web.SendError(r.Context(), w, app.UnauthenticatedError(err.Error(), nil))
 				return
 			}
-			infoLog.Str("user", authInfo.User)
+			infoLog.Any("authInfo", authInfo)
 		}
 		infoLog.
 			Any("Method", r.Method).

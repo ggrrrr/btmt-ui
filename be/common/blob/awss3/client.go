@@ -77,7 +77,7 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 	}, nil
 }
 
-func (client *Client) Fetch(ctx context.Context, tenant string, idString string) (*blob.FetchResult, error) {
+func (client *Client) Fetch(ctx context.Context, tenant string, idString string) (blob.FetchResult, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Fetch", nil, logger.AttributeString("id", idString))
 	defer func() {
@@ -86,12 +86,12 @@ func (client *Client) Fetch(ctx context.Context, tenant string, idString string)
 
 	c, err := client.getClient(tenant)
 	if err != nil {
-		return nil, err
+		return blob.FetchResult{}, err
 	}
 
 	id, err := awsIdFromString(idString)
 	if err != nil {
-		return nil, err
+		return blob.FetchResult{}, err
 	}
 
 	logger.InfoCtx(ctx).
@@ -100,29 +100,72 @@ func (client *Client) Fetch(ctx context.Context, tenant string, idString string)
 
 	versions, err := list(ctx, c, id)
 	if err != nil {
-		return nil, err
+		return blob.FetchResult{}, err
 	}
 	if len(versions) == 0 {
-		return nil, app.ItemNotFoundError("blob", id.idFolder())
+		return blob.FetchResult{}, app.ItemNotFoundError("blob", id.idPath())
 	}
 
 	lastVersion := versions[len(versions)-1]
 	if id.ver != "" {
 		if lastVersion.ver != id.ver {
-			return nil, app.ItemNotFoundError("blob.version", id.String())
+			return blob.FetchResult{}, app.ItemNotFoundError("blob.version", id.String())
 		}
 	}
 
 	object, err := get(ctx, c, lastVersion)
 	if err != nil {
-		return nil, err
+		return blob.FetchResult{}, err
 	}
 	return object, nil
 }
 
-func (client *Client) Head(ctx context.Context, tenant string, idString string) (*blob.BlobInfo, error) {
+func (client *Client) Head(ctx context.Context, tenant string, idString string) (blob.BlobInfo, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Head", nil, logger.AttributeString("id", idString))
+	defer func() {
+		span.End(err)
+	}()
+
+	c, err := client.getClient(tenant)
+	if err != nil {
+		return blob.BlobInfo{}, err
+	}
+
+	id, err := awsIdFromString(idString)
+	if err != nil {
+		return blob.BlobInfo{}, err
+	}
+
+	logger.InfoCtx(ctx).
+		Str("id", id.String()).
+		Msg("blob.Head")
+
+	versions, err := list(ctx, c, id)
+	if err != nil {
+		return blob.BlobInfo{}, err
+	}
+	if len(versions) == 0 {
+		return blob.BlobInfo{}, app.ItemNotFoundError("blob", id.idPath())
+	}
+
+	lastVersion := versions[len(versions)-1]
+	if id.ver != "" {
+		if lastVersion.ver != id.ver {
+			return blob.BlobInfo{}, app.ItemNotFoundError("blob version", id.String())
+		}
+	}
+
+	md, err := head(ctx, c, lastVersion)
+	if err != nil {
+		return blob.BlobInfo{}, err
+	}
+	return md, nil
+}
+
+func (client *Client) List(ctx context.Context, tenant string, idString string) ([]blob.FetchResult, error) {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.ListDir", nil, logger.AttributeString("id", idString))
 	defer func() {
 		span.End(err)
 	}()
@@ -141,43 +184,56 @@ func (client *Client) Head(ctx context.Context, tenant string, idString string) 
 		Str("id", id.String()).
 		Msg("blob.Head")
 
-	versions, err := list(ctx, c, id)
+	blobs, err := list(ctx, c, id)
 	if err != nil {
 		return nil, err
 	}
-	if len(versions) == 0 {
-		return nil, app.ItemNotFoundError("blob", id.idFolder())
+	if len(blobs) == 0 {
+		return nil, app.ItemNotFoundError("blob", id.idPath())
 	}
 
-	lastVersion := versions[len(versions)-1]
-	if id.ver != "" {
-		if lastVersion.ver != id.ver {
-			return nil, app.ItemNotFoundError("blob version", id.String())
+	out := []blob.FetchResult{}
+	for _, v := range blobs {
+		fmt.Printf("list \t\t%v \n", v)
+		blobId, err := blob.NewBlobId(v.path, v.id, v.ver)
+		if err != nil {
+			logger.ErrorCtx(ctx, err).Str("id", v.String()).Msg("awss3.blob.NewBlobId")
+			continue
 		}
+		blobInfo, err := head(ctx, c, v)
+		if err != nil {
+			logger.ErrorCtx(ctx, err).Str("id", v.String()).Msg("awss3.head")
+			continue
+		}
+		out = append(out, blob.FetchResult{
+			Id:   blobId,
+			Info: blobInfo,
+		})
 	}
 
-	md, err := head(ctx, c, lastVersion)
-	if err != nil {
-		return nil, err
-	}
-	return md, nil
+	return out, nil
 }
 
-func (client *Client) Push(ctx context.Context, tenant string, idString string, blobInfo *blob.BlobInfo, reader io.ReadSeeker) (*blob.BlobId, error) {
+func (client *Client) Push(ctx context.Context, tenant string, idString string, blobInfo blob.BlobInfo, reader io.ReadSeeker) (blob.BlobId, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Push", nil, logger.AttributeString("id", idString))
 	defer func() {
 		span.End(err)
 	}()
 
+	if reader == nil {
+		err = fmt.Errorf("reader is nil")
+		return blob.BlobId{}, err
+	}
+
 	c, err := client.getClient(tenant)
 	if err != nil {
-		return nil, err
+		return blob.BlobId{}, err
 	}
 
 	id, err := awsIdFromString(idString)
 	if err != nil {
-		return nil, err
+		return blob.BlobId{}, err
 	}
 
 	logger.InfoCtx(ctx).
@@ -186,7 +242,7 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 
 	objects, err := list(ctx, c, id)
 	if err != nil {
-		return nil, err
+		return blob.BlobId{}, err
 	}
 
 	// TODO: add error if we need to overwrite
@@ -195,8 +251,17 @@ func (client *Client) Push(ctx context.Context, tenant string, idString string, 
 	id.ver = newVer
 
 	newId, err := put(ctx, c, id, blobInfo, reader)
-	blobId := blob.NewBlobId(newId.folder, newId.id, newId.ver)
-	return &blobId, err
+	if err != nil {
+		return blob.BlobId{}, err
+	}
+
+	newBlobId, err := blob.NewBlobId(newId.path, newId.id, newId.ver)
+	if err != nil {
+		err = fmt.Errorf("awss3.NewBlobId[%s]: %w", id.String(), err)
+		return blob.BlobId{}, err
+	}
+
+	return newBlobId, err
 }
 
 func (c *Client) getClient(tenant string) (s3Client, error) {

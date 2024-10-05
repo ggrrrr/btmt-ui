@@ -85,3 +85,23 @@ func ErrorCtx(ctx context.Context, err error) *zerolog.Event {
 	l := log.Error().Err(err)
 	return addTrace(l, ctx)
 }
+
+func IsDebug() bool {
+	switch log.GetLevel() {
+	case zerolog.DebugLevel:
+		return true
+	case zerolog.TraceLevel:
+		return true
+	}
+
+	return false
+}
+
+func IsTrace() bool {
+	switch log.GetLevel() {
+	case zerolog.TraceLevel:
+		return true
+	}
+
+	return false
+}

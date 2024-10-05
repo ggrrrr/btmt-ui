@@ -6,7 +6,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
-type AttachmentWriterTo struct {
+type FileWriterTo struct {
 	ContentType string
 	Version     string
 	Name        string
@@ -32,4 +32,5 @@ type Tmpl struct {
 	Name        string
 	Body        string
 	Attachments map[string]string
+	Images      map[string]string
 }

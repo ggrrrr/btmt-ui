@@ -25,7 +25,7 @@ func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
 }
 
 func Root(ctx context.Context, s system.Service) error {
-	logger.Info().Msg("svc-tmpl")
+	logger.Info().Msg("Root")
 
 	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.AwsConfig{
 		Region:   "us-east-1",
@@ -35,7 +35,7 @@ func Root(ctx context.Context, s system.Service) error {
 		return err
 	}
 
-	a, _ := app.New(app.WithBlobFetcher(blobClient))
+	a, _ := app.New(app.WithBlobStore(blobClient))
 
 	restApp := rest.New(a)
 	s.Mux().Mount("/tmpl", restApp.Router())

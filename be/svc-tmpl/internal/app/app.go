@@ -2,32 +2,41 @@ package app
 
 import (
 	"context"
-	"fmt"
-	"io"
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
-type OptionsFunc func(a *App) error
+type (
+	OptionsFunc func(a *App) error
 
-type App struct {
-	blobFetcher blob.Fetcher
-}
+	App struct {
+		appPolices   roles.AppPolices
+		blobFetcher  blob.Store
+		imagesFolder string
+	}
+)
 
 func New(opts ...OptionsFunc) (*App, error) {
-	a := &App{}
+	a := &App{
+		imagesFolder: "images",
+	}
 	for _, optFunc := range opts {
 		err := optFunc(a)
 		if err != nil {
 			return nil, err
 		}
 	}
+	if a.appPolices == nil {
+		logger.Warn().Msg("use mock AppPolices")
+		a.appPolices = roles.NewAppPolices()
+	}
 	return a, nil
 }
 
-func WithBlobFetcher(blobFetcher blob.Fetcher) OptionsFunc {
+func WithBlobStore(blobFetcher blob.Store) OptionsFunc {
 	return func(a *App) error {
 		a.blobFetcher = blobFetcher
 		return nil
@@ -54,54 +63,6 @@ func (a *App) GetTmpl(ctx context.Context, tmplId string, tmplVersion string) (*
 		## item 1 {{  }}
 		## Footers`,
 	}, nil
-}
-
-type filePipe struct {
-	reader io.ReadCloser
-}
-
-func (f *filePipe) WriteTo(w io.Writer) (int64, error) {
-	defer f.reader.Close()
-	return io.Copy(w, f.reader)
-}
-
-func (a *App) GetFile(ctx context.Context, fileId string) (*ddd.AttachmentWriterTo, error) {
-	var err error
-	ctx, span := logger.Span(ctx, "GetFile", nil)
-	defer func() {
-		span.End(err)
-	}()
-
-	// fileName := "glass-mug-variant.png"
-	// p := "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui"
-	// file, err := os.Open(fmt.Sprintf("%s/%s", p, fileName))
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	logger.InfoCtx(ctx).
-		Any("info", fileId).
-		Msg("Fetch")
-
-	res, err := a.blobFetcher.Fetch(ctx, "localhost", fmt.Sprintf("images/%s", fileId))
-	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Fetch")
-		return nil, err
-	}
-	logger.InfoCtx(ctx).
-		Any("info", res).
-		Any("id", fileId).
-		Msg("Fetch")
-
-	return &ddd.AttachmentWriterTo{
-			ContentType: "image/png",
-			Version:     res.Id.Version(),
-			Name:        res.Info.Name,
-			WriterTo: &filePipe{
-				reader: res.ReadCloser,
-			},
-		},
-		nil
 }
 
 // func (*App) Render(ctx context.Context, templId string, values any) (ddd.ReanderResponse, error) {

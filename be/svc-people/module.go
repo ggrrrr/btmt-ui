@@ -20,7 +20,7 @@ type Module struct{}
 var _ (system.Module) = (*Module)(nil)
 
 func (*Module) Name() string {
-	return "svc-auth"
+	return "svc-people"
 }
 
 func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
@@ -51,7 +51,7 @@ func InitApp(ctx context.Context, cfg config.AppConfig) (app.App, []waiter.Clean
 }
 
 func Root(ctx context.Context, s system.Service) error {
-	logger.Info().Msg("svc-auth")
+	logger.Info().Msg("Root")
 	a, fns, err := InitApp(ctx, s.Config())
 	s.Waiter().Cleanup(fns...)
 	if err != nil {
