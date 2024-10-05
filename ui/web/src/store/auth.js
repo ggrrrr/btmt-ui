@@ -71,11 +71,13 @@ export const useLoginStore = defineStore({
 
 const fetchAPIFunc = function (url, opts = {}) {
   let loginStore = useLoginStore();
-  let headers = {
-    "Content-Type": "application/json",
-  };
+  let headers = {};
   if (loginStore.token) {
     headers["Authorization"] = "Bearer " + loginStore.token;
+  }
+
+  if (opts.formData != undefined) {
+    headers["Content-Type"] = "application/json";
   }
 
   const options = {

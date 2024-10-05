@@ -2,8 +2,8 @@
   <v-main>
     <v-form>
       <v-text-field v-model="refs.file.fileName"></v-text-field>
-      <v-file-input accept="image/*" show-size @change="formChange" v-model="refs.file.fileForm" type='file'
-        name="image" label="Image file" variant="solo-inverted" @update="inputFileUpload"></v-file-input>
+      <v-file-input show-size @change="formChange" v-model="refs.file.fileForm" type='file' name="image"
+        label="Image file" variant="solo-inverted" @update="inputFileUpload"></v-file-input>
     </v-form>
     <BtnLoadData @click="inputFileUpload" text="Upload"></BtnLoadData>
   </v-main>
@@ -12,9 +12,11 @@
 <script setup>
 import { ref } from 'vue'
 import BtnLoadData from '@/components/BtnLoadData.vue';
-import { useLoginStore } from "@/store/auth";
-const loginStore = useLoginStore();
 
+import { fetchAPI } from "@/store/auth";
+import { useConfig } from "@/store/app";
+
+const config = useConfig;
 
 const refs = ref({
   file: {
@@ -24,9 +26,14 @@ const refs = ref({
 })
 
 function formChange() {
+  console.log("file", refs.value.file.fileForm);
+  if (refs.value.file.fileForm) {
+    console.log("fileForm empty")
+    return
+  }
+
   const regexpSize = /[^0-9a-z\-.]/gi;
 
-  console.log("file", refs.value.file.fileForm[0]);
 
   if (refs.value.file.fileForm[0].name) {
     const match = refs.value.file.fileForm[0].name.replace(regexpSize, '');
@@ -36,26 +43,29 @@ function formChange() {
 
 }
 
-function inputFileUpload() {
-  console.log('inputFileChange', refs.value.file.fileForm[0])
-  console.log('inputFileChange', refs.value.file.fileName)
+async function inputFileUpload() {
+  console.log('fileForm', refs.value.file.fileForm)
 
-  let headers = {}
-  let formData = new FormData();
-
-  if (loginStore.token) {
-    headers["Authorization"] = "Bearer " + loginStore.token;
+  if (refs.value.file.fileForm == null) {
+    console.log("no files")
+    return
   }
 
+  let formData = new FormData();
   formData.append("file", refs.value.file.fileForm[0]);
-  formData.append("file", refs.value.file.fileName);
-  let options = {
+  // formData.append("file", refs.value.file.fileName);
+  let request = {
     method: 'POST',
     body: formData,
-    headers: headers,
   };
-  fetch('http://localhost:8010/tmpl/image', options).then(response => response.json())
-    .then(data => console.log(data));
+  const url = config.BASE_URL + "/tmpl/image";
+  await fetchAPI(url, request)
+    .then((result) => {
+      console.log("file.result", result)
+    }).finally(() => {
+      console.log("file.result", "finally")
+    });
+
 }
 
 </script>

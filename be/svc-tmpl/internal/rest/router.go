@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	appError "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -82,6 +83,7 @@ func (s *server) UploadImage(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
+	time.Sleep(5 * time.Second)
 	web.SendPayload(ctx, w, "ok", nil)
 
 }
