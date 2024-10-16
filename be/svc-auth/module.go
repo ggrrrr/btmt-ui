@@ -100,7 +100,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 	return a, nil
 }
 
-func initAwsRepo(ctx context.Context, w waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
+func initAwsRepo(_ context.Context, _ waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
 	repo, err := dynamodb.New(cfg.Aws, cfg.Dynamodb)
 	if err != nil {
 		logger.Error(err).Msg("initAwsRepo error")

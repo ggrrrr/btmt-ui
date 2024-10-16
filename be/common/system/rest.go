@@ -7,11 +7,6 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-	oteltrace "go.opentelemetry.io/otel/trace"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/riandyrn/otelchi"
@@ -24,26 +19,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 )
 
-// https://github.com/Ecostack/otelchi/blob/master/middleware.go
-func (s *System) httpMiddlewareOtel(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-
-		ctx, span := logger.Tracer().Start(
-			ctx, r.RequestURI,
-			oteltrace.WithAttributes(semconv.NetAttributesFromHTTPRequest("tcp", r)...),
-			oteltrace.WithAttributes(semconv.EndUserAttributesFromHTTPRequest(r)...),
-			oteltrace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest("rest", "", r)...),
-			oteltrace.WithSpanKind(oteltrace.SpanKindServer),
-		)
-		defer span.End()
-		r = r.WithContext(ctx)
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (s *System) httpRecovery(next http.Handler) http.Handler {
+func (s *System) httpHandlerRecoverer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			err := recover()
@@ -65,7 +41,10 @@ func (s *System) httpRecovery(next http.Handler) http.Handler {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write(jsonBody)
+				_, err = w.Write(jsonBody)
+				if err != nil {
+					fmt.Printf("unable to write recover response %s", err)
+				}
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -141,11 +120,13 @@ func (s *System) initMux() {
 	s.mux.Use(middleware.URLFormat)
 	s.mux.Use(s.httpHandlerCORS)
 	s.mux.Use(middleware.Logger)
-	s.mux.Use(middleware.Recoverer)
+	// s.mux.Use(middleware.Recoverer)
+	s.mux.Use(s.httpHandlerRecoverer)
 	s.mux.Use(middleware.RealIP)
 	s.mux.Use(s.httpHandlerAuth)
 	s.mux.Use(middleware.Heartbeat("/liveness"))
 
+	// or use https://github.com/Ecostack/otelchi/blob/master/middleware.go
 	if s.cfg.Otel.Enabled {
 		s.mux.Use(otelchi.Middleware("rest"))
 	}

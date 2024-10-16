@@ -192,10 +192,10 @@ func TestMain(t *testing.T) {
 	}
 
 	// runCount, err := meter.Int64Counter("run", metric.WithDescription("The number of times the iteration ran"))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	// Work begins
 	ctx, span := tracer.Start(

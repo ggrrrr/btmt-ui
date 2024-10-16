@@ -90,7 +90,7 @@ func TestServer(t *testing.T) {
 
 }
 
-func testServer(ctx context.Context, app app.App) (authpb.AuthSvcClient, func()) {
+func testServer(_ context.Context, app app.App) (authpb.AuthSvcClient, func()) {
 	buffer := 101024 * 1024
 	lis := bufconn.Listen(buffer)
 
