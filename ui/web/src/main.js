@@ -11,6 +11,8 @@ import { registerPlugins } from "@/plugins";
 // import App from "./App.vue";
 import App from "./App.vue";
 
+// console.log("asdasd", Vue.http.options.root);
+
 // Composables
 import { createApp } from "vue";
 

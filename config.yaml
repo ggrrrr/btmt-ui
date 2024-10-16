@@ -12,7 +12,7 @@ postgres:
 # region: us-east-1
 # endpoint: http://localhost:4566
 otel:
-  Enabled: true
+  Enabled: false
 jwt:
   ttl: 1h
   crtFile: jwt.crt

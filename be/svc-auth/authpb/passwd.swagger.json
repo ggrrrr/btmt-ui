@@ -347,6 +347,10 @@
         },
         "token": {
           "type": "string"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },

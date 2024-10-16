@@ -20,20 +20,20 @@ type (
 	}
 
 	appJwt struct {
-		Roles  []string `json:"roles"`
-		Tenant string   `json:"tenant"`
+		Roles []string `json:"roles"`
+		Realm string   `json:"realm"`
 		jwt.RegisteredClaims
 	}
 
 	Signer interface {
-		Sign(claims roles.AuthInfo) (string, error)
+		Sign(claims roles.AuthInfo) (string, time.Time, error)
 	}
 )
 
 func fromAuthInfo(from roles.AuthInfo) *appJwt {
 	out := appJwt{
 		Roles:            []string{},
-		Tenant:           string(from.Tenant),
+		Realm:            string(from.Realm),
 		RegisteredClaims: jwt.RegisteredClaims{Subject: from.User},
 	}
 	for _, v := range from.Roles {
@@ -68,14 +68,15 @@ func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
 	}, nil
 }
 
-func (c *signer) Sign(authInfo roles.AuthInfo) (string, error) {
+func (c *signer) Sign(authInfo roles.AuthInfo) (string, time.Time, error) {
+	expiresAt := time.Now().UTC().Add(c.ttl)
 	claims := fromAuthInfo(authInfo)
-	claims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(c.ttl))
+	claims.ExpiresAt = jwt.NewNumericDate(expiresAt)
 	myToken := jwt.NewWithClaims(jwt.GetSigningMethod(c.signMethod), claims)
 	tokenString, err := myToken.SignedString(c.signKey)
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
 	encoded := base64.StdEncoding.EncodeToString([]byte(tokenString))
-	return encoded, nil
+	return encoded, expiresAt, nil
 }

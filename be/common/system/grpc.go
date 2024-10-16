@@ -34,7 +34,8 @@ func (s *System) WaitForGRPC(ctx context.Context) error {
 	group.Go(func() error {
 		logger.Info().Str("address", addr).Msg("grpc started")
 		defer fmt.Println("rpc server shutdown")
-		if err := s.RPC().Serve(listener); err != nil && err != grpc.ErrServerStopped {
+		err := s.RPC().Serve(listener)
+		if err != nil && err != grpc.ErrServerStopped {
 			return err
 		}
 		return nil
@@ -51,6 +52,7 @@ func (s *System) WaitForGRPC(ctx context.Context) error {
 		select {
 		case <-timeout.C:
 			// Force it to stop
+			logger.Info().Str("address", addr).Msg("timeout")
 			s.RPC().Stop()
 			return fmt.Errorf("grpc server failed to stop gracefully")
 		case <-stopped:

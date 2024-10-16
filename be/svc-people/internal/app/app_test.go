@@ -24,7 +24,7 @@ type (
 
 func TestSave(t *testing.T) {
 	rootCtx := context.Background()
-	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemTenant, "mock", roles.Device{}))
+	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "mock", roles.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 
 	cfg := mgo.MgoTestCfg()

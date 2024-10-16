@@ -39,7 +39,13 @@ const routes = [
         // route level code-splitting
         // this generates a separate chunk (Home-[hash].js) for this route
         // which is lazy-loaded when the route is visited.
-        component: () => import("@/views/TemplatesView.vue"),
+        children: [
+          {
+            path: "/templates/images",
+            component: () => import("@/modules/tmpl/views/ImagesView.vue"),
+          },
+        ],
+        component: () => import("@/modules/tmpl/views/TemplatesView.vue"),
       },
       {
         path: "/todo",

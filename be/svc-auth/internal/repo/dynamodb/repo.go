@@ -243,7 +243,7 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 				SS: aws.StringSlice(auth.SystemRoles),
 			},
 			":tenant_roles": {
-				M: toAwsMap(auth.TenantRoles),
+				M: toAwsMap(auth.RealmRoles),
 			},
 		},
 		TableName: aws.String(r.table()),

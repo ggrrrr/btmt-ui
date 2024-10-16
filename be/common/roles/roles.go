@@ -19,8 +19,8 @@ type (
 )
 
 const (
-	RoleAdmin    string = "admin"
-	SystemTenant string = "localhost"
+	RoleAdmin   string = "admin"
+	SystemRealm string = "localhost"
 )
 
 func HasRole(role string, roles []string) bool {

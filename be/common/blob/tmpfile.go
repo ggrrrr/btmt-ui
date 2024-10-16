@@ -9,9 +9,10 @@ import (
 )
 
 type TempFile struct {
-	FileName     string
-	TempFileName string
-	ContentType  string
+	FileName      string
+	TempFileName  string
+	ContentType   string
+	ContentLength int64
 }
 
 func (f TempFile) Delete(ctx context.Context) {

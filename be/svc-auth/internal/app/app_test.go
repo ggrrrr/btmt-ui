@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,7 +54,7 @@ func cfg() (awsclient.AwsConfig, awsclient.DynamodbConfig) {
 
 func TestLogin(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
 	// store, err := dynamodb.New(cfg())
@@ -91,7 +92,8 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T) {
 				jwt, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
 				assert.NoError(t, err)
-				assert.Equal(t, jwt.Payload(), AuthToken("ok"))
+				testAuthToken(t, jwt, ddd.AuthToken{Token: "ok", ExpiresAt: time.Now().Add(1 * time.Hour)})
+
 			},
 		},
 		{
@@ -132,7 +134,7 @@ func TestLogin(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 	ctxNoEmail := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{})
 
@@ -216,7 +218,7 @@ func TestValidate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
 	store, err := dynamodb.New(cfg())
@@ -240,7 +242,7 @@ func TestUpdate(t *testing.T) {
 
 	jwt, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
 	assert.NoError(t, err)
-	assert.Equal(t, jwt.Payload(), AuthToken("ok"))
+	testAuthToken(t, jwt, ddd.AuthToken{Token: "ok", ExpiresAt: time.Now().Add(1 * time.Hour)})
 
 	err = testApp.UserChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
 	assert.ErrorIs(t, err, ErrAuthBadPassword)
@@ -250,5 +252,11 @@ func TestUpdate(t *testing.T) {
 
 	jwt, err = testApp.LoginPasswd(ctx, authItem.Email, "newpass")
 	assert.NoError(t, err)
-	assert.Equal(t, jwt.Payload(), AuthToken("ok"))
+	testAuthToken(t, jwt, ddd.AuthToken{Token: "ok", ExpiresAt: time.Now().Add(1 * time.Hour)})
+}
+
+func testAuthToken(t *testing.T, expected ddd.AuthToken, actual ddd.AuthToken) bool {
+	assert.WithinDuration(t, expected.ExpiresAt, actual.ExpiresAt, 1*time.Second)
+	assert.Equal(t, expected.Token, actual.Token)
+	return true
 }

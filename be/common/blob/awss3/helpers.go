@@ -11,9 +11,10 @@ import (
 )
 
 type awsId struct {
-	path string
-	id   string
-	ver  string
+	path      string
+	id        string
+	ver       string
+	createdAt time.Time
 }
 
 func timeInLocal(from *time.Time) time.Time {
@@ -24,21 +25,16 @@ func timeInLocal(from *time.Time) time.Time {
 	return to
 }
 
-func awsIdFromString(fromStr string) (awsId, error) {
-	blobId, err := blob.ParseBlobId(fromStr)
-	if err != nil {
-		return awsId{}, err
-	}
+func awsIdFromString(blobId blob.BlobId) awsId {
 	return awsId{
 		path: blobId.Path(),
-		id:   blobId.Name(),
+		id:   blobId.Id(),
 		ver:  blobId.Version(),
-	}, nil
-
+	}
 }
 
 // folder/id
-func (i awsId) idPath() string {
+func (i awsId) pathId() string {
 	return fmt.Sprintf("%s/%s", i.path, i.id)
 }
 
@@ -55,8 +51,8 @@ func (i awsId) String() string {
 	return i.keyVer()
 }
 
-func fromAwsHeadToBlobInfo(result *s3.HeadObjectOutput) blob.BlobInfo {
-	out := blob.BlobInfo{
+func fromAwsHeadToBlobInfo(result *s3.HeadObjectOutput) blob.BlobMD {
+	out := blob.BlobMD{
 		ContentType:   *result.ContentType,
 		ContentLength: *result.ContentLength,
 		CreatedAt:     timeInLocal(result.LastModified),
@@ -67,7 +63,7 @@ func fromAwsHeadToBlobInfo(result *s3.HeadObjectOutput) blob.BlobInfo {
 	width, widtErr := strconv.ParseInt(result.Metadata["image_width"], 10, 64)
 	height, heightErr := strconv.ParseInt(result.Metadata["image_height"], 10, 64)
 	if widtErr == nil && heightErr == nil {
-		out.ImageInfo = blob.ImageInfo{
+		out.ImageInfo = blob.MDImageInfo{
 			Width:  width,
 			Height: height,
 		}
@@ -76,8 +72,8 @@ func fromAwsHeadToBlobInfo(result *s3.HeadObjectOutput) blob.BlobInfo {
 	return out
 }
 
-func fromAwsGetToBlobInfo(result *s3.GetObjectOutput) blob.BlobInfo {
-	out := blob.BlobInfo{
+func fromAwsGetToBlobInfo(result *s3.GetObjectOutput) blob.BlobMD {
+	out := blob.BlobMD{
 		ContentType:   *result.ContentType,
 		ContentLength: *result.ContentLength,
 		CreatedAt:     timeInLocal(result.LastModified),
@@ -88,7 +84,7 @@ func fromAwsGetToBlobInfo(result *s3.GetObjectOutput) blob.BlobInfo {
 	width, widtErr := strconv.ParseInt(result.Metadata["image_width"], 10, 64)
 	height, heightErr := strconv.ParseInt(result.Metadata["image_height"], 10, 64)
 	if widtErr == nil && heightErr == nil {
-		out.ImageInfo = blob.ImageInfo{
+		out.ImageInfo = blob.MDImageInfo{
 			Width:  width,
 			Height: height,
 		}
@@ -97,7 +93,7 @@ func fromAwsGetToBlobInfo(result *s3.GetObjectOutput) blob.BlobInfo {
 	return out
 }
 
-func fromBlobInfoToAwsObject(c s3Client, id awsId, info blob.BlobInfo) *s3.PutObjectInput {
+func fromBlobInfoToAwsObject(c s3Client, id awsId, info blob.BlobMD) *s3.PutObjectInput {
 	md := map[string]string{
 		"type":  info.Type,
 		"name":  info.Name,

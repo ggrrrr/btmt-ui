@@ -74,9 +74,21 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := authpb.LoginTokenPayload{
-		Email: req.Email,
-		Token: string(res.Payload()),
+		Email:     req.Email,
+		Token:     res.Token,
+		ExpiresAt: timestamppb.New(res.ExpiresAt),
 	}
+
+	// cookie := http.Cookie{
+	// 	Name:     "accessToken",
+	// 	Value:    string(res.Payload()),
+	// 	HttpOnly: true,
+	// 	Secure:   false,
+	// 	Domain:   "localhost:8010",
+	// 	Path:     "/",
+	// 	Expires:  time.Now().Add(365 * 24 * time.Hour),
+	// }
+	// http.SetCookie(w, &cookie)
 	web.SendPayload(ctx, w, "ok", &out)
 }
 
@@ -111,7 +123,7 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := []*authpb.UserListPayload{}
-	for _, a := range list.Payload() {
+	for _, a := range list {
 		line := &authpb.UserListPayload{
 			Email:       a.Email,
 			Status:      string(a.Status),
@@ -119,11 +131,11 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:   timestamppb.New(a.CreatedAt),
 		}
 		fmt.Printf("\t\t handler %v \n", a)
-		if len(a.TenantRoles) > 0 {
+		if len(a.RealmRoles) > 0 {
 			line.TenantRoles = map[string]*authpb.ListText{}
-			for k := range a.TenantRoles {
+			for k := range a.RealmRoles {
 				roles := authpb.ListText{
-					List: a.TenantRoles[k],
+					List: a.RealmRoles[k],
 				}
 				line.TenantRoles[k] = &roles
 			}

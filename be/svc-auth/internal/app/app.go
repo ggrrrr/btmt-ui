@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -14,18 +13,16 @@ import (
 )
 
 type (
-	AuthToken string
-
 	AppCfgFunc func(a *Application) error
 
 	App interface {
-		Get(ctx context.Context, email string) (app.Result[ddd.AuthPasswd], error)
+		Get(ctx context.Context, email string) (ddd.AuthPasswd, error)
 		UserCreate(ctx context.Context, auth ddd.AuthPasswd) error
-		UserList(ctx context.Context) (app.Result[[]ddd.AuthPasswd], error)
+		UserList(ctx context.Context) ([]ddd.AuthPasswd, error)
 		UserUpdate(ctx context.Context, email ddd.AuthPasswd) error
 		UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error
 
-		LoginPasswd(ctx context.Context, email, passwd string) (app.Result[AuthToken], error)
+		LoginPasswd(ctx context.Context, email, passwd string) (ddd.AuthToken, error)
 		TokenValidate(ctx context.Context) error
 
 		// RegisterEmail(ctx context.Context, email string) (*a.Result[string], error)

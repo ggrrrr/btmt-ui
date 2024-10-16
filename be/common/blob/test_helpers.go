@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBlobInfo(subTest string, t *testing.T, actual BlobInfo, expected BlobInfo, duration int) {
+func TestBlobInfo(subTest string, t *testing.T, actual BlobMD, expected BlobMD, duration int) {
 	if duration > 0 {
 		gotInLocal := actual.CreatedAt.In(expected.CreatedAt.Location())
 		if !assert.WithinDurationf(t, expected.CreatedAt, gotInLocal, 1+time.Second, subTest) {
@@ -28,7 +28,7 @@ func TestBlobInfo(subTest string, t *testing.T, actual BlobInfo, expected BlobIn
 	assert.Equalf(t, expected, actual, subTest)
 }
 
-func TestBlobInfoData(t *testing.T, got FetchResult, want BlobInfo, wantData string, duration int) {
+func TestBlobInfoData(t *testing.T, got BlobReader, want BlobMD, wantData string, duration int) {
 	gotData := new(bytes.Buffer)
 	_, err := io.Copy(gotData, got.ReadCloser)
 	assert.NoError(t, err)

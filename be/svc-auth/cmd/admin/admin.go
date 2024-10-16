@@ -77,7 +77,7 @@ func runNewEmail() error {
 	}
 	authPasswd, err := a.Get(ctx, newEmail)
 	if !errors.Is(err, app.ErrAuthEmailNotFound) {
-		currentUser := authPasswd.Payload()
+		currentUser := authPasswd
 		currentUser.Passwd = newPasswd
 		if domain != "" {
 			currentUser.SystemRoles = []string{domain}
@@ -88,8 +88,8 @@ func runNewEmail() error {
 	err = a.UserCreate(ctx, ddd.AuthPasswd{
 		Email:  newEmail,
 		Passwd: newPasswd,
-		TenantRoles: map[string][]string{
-			string(roles.SystemTenant): {roles.RoleAdmin},
+		RealmRoles: map[string][]string{
+			string(roles.SystemRealm): {roles.RoleAdmin},
 		},
 		SystemRoles: []string{roles.RoleAdmin},
 		Status:      ddd.StatusEnabled,
@@ -100,7 +100,7 @@ func runNewEmail() error {
 func prepCli() (context.Context, app.App, error) {
 	hostname, _ := os.Hostname()
 	ctx := roles.CtxWithAuthInfo(context.Background(), roles.CreateSystemAdminUser(
-		roles.SystemTenant,
+		roles.SystemRealm,
 		"root",
 		roles.Device{
 			DeviceInfo: fmt.Sprintf("%v@%v", os.Getenv("USER"), hostname),
@@ -144,7 +144,7 @@ func runListEmail() error {
 		return err
 	}
 	res, err := app.UserList(ctx)
-	for _, a := range res.Payload() {
+	for _, a := range res {
 		fmt.Printf("%v \n", a)
 	}
 	return err

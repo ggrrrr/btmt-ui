@@ -9,6 +9,9 @@ import (
 )
 
 const (
+	CookieName   string = "authorization"
+	CookieSchema string = "Bearer"
+
 	HttpForwardedFor  string = "X-Forwarded-For"
 	HttpForwardedHost string = "X-Forwarded-Host"
 
@@ -16,11 +19,17 @@ const (
 	HttpUserAgent     string = "User-Agent"
 )
 
-func FromHttpMetadata(md http.Header, fullMethod string) UserRequest {
+func FromHttp(md http.Header, cookies []*http.Cookie, fullMethod string) UserRequest {
 	out := UserRequest{
 		FullMethod: fullMethod,
 	}
-	out.Authorization = extractHttpAuthorization(md)
+
+	auth, ok := authorizationFromCokies(cookies)
+	if !ok {
+		auth, _ = authorizationFromHeaders(md)
+	}
+
+	out.Authorization = auth
 	out.Device = extractHttpDevice(md)
 
 	ua := useragent.Parse(out.Device.DeviceInfo)
@@ -30,18 +39,29 @@ func FromHttpMetadata(md http.Header, fullMethod string) UserRequest {
 	return out
 }
 
-func extractHttpAuthorization(md http.Header) Authorization {
+func authorizationFromCokies(cookies []*http.Cookie) (Authorization, bool) {
+	for _, v := range cookies {
+		if v.Name == CookieName {
+			return Authorization{
+				AuthScheme:      CookieSchema,
+				AuthCredentials: AuthCredentials(v.Value),
+			}, true
+		}
+	}
+	return Authorization{}, false
+}
+
+func authorizationFromHeaders(md http.Header) (Authorization, bool) {
 	out := Authorization{}
-	// We check first for grpc specific header 'authorization'
 	if len(md[HttpAuthorization]) == 1 {
 		gwAuthorization := strings.Split(md[HttpAuthorization][0], " ")
 		if len(gwAuthorization) == 2 {
 			out.AuthScheme = gwAuthorization[0]
 			out.AuthCredentials = AuthCredentials(gwAuthorization[1])
-			return out
+			return out, true
 		}
 	}
-	return out
+	return out, false
 }
 
 func extractHttpDevice(md http.Header) Device {

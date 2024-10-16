@@ -16,9 +16,16 @@ var (
 	ErrJwtBadScheme         = errors.New("JWT authorization scheme is invalid")
 	ErrJwtBadAlg            = errors.New("JWT Inconsistent Algorithm")
 	ErrJwtInvalid           = errors.New("JWT is invalid")
-	ErrJwtNotFoundTenant    = errors.New("JWT tenant not set")
+	ErrJwtNotFoundRealm     = errors.New("JWT tenant not set")
 	ErrJwtInvalidSubject    = errors.New("JWT subject is invalid")
 	ErrJwtNotFoundMapClaims = errors.New("JWT MapClaims not found")
+)
+
+const (
+	claimKey string = "realm"
+	subKey   string = "sub"
+	rolesKey string = "roles"
+	algKey   string = "alg"
 )
 
 type (
@@ -70,7 +77,7 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 	if err != nil {
 		return roles.AuthInfo{}, err
 	}
-	jwtAlg := out.Header["alg"]
+	jwtAlg := out.Header[algKey]
 	if c.signMethod != jwtAlg {
 		return roles.AuthInfo{}, ErrJwtBadAlg
 	}
@@ -82,31 +89,31 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtInvalid
 	}
 
-	user, ok := (claims["sub"]).(string)
+	user, ok := (claims[subKey]).(string)
 	if !ok {
 		return roles.AuthInfo{}, ErrJwtInvalidSubject
 	}
 
-	var tenant string
+	var realm string
 	var listRoles []string
-	tmp, ok := (claims["roles"]).([]interface{})
+	tmp, ok := (claims[rolesKey]).([]interface{})
 	if ok {
 		listRoles = listToRoles(tmp)
 	}
 
-	tenant, ok = (claims["tenant"]).(string)
+	realm, ok = (claims[claimKey]).(string)
 	if !ok {
-		return roles.AuthInfo{}, ErrJwtNotFoundTenant
+		return roles.AuthInfo{}, ErrJwtNotFoundRealm
 	}
 
-	if tenant == "" {
-		return roles.AuthInfo{}, ErrJwtNotFoundTenant
+	if realm == "" {
+		return roles.AuthInfo{}, ErrJwtNotFoundRealm
 	}
 
 	return roles.AuthInfo{
-		User:   user,
-		Tenant: tenant,
-		Roles:  listRoles,
+		User:  user,
+		Realm: realm,
+		Roles: listRoles,
 	}, nil
 }
 

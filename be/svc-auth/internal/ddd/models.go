@@ -9,13 +9,18 @@ import (
 )
 
 type (
+	AuthToken struct {
+		Token     string
+		ExpiresAt time.Time
+	}
+
 	StatusType string
 
 	AuthPasswd struct {
 		Email       string              `json:"email"`
 		Passwd      string              `json:"passwd"`
 		Status      StatusType          `json:"status"`
-		TenantRoles map[string][]string `json:"tenant_roles"`
+		RealmRoles  map[string][]string `json:"realm_roles"`
 		SystemRoles []string            `json:"system_roles"`
 		CreatedAt   time.Time           `json:"created_at"`
 	}
@@ -39,12 +44,12 @@ type AuthPasswdRepo interface {
 func (a *AuthPasswd) ToAuthInfo(domain string) roles.AuthInfo {
 	out := roles.AuthInfo{
 		User:        a.Email,
-		Tenant:      domain,
+		Realm:       domain,
 		Roles:       []string{},
 		SystemRoles: []string{},
 	}
 
-	hostRoles, ok := a.TenantRoles[domain]
+	hostRoles, ok := a.RealmRoles[domain]
 	if ok {
 		out.Roles = append(out.Roles, hostRoles...)
 	}

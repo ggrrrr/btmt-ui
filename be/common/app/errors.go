@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	grpcCodes "google.golang.org/grpc/codes"
+	grpcStatus "google.golang.org/grpc/status"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 type AppError struct {
 	msg      string
 	err      error
-	grpcCode codes.Code
+	grpcCode grpcCodes.Code
 }
 
 func (e *AppError) Cause() error {
@@ -27,7 +27,7 @@ func (e *AppError) Msg() string {
 	return e.msg
 }
 
-func (e *AppError) Code() codes.Code {
+func (e *AppError) Code() grpcCodes.Code {
 	return e.grpcCode
 }
 
@@ -45,15 +45,15 @@ func ToGrpcError(e error) error {
 	}
 	appError, ok := e.(*AppError)
 	if ok {
-		return status.Error(appError.grpcCode, appError.Msg())
+		return grpcStatus.Error(appError.grpcCode, appError.Msg())
 	}
-	return status.Error(codes.Internal, e.Error())
+	return grpcStatus.Error(grpcCodes.Internal, e.Error())
 }
 
 // HTTP CODE 500
 func SystemError(msg string, err error) error {
 	return &AppError{
-		grpcCode: codes.Internal,
+		grpcCode: grpcCodes.Internal,
 		msg:      msg,
 		err:      err,
 	}
@@ -62,7 +62,7 @@ func SystemError(msg string, err error) error {
 // HTTP CODE 400
 func BadRequestError(msg string, err error) error {
 	return &AppError{
-		grpcCode: codes.InvalidArgument,
+		grpcCode: grpcCodes.InvalidArgument,
 		msg:      msg,
 		err:      err,
 	}
@@ -71,7 +71,7 @@ func BadRequestError(msg string, err error) error {
 // HTTP code 401
 func UnauthenticatedError(msg string, err error) error {
 	return &AppError{
-		grpcCode: codes.Unauthenticated,
+		grpcCode: grpcCodes.Unauthenticated,
 		msg:      msg,
 		err:      err,
 	}
@@ -80,7 +80,7 @@ func UnauthenticatedError(msg string, err error) error {
 // HTTP code 403
 func PermissionDeniedError(msg string, err error) error {
 	return &AppError{
-		grpcCode: codes.PermissionDenied,
+		grpcCode: grpcCodes.PermissionDenied,
 		msg:      msg,
 		err:      err,
 	}
@@ -89,7 +89,7 @@ func PermissionDeniedError(msg string, err error) error {
 // HTTP code 404
 func ItemNotFoundError(itemName, itemID string) error {
 	return &AppError{
-		grpcCode: codes.NotFound,
+		grpcCode: grpcCodes.NotFound,
 		msg:      fmt.Sprintf("%s with ID:%s not found", itemName, itemID),
 		err:      nil,
 	}

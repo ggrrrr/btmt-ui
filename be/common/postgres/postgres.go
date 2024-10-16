@@ -49,6 +49,7 @@ func Connect(cfg Config) (*sql.DB, error) {
 		Str("host", cfg.Host).
 		Int("port", cfg.Port).
 		Str("User", cfg.Username).
+		Str("Database", cfg.Database).
 		Msg("Connected")
 
 	return db, nil

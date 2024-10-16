@@ -46,7 +46,7 @@ func TestSave(t *testing.T) {
 	auth1 := ddd.AuthPasswd{
 		Email:       email1,
 		Status:      ddd.StatusDisable,
-		TenantRoles: map[string][]string{"local": {"role1"}},
+		RealmRoles:  map[string][]string{"local": {"role1"}},
 		SystemRoles: []string{"admin"},
 	}
 	passwd1 := "asd1asd"
@@ -85,7 +85,7 @@ func TestSave(t *testing.T) {
 		Email:       auth1.Email,
 		Status:      ddd.StatusPending,
 		SystemRoles: []string{"noadmin", "shit"},
-		TenantRoles: map[string][]string{"asdasd": {"roles"}},
+		RealmRoles:  map[string][]string{"asdasd": {"roles"}},
 	}
 
 	err = r.Update(ctx, authUpdate)

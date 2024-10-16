@@ -25,7 +25,7 @@ func TestAuth(t *testing.T) {
 				Email:       "asdasd",
 				Passwd:      "",
 				Status:      "",
-				TenantRoles: map[string][]string{},
+				RealmRoles:  map[string][]string{},
 				SystemRoles: []string{"asdasd", roles.RoleAdmin},
 			},
 			expErr: nil,
@@ -37,7 +37,7 @@ func TestAuth(t *testing.T) {
 				Email:  "asdasd",
 				Passwd: "",
 				Status: "",
-				TenantRoles: map[string][]string{
+				RealmRoles: map[string][]string{
 					"domain": {roles.RoleAdmin, "asdasd"},
 				},
 				SystemRoles: []string{"asdasd", "asd"},
@@ -51,7 +51,7 @@ func TestAuth(t *testing.T) {
 				Email:  "asdasd",
 				Passwd: "",
 				Status: "",
-				TenantRoles: map[string][]string{
+				RealmRoles: map[string][]string{
 					"bad-domain": {roles.RoleAdmin, "asdasd"},
 				},
 				SystemRoles: []string{"asdasd", "asd"},
@@ -65,7 +65,7 @@ func TestAuth(t *testing.T) {
 				Email:       "asdasd",
 				Passwd:      "",
 				Status:      "",
-				TenantRoles: map[string][]string{},
+				RealmRoles:  map[string][]string{},
 				SystemRoles: []string{"asdasd"},
 			},
 			expErr: app.ErrForbidden,

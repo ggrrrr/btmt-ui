@@ -122,10 +122,13 @@ message LoginOauth2Request {
 	string provider = 3;
 	string redirect_url = 4;
 }
+
 message LoginTokenPayload{
-  string email = 1;
-  string token = 2;
+  string email = 1 [json_name = "email"];
+  string token = 2 [json_name = "token"];
+  google.protobuf.Timestamp expires_at = 3 [json_name = "expires_at"];
 }
+
 message LoginPasswdResponse {
   LoginTokenPayload payload = 1;
 }

@@ -5,7 +5,7 @@ import "context"
 type (
 	AuthInfo struct {
 		User        string
-		Tenant      string
+		Realm       string
 		Roles       []string
 		SystemRoles []string
 		Device      Device
@@ -14,7 +14,7 @@ type (
 
 func CreateSystemAdminUser(tenant string, user string, device Device) AuthInfo {
 	return AuthInfo{
-		Tenant:      tenant,
+		Realm:       tenant,
 		User:        user,
 		Roles:       []string{RoleAdmin},
 		SystemRoles: []string{RoleAdmin},

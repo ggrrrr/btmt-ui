@@ -35,12 +35,12 @@ func initLog() {
 func traceMap(ctx context.Context) map[string]any {
 	span := trace.SpanFromContext(ctx)
 	traceId := span.SpanContext().TraceID()
-	d := roles.AuthInfoFromCtx(ctx)
+	authInfo := roles.AuthInfoFromCtx(ctx)
 	out := map[string]any{}
-	out["device"] = d.Device.DeviceInfo
-	out["remote"] = d.Device.RemoteAddr
-	out["tenant"] = d.Tenant
-	out["user"] = d.User
+	out["device"] = authInfo.Device.DeviceInfo
+	out["remote"] = authInfo.Device.RemoteAddr
+	out["tenant"] = authInfo.Realm
+	out["user"] = authInfo.User
 	if traceId.IsValid() {
 		out["trace"] = traceId.String()
 	}

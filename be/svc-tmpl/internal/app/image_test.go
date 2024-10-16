@@ -14,7 +14,7 @@ func TestImage(t *testing.T) {
 
 	pwd := help.RepoDir()
 
-	want := blob.ImageInfo{
+	want := blob.MDImageInfo{
 		Width:  256,
 		Height: 256,
 	}

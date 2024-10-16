@@ -1,5 +1,9 @@
 <template>
   <v-main>
+    <v-tabs>
+
+
+    </v-tabs>
     <v-form>
       <v-text-field v-model="refs.file.fileName"></v-text-field>
       <v-file-input show-size @change="formChange" v-model="refs.file.fileForm" type='file' name="image"

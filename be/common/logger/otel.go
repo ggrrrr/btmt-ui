@@ -172,6 +172,6 @@ func attributeFromCtx(ctx context.Context) []attribute.KeyValue {
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.user", spanKeyPrefix), authInfo.User))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.device.info", spanKeyPrefix), authInfo.Device.DeviceInfo))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.device.addr", spanKeyPrefix), authInfo.Device.RemoteAddr))
-	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.tenant", spanKeyPrefix), string(authInfo.Tenant)))
+	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.tenant", spanKeyPrefix), string(authInfo.Realm)))
 	return kv
 }

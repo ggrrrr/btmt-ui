@@ -39,7 +39,7 @@ type (
 
 func TestServer(t *testing.T) {
 	ctx := context.Background()
-	ctxAdmin := roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemTenant, "admin", roles.Device{}))
+	ctxAdmin := roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemRealm, "admin", roles.Device{}))
 
 	store, err := mem.New()
 	require.NoError(t, err)
@@ -96,7 +96,7 @@ func testServer(ctx context.Context, app app.App) (authpb.AuthSvcClient, func())
 
 	baseServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-			ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemTenant, "test", roles.Device{}))
+			ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{}))
 			return handler(ctx, req)
 		}),
 	)

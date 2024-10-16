@@ -12,7 +12,7 @@ import (
 
 func TestData(t *testing.T) {
 
-	testTmpl := Tmpl{
+	testTmpl := Template{
 		// ContentType: "text/plain",
 		Body: `# Header from: {{ .UserInfo.User }}
 # Header key 1: {{ .Items.key1.Item1 }} {{ .Items.key1.Item }}
@@ -32,7 +32,7 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 	}{Item1: "value 1", Item: "value 2"}
 	item2 := struct{ Item2 string }{Item2: "value 2"}
 
-	testData := TmplData{
+	testData := TemplateData{
 		UserInfo: roles.AuthInfo{
 			User: "test user",
 		},
@@ -41,7 +41,7 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 			"key2": item2,
 		},
 		Lists: map[string][]string{"list1": {"item 1", "item 2", "item 3"}},
-		Tables: map[string]TmplTable{
+		Tables: map[string]DataTable{
 			"table1": {
 				Name:    "table 1",
 				Headers: []string{"name 1", "name 2"},

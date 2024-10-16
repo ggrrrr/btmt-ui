@@ -28,7 +28,7 @@ func (s *server) UserList(ctx context.Context, _ *authpb.UserListRequest) (*auth
 		Payload: []*authpb.UserListPayload{},
 	}
 
-	for _, a := range list.Payload() {
+	for _, a := range list {
 		out.Payload = append(out.Payload, &authpb.UserListPayload{
 			Email:       a.Email,
 			Status:      string(a.Status),
@@ -64,8 +64,9 @@ func (s *server) LoginPasswd(ctx context.Context, req *authpb.LoginPasswdRequest
 	}
 	return &authpb.LoginPasswdResponse{
 		Payload: &authpb.LoginTokenPayload{
-			Email: req.Email,
-			Token: string(res.Payload()),
+			Email:     req.Email,
+			Token:     string(res.Token),
+			ExpiresAt: timestamppb.New(res.ExpiresAt),
 		},
 	}, nil
 }

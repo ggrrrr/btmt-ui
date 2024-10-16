@@ -13,27 +13,32 @@ export const useLoginStore = defineStore({
   state: () => ({
     email: localStorage.getItem("email"),
     token: localStorage.getItem("token"),
+    expires_at: localStorage.getItem("expires_at"),
     showLogin: false,
-    // error: "",
   }),
   actions: {
     logout() {
       this.token = "";
       this.email = "";
+      this.expires_at = null;
     },
     loggedIn(result) {
       this.email = result.email;
       this.token = result.token;
+      this.expires_at = result.expires_at;
       localStorage.setItem("email", result.email);
       localStorage.setItem("token", result.token);
+      localStorage.setItem("expires_at", result.expires_at);
       this.showLogin = false;
     },
     resetLogin() {
       this.token = "";
       this.email = "";
+      this.expires_at = null;
       this.showLogin = true;
       localStorage.setItem("email", "");
       localStorage.setItem("token", "");
+      localStorage.setItem("expires_at", "");
     },
     async validateRequest() {
       const url = config.BASE_URL + "/auth/token/validate";
@@ -51,6 +56,7 @@ export const useLoginStore = defineStore({
     async loginRequest(email, passwd) {
       const url = config.BASE_URL + "/auth/login/passwd";
       const requestOptions = {
+        withCredentials: true,
         // mode: "no-cors",
         method: "POST",
         body: JSON.stringify({
@@ -60,8 +66,17 @@ export const useLoginStore = defineStore({
       };
       const { result, ok, error } = await fetchAPIFunc(url, requestOptions);
       if (ok) {
+        let loginResult = {
+          email: result.email,
+          token: result.token,
+          expires_at: parseTimestamp(result.expires_at),
+        };
         console.log("result", result);
-        this.loggedIn(result);
+        let expiresFrom = parseTimestamp(result.expires_at);
+        let expires = "expires=" + expiresFrom.toUTCString();
+        let cookie = `${result.token};${expires};path=/`;
+        document.cookie = "authorization" + "=" + cookie;
+        this.loggedIn(loginResult);
       } else {
         console.log("error:", error);
       }
@@ -83,6 +98,7 @@ const fetchAPIFunc = function (url, opts = {}) {
   const options = {
     method: "GET",
     headers: headers,
+    // credentials: "omit",
   };
   if (opts.method) {
     options.method = opts.method;
@@ -92,6 +108,9 @@ const fetchAPIFunc = function (url, opts = {}) {
   }
   if (opts.body) {
     options.body = opts.body;
+  }
+  if (opts.withCredentials) {
+    options.withCredentials = true;
   }
 
   let out = {
@@ -105,6 +124,7 @@ const fetchAPIFunc = function (url, opts = {}) {
       console.log("fetch.then OK");
       let message = response.statusText;
       let error = response.statusText;
+      // response.
       return response
         .json()
         .then((data) => {
@@ -174,6 +194,15 @@ const fetchAPIFunc = function (url, opts = {}) {
 
 export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function parseTimestamp(fromValue) {
+  if (fromValue.seconds) {
+    const dateObj = new Date(fromValue.seconds * 1000);
+    return dateObj;
+  }
+  const dateObj = new Date(fromValue);
+  return dateObj;
 }
 
 export const fetchAPI = fetchAPIFunc;

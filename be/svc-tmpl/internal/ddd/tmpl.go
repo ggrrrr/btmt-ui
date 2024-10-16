@@ -13,20 +13,20 @@ type FileWriterTo struct {
 	WriterTo    io.WriterTo
 }
 
-type TmplTable struct {
+type DataTable struct {
 	Name    string
 	Headers []string
 	Rows    [][]string
 }
 
-type TmplData struct {
+type TemplateData struct {
 	UserInfo roles.AuthInfo
 	Items    map[string]any
 	Lists    map[string][]string
-	Tables   map[string]TmplTable
+	Tables   map[string]DataTable
 }
 
-type Tmpl struct {
+type Template struct {
 	ContentType string
 	Version     string
 	Name        string

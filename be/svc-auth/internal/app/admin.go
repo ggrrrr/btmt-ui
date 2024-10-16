@@ -17,7 +17,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	err = a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserCreate_FullMethodName, authInfo)
+	err = a.appPolices.CanDo(roles.SystemRealm, authpb.AuthSvc_UserCreate_FullMethodName, authInfo)
 	if err != nil {
 		return err
 	}
@@ -48,40 +48,40 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 	return nil
 }
 
-func (ap *Application) Get(ctx context.Context, email string) (result app.Result[ddd.AuthPasswd], err error) {
+func (ap *Application) Get(ctx context.Context, email string) (result ddd.AuthPasswd, err error) {
 	ctx, span := logger.Span(ctx, "Get", nil)
 	defer func() {
 		span.End(err)
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err = ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
+	if err = ap.appPolices.CanDo(roles.SystemRealm, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
 		return
 	}
 
 	auth, err := ap.findEmail(ctx, email)
 	if err != nil {
 		logger.Error(err).Msg("ap.findEmail")
-		return app.Result[ddd.AuthPasswd]{}, err
+		return ddd.AuthPasswd{}, err
 	}
 
 	if auth == nil {
 		err = ErrAuthEmailNotFound
-		return app.Result[ddd.AuthPasswd]{}, err
+		return ddd.AuthPasswd{}, err
 	}
 
-	return app.ResultWithPayload[ddd.AuthPasswd]("ok", *auth), nil
+	return *auth, nil
 
 }
 
-func (ap *Application) UserList(ctx context.Context) (result app.Result[[]ddd.AuthPasswd], err error) {
+func (ap *Application) UserList(ctx context.Context) (result []ddd.AuthPasswd, err error) {
 	ctx, span := logger.Span(ctx, "UserList", nil)
 	defer func() {
 		span.End(err)
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err = ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
+	if err = ap.appPolices.CanDo(roles.SystemRealm, authpb.AuthSvc_UserList_FullMethodName, authInfo); err != nil {
 		return
 	}
 
@@ -94,7 +94,7 @@ func (ap *Application) UserList(ctx context.Context) (result app.Result[[]ddd.Au
 	logger.DebugCtx(ctx).
 		Any("list", out).
 		Msg("UserList")
-	return app.ResultWithPayload[[]ddd.AuthPasswd]("ok", out), nil
+	return out, nil
 }
 
 func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
@@ -104,7 +104,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	err = ap.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserUpdate_FullMethodName, authInfo)
+	err = ap.appPolices.CanDo(roles.SystemRealm, authpb.AuthSvc_UserUpdate_FullMethodName, authInfo)
 	if err != nil {
 		return
 	}
@@ -131,7 +131,7 @@ func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, ne
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	err = a.appPolices.CanDo(roles.SystemTenant, authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo)
+	err = a.appPolices.CanDo(roles.SystemRealm, authpb.AuthSvc_UserChangePasswd_FullMethodName, authInfo)
 	if err != nil {
 		return
 	}

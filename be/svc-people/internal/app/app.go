@@ -77,7 +77,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) (err error) {
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Realm, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return err
 	}
 	if p.Id != "" {
@@ -112,7 +112,7 @@ func (a *application) GetById(ctx context.Context, id string) (person *ddd.Perso
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Realm, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		return nil, err
 	}
 
@@ -136,7 +136,7 @@ func (a *application) List(ctx context.Context, filters Filters) (result []ddd.P
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if err := a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
+	if err := a.appPolices.CanDo(authInfo.Realm, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
 		logger.ErrorCtx(ctx, err).Msg("List")
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (a *application) Update(ctx context.Context, p *ddd.Person) (err error) {
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	err = a.appPolices.CanDo(authInfo.Tenant, peoplepb.PeopleSvc_Save_FullMethodName, authInfo)
+	err = a.appPolices.CanDo(authInfo.Realm, peoplepb.PeopleSvc_Save_FullMethodName, authInfo)
 	if err != nil {
 		return
 	}

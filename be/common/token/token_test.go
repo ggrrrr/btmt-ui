@@ -27,7 +27,7 @@ func TestSignTTL(t *testing.T) {
 		Roles: []string{},
 	}
 
-	jwt, err := testSigner.Sign(apiClaims)
+	jwt, expiresAt, err := testSigner.Sign(apiClaims)
 	assert.NoError(t, err)
 	time.Sleep(1 * time.Second)
 	_, err = testVer.Verify(
@@ -37,6 +37,7 @@ func TestSignTTL(t *testing.T) {
 		})
 	logger.Info().Any("err", err).Msg("v")
 	assert.Error(t, err)
+	assert.True(t, !expiresAt.IsZero())
 }
 
 func TestSignVerify(t *testing.T) {
@@ -47,15 +48,15 @@ func TestSignVerify(t *testing.T) {
 	require.NoError(t, err)
 
 	apiClaims := roles.AuthInfo{
-		User:   "user1",
-		Tenant: "localhost",
-		Roles:  []string{"admin"},
+		User:  "user1",
+		Realm: "localhost",
+		Roles: []string{"admin"},
 	}
 
 	expClaims := roles.AuthInfo{
-		User:   "user1",
-		Tenant: "localhost",
-		Roles:  []string{"admin"},
+		User:  "user1",
+		Realm: "localhost",
+		Roles: []string{"admin"},
 	}
 
 	_, err = testVer.Verify(
@@ -66,7 +67,7 @@ func TestSignVerify(t *testing.T) {
 	)
 	assert.ErrorIs(t, err, ErrJwtBadScheme)
 
-	jwt, err := testSigner.Sign(apiClaims)
+	jwt, expiresAt, err := testSigner.Sign(apiClaims)
 	assert.NoError(t, err)
 	c, err := testVer.Verify(
 		roles.Authorization{
@@ -77,4 +78,5 @@ func TestSignVerify(t *testing.T) {
 	assert.NoError(t, err)
 	logger.Info().Any("c", c).Msg("v")
 	assert.Equal(t, expClaims, c)
+	assert.True(t, !expiresAt.IsZero())
 }

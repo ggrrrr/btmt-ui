@@ -2,8 +2,10 @@ package system
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/riandyrn/otelchi"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
@@ -42,7 +43,36 @@ func (s *System) httpMiddlewareOtel(next http.Handler) http.Handler {
 	})
 }
 
-func (s *System) httpMiddleware(next http.Handler) http.Handler {
+func (s *System) httpRecovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			err := recover()
+			if err != nil {
+				logger.ErrorCtx(r.Context(), fmt.Errorf("recover %+v", err)).
+					// Str("stack", string(debug.Stack())).
+					Msg("httpRecovery")
+
+				fmt.Println(string(debug.Stack()))
+
+				jsonBody, _ := json.Marshal(struct {
+					Code    int    `json:"code,omitempty"`
+					Message string `json:"message,omitempty"`
+					Error   string `json:"error,omitempty"`
+				}{
+					Code:    http.StatusInternalServerError,
+					Message: "internal server error",
+				})
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write(jsonBody)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *System) httpHandlerCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Authorization")
@@ -56,7 +86,12 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 			}
 			return
 		}
+		next.ServeHTTP(w, r)
+	})
+}
 
+func (s *System) httpHandlerAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var infoLog *zerolog.Event
 		if s.cfg.Jwt.UseMock == "" {
 			infoLog = logger.Debug()
@@ -68,7 +103,7 @@ func (s *System) httpMiddleware(next http.Handler) http.Handler {
 		var authInfo roles.AuthInfo
 		var err error
 
-		userRequest := roles.FromHttpMetadata(r.Header, r.RequestURI)
+		userRequest := roles.FromHttp(r.Header, r.Cookies(), r.RequestURI)
 
 		if userRequest.Authorization.AuthScheme != "" {
 			authInfo, err = s.verifier.Verify(userRequest.Authorization)
@@ -102,30 +137,22 @@ func (s *System) initMux() {
 	s.mux = chi.NewRouter()
 	s.mux.NotFound(web.MethodNotFoundHandler)
 	s.mux.MethodNotAllowed(web.MethodNotAllowedHandler)
-	// s.mux.NotFound(func(w http.ResponseWriter, r *http.Request) {
-	// 	// chkMw2 := r.Context().Value(ctxKey{"mw2"}).(string)
-	// 	w.WriteHeader(404)
-	// 	w.Write([]byte(fmt.Sprintf("sub 404 %s", "adsasd")))
-	// })
-	s.mux.Use(middleware.Heartbeat("/liveness"))
-	s.mux.Use(middleware.Logger)
-	s.mux.Use(s.httpMiddleware)
 
-	// if s.cfg.Otel.Enabled {
-	// 	// s.mux.Use(otelchi.Middleware("my-server", otelchi.WithChiRoutes(s.mux)))
-	// 	s.mux.Use(s.httpMiddlewareOtel)
-	// }
+	s.mux.Use(middleware.URLFormat)
+	s.mux.Use(s.httpHandlerCORS)
+	s.mux.Use(middleware.Logger)
+	s.mux.Use(middleware.Recoverer)
+	s.mux.Use(middleware.RealIP)
+	s.mux.Use(s.httpHandlerAuth)
+	s.mux.Use(middleware.Heartbeat("/liveness"))
+
 	if s.cfg.Otel.Enabled {
 		s.mux.Use(otelchi.Middleware("rest"))
-		// s.mux.Use(s.httpMiddlewareOtel)
 	}
 
-	s.gateway = runtime.NewServeMux()
+	// TODO create grpc gateway as a service
+	// s.gateway = runtime.NewServeMux()
 
-	// s.mux.Get("/root", func(w http.ResponseWriter, r *http.Request) {
-	// 	w.Write([]byte("root."))
-	// })
-	// s.mux.Method("GET", "/metrics", promhttp.Handler())
 }
 
 func (s *System) WaitForWeb(ctx context.Context) error {

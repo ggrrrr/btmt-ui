@@ -35,7 +35,6 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	}
 
 	if cfg.Otel.Enabled {
-		// err := log.ConfigureOtel()
 		err := logger.ConfigureOtel(context.Background())
 		if err != nil {
 			return nil, err

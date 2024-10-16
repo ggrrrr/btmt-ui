@@ -37,12 +37,13 @@ func Root(ctx context.Context, s system.Service) error {
 
 	a, _ := app.New(app.WithBlobStore(blobClient))
 
-	restApp := rest.New(a)
-	s.Mux().Mount("/tmpl", restApp.Router())
-
 	if s.Mux() == nil {
 		return fmt.Errorf("system.Mux is nil")
 	}
+
+	restApp := rest.New(a)
+	s.Mux().Mount("/tmpl", restApp.Router())
+
 	return nil
 
 }

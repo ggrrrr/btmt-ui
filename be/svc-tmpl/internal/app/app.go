@@ -2,6 +2,9 @@ package app
 
 import (
 	"context"
+	"fmt"
+
+	appError "github.com/ggrrrr/btmt-ui/be/common/app"
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -14,14 +17,20 @@ type (
 
 	App struct {
 		appPolices   roles.AppPolices
-		blobFetcher  blob.Store
-		imagesFolder string
+		blobStore    blob.Store
+		imagesFolder blob.BlobId
 	}
 )
 
 func New(opts ...OptionsFunc) (*App, error) {
+
+	imagesFolder, err := blob.ParseBlobId("images")
+	if err != nil {
+		return nil, err
+	}
+
 	a := &App{
-		imagesFolder: "images",
+		imagesFolder: imagesFolder,
 	}
 	for _, optFunc := range opts {
 		err := optFunc(a)
@@ -33,40 +42,24 @@ func New(opts ...OptionsFunc) (*App, error) {
 		logger.Warn().Msg("use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
+	if a.blobStore == nil {
+		return nil, fmt.Errorf("blobStore is nil")
+	}
 	return a, nil
 }
 
-func WithBlobStore(blobFetcher blob.Store) OptionsFunc {
+func WithBlobStore(blobStore blob.Store) OptionsFunc {
 	return func(a *App) error {
-		a.blobFetcher = blobFetcher
+		a.blobStore = blobStore
 		return nil
 	}
 }
 
-func (a *App) GetTmpl(ctx context.Context, tmplId string, tmplVersion string) (*ddd.Tmpl, error) {
+func (a *App) GetTmpl(ctx context.Context, tmplId string, tmplVersion string) (*ddd.Template, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "GetTmpl", nil)
 	defer func() {
 		span.End(err)
 	}()
-
-	logger.InfoCtx(ctx).Str("tmeplId", tmplId).Msg("GetTmpl")
-
-	result, err := a.blobFetcher.Head(ctx, "localhost", "images/beer1")
-	if err != nil {
-		return nil, err
-	}
-	logger.InfoCtx(ctx).Any("info", result).Msg("got")
-	return &ddd.Tmpl{
-		ContentType: "text/markdown",
-		Body: `# Header1 {{ .UserInfo.User }}
-		## item 1 {{  }}
-		## Footers`,
-	}, nil
+	return nil, appError.ErrTeapot
 }
-
-// func (*App) Render(ctx context.Context, templId string, values any) (ddd.ReanderResponse, error) {
-// 	// testReader := strings.NewReader("")
-
-// 	return nil, nil
-// }

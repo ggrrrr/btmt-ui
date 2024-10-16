@@ -40,7 +40,7 @@ type (
 		Jwt             JwtConfig
 		Rest            RestConfig
 		Mgo             mgo.Config
-		ShutdownTimeout time.Duration `default:"10s"`
+		ShutdownTimeout time.Duration `default:"20s"`
 	}
 )
 

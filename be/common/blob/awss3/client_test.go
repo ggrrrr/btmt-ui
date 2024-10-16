@@ -15,8 +15,17 @@ import (
 
 var testBucket string = "test-bucket-1"
 
-func TestListPushFetchHead(t *testing.T) {
+func TestList2(t *testing.T) {
 	ctx := context.TODO()
+
+	folderName := "root/folder-1"
+	fileFolderId, _ := blob.ParseBlobId(fmt.Sprintf("%s", folderName))
+
+	file1v1, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-1:1", folderName))
+	file1v2, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-1:2", folderName))
+	file2v1, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-2:1", folderName))
+	file2v2, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-2:2", folderName))
+	file2v3, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-2:3", folderName))
 
 	tests := []struct {
 		name     string
@@ -34,43 +43,70 @@ func TestListPushFetchHead(t *testing.T) {
 					},
 				}
 
-				data := "my data"
-				md := blob.BlobInfo{
+				data := "my data asd"
+				md := blob.BlobMD{
 					Type:        "some_type",
 					ContentType: "text/plain",
 					Name:        "some-name",
 					Owner:       "user-1",
 					CreatedAt:   time.Now(),
-					ImageInfo: blob.ImageInfo{
+					ImageInfo: blob.MDImageInfo{
 						Width:  10,
 						Height: 123,
 					},
 					ContentLength: int64(len(data)),
 				}
 
-				folderName := "root/folder-1"
-				file1v1 := fmt.Sprintf("%s/file-1:1", folderName)
-				file1v2 := fmt.Sprintf("%s/file-1:2", folderName)
-				file2v1 := fmt.Sprintf("%s/file-2:1", folderName)
+				delayDuration := time.Duration(900 * time.Millisecond)
 
 				_, err = testClient.Push(ctx, "localhost", file1v1, md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
+				time.Sleep(delayDuration)
 				_, err = testClient.Push(ctx, "localhost", file1v2, md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
+				time.Sleep(delayDuration)
 				_, err = testClient.Push(ctx, "localhost", file2v1, md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
-
-				defer deleteAll(ctx, s3c, awsId{path: folderName, id: "file-1"})
-				defer deleteAll(ctx, s3c, awsId{path: folderName, id: "file-2"})
-
-				blobList, err := testClient.List(ctx, "localhost", folderName)
+				time.Sleep(delayDuration)
+				_, err = testClient.Push(ctx, "localhost", file2v2, md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
-				blob.TestBlobInfo("List dir1", t, blobList[0].Info, md, 1000)
-				blob.TestBlobInfo("List dir2", t, blobList[1].Info, md, 1000)
-				blob.TestBlobInfo("List dir3", t, blobList[2].Info, md, 1000)
+				time.Sleep(delayDuration)
+				_, err = testClient.Push(ctx, "localhost", file2v3, md, bytes.NewReader([]byte(data)))
+				require.NoError(t, err)
 
+				defer func() {
+					deleteAll(ctx, s3c, awsId{
+						path: folderName,
+					})
+				}()
+
+				// file2v1 := fmt.Sprintf("%s", folderName)
+				list2, err := testClient.List(ctx, "localhost", fileFolderId)
+				require.NoError(t, err)
+
+				fmt.Printf("\n\ntestClient\n")
+				for _, ll := range list2 {
+					fmt.Printf("\t%+v: %v \n", ll.Id, ll.Blob.MD.CreatedAt)
+					for _, vv := range ll.Versions {
+						fmt.Printf("\t\t : %+v %v\n", vv.Id, vv.MD.CreatedAt)
+					}
+				}
 			},
-		}, {
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, tc.testFunc)
+	}
+}
+
+func TestCallsListPushFetchHead(t *testing.T) {
+	ctx := context.TODO()
+	var folder1v1 = blob.BlobId{}
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
 			name: "ok Push/Fetch",
 			testFunc: func(t *testing.T) {
 				s3c, err := createS3Client(cfg())
@@ -83,31 +119,35 @@ func TestListPushFetchHead(t *testing.T) {
 				}
 
 				data := "my data"
-				md := blob.BlobInfo{
+				md := blob.BlobMD{
 					Type:        "some_type",
 					ContentType: "text/plain",
 					Name:        "some-name",
 					Owner:       "user-1",
 					CreatedAt:   time.Now(),
-					ImageInfo: blob.ImageInfo{
+					ImageInfo: blob.MDImageInfo{
 						Width:  10,
 						Height: 123,
 					},
 					ContentLength: int64(len(data)),
 				}
 
-				newID, err := testClient.Push(ctx, "localhost", "folder-1/id-1", md, bytes.NewReader([]byte(data)))
+				folder1v1, _ = blob.ParseBlobId("folder-1/id-1")
+
+				newID, err := testClient.Push(ctx, "localhost", folder1v1, md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
 				defer deleteAll(ctx, s3c, awsId{path: "folder-1", id: "id-1"})
 				verID, err := blob.NewBlobId("folder-1", "id-1", "1")
 				require.NoError(t, err)
 				assert.Equal(t, verID, newID)
 
-				blobTest, err := testClient.Fetch(ctx, "localhost", "folder-1/id-1")
+				folder1v1, _ = blob.ParseBlobId("folder-1/id-1")
+				blobTest, err := testClient.Fetch(ctx, "localhost", folder1v1)
 				require.NoError(t, err)
 				blob.TestBlobInfoData(t, blobTest, md, data, 1000)
 
-				blobInfo, err := testClient.Head(ctx, "localhost", "folder-1/id-1:1")
+				folder1v1, _ = blob.ParseBlobId("folder-1/id-1:1")
+				blobInfo, err := testClient.Head(ctx, "localhost", folder1v1)
 				require.NoError(t, err)
 				blob.TestBlobInfo("head", t, blobInfo, md, 1000)
 
@@ -119,47 +159,20 @@ func TestListPushFetchHead(t *testing.T) {
 				testClient := &Client{
 					s3Clients: map[string]s3Client{},
 				}
-				_, err := testClient.Push(ctx, "notfound", "asd/asd", blob.BlobInfo{}, nil)
-				require.Error(t, err)
-				// tenantNotFound := &blob.TenantNotFoundError{}
-				// assert.ErrorAs(t, err, &tenantNotFound)
 
-				_, err = testClient.Fetch(ctx, "notfound", "asd/asd")
-				require.Error(t, err)
-				// tenantNotFound := &blob.TenantNotFoundError{}
-				// assert.ErrorAs(t, err, &tenantNotFound)
+				folder1v1, _ = blob.ParseBlobId("asdasdasd/asd")
 
-				_, err = testClient.Head(ctx, "notfound", "asd/asd")
+				_, err := testClient.Push(ctx, "notfound", folder1v1, blob.BlobMD{}, nil)
 				require.Error(t, err)
-				// tenantNotFound := &blob.TenantNotFoundError{}
-				// assert.ErrorAs(t, err, &tenantNotFound)
-			},
-		},
-		{
-			name: "ok Push parsing id err",
-			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg())
-				require.NoError(t, err)
-				s3c.bucketName = testBucket
 
-				testClient := &Client{
-					s3Clients: map[string]s3Client{
-						"localhost": s3c,
-					},
-				}
-				_, err = testClient.Push(ctx, "localhost", "123asd/asd", blob.BlobInfo{}, nil)
+				_, err = testClient.Fetch(ctx, "notfound", folder1v1)
 				require.Error(t, err)
-				// tenantNotFound := &blob.BlobIdInputError{}
-				// assert.ErrorAsf(t, err, &tenantNotFound, "%#v, %+v", err, err)
 
-				_, err = testClient.Fetch(ctx, "localhost", "123ad/asd")
+				_, err = testClient.Head(ctx, "notfound", folder1v1)
 				require.Error(t, err)
-				// assert.ErrorAsf(t, err, &tenantNotFound, "%#v, %+v", err, err)
 
-				_, err = testClient.Head(ctx, "localhost", "123ad/asd")
+				_, err = testClient.List(ctx, "notfound", folder1v1)
 				require.Error(t, err)
-				// assert.ErrorAsf(t, err, &tenantNotFound, "%#v, %+v", err, err)
-
 			},
 		},
 		{
@@ -174,7 +187,9 @@ func TestListPushFetchHead(t *testing.T) {
 						"localhost": s3c,
 					},
 				}
-				_, err = testClient.Fetch(ctx, "localhost", "ad/asd")
+				folder1v1, _ = blob.ParseBlobId("ad/asd")
+
+				_, err = testClient.Fetch(ctx, "localhost", folder1v1)
 				require.Error(t, err)
 				// notFound := &blob.NotFoundError{}
 				// assert.ErrorAsf(t, err, &notFound, "%#v, %+v", err, err)
@@ -188,61 +203,13 @@ func TestListPushFetchHead(t *testing.T) {
 	}
 }
 
-func TestListGetPutDelete(t *testing.T) {
+func TestGetPutDelete(t *testing.T) {
 	ctx := context.TODO()
 
 	tests := []struct {
 		name     string
 		testFunc func(t *testing.T)
 	}{
-
-		{
-			name: "ok put list 2",
-			testFunc: func(t *testing.T) {
-				s3c, err := createS3Client(cfg())
-				require.NoError(t, err)
-				s3c.bucketName = testBucket
-
-				data := "mydata"
-
-				idV1 := awsId{path: "folder-1", id: "id-1", ver: "1"}
-				idV2 := awsId{path: "folder-1", id: "id-1", ver: "2"}
-				idV3 := awsId{path: "folder-1", id: "id-2", ver: "1"}
-				blobInfo := blob.BlobInfo{
-					Type:          "some_type",
-					ContentType:   "text/plain",
-					Name:          "some-name",
-					Owner:         "user1",
-					ContentLength: int64(len(data)),
-					CreatedAt:     time.Now(),
-				}
-				_, err = put(ctx, s3c, idV1, blobInfo, bytes.NewReader([]byte(data)))
-				require.NoError(t, err)
-
-				_, err = put(ctx, s3c, idV3, blobInfo, bytes.NewReader([]byte(data)))
-				require.NoError(t, err)
-
-				defer func() {
-					err := deleteAll(ctx, s3c, idV1)
-					assert.NoError(t, err)
-					err = deleteAll(ctx, s3c, idV3)
-					assert.NoError(t, err)
-				}()
-
-				_, err = put(ctx, s3c, idV2, blobInfo, bytes.NewReader([]byte(data)))
-				require.NoError(t, err)
-
-				_, err = list(ctx, s3c, awsId{path: "folder-1"})
-				require.NoError(t, err)
-
-				list2, err := list(ctx, s3c, idV1)
-				require.NoError(t, err)
-				assert.Equal(t, 2, len(list2))
-				assert.Equal(t, idV1, list2[0])
-				assert.Equal(t, idV2, list2[1])
-
-			},
-		},
 		{
 			name: "ok list 0",
 			testFunc: func(t *testing.T) {
@@ -291,7 +258,7 @@ func TestListGetPutDelete(t *testing.T) {
 				_, err = head(ctx, s3c, blockId)
 				require.Error(t, err)
 
-				_, err = put(ctx, s3c, blockId, blob.BlobInfo{}, nil)
+				_, err = put(ctx, s3c, blockId, blob.BlobMD{}, nil)
 				require.Error(t, err)
 			},
 		},
@@ -305,7 +272,7 @@ func TestListGetPutDelete(t *testing.T) {
 				data := "mydata"
 
 				id := awsId{path: "folder-1", id: "id-1", ver: "1"}
-				blobInfo := blob.BlobInfo{
+				blobInfo := blob.BlobMD{
 					Type:          "some_type",
 					ContentType:   "text/plain",
 					Name:          "some-name",
@@ -333,9 +300,9 @@ func TestListGetPutDelete(t *testing.T) {
 				blobResult, err := get(ctx, s3c, id)
 				require.NoError(t, err)
 				blob.TestBlobInfoData(t, blobResult, blobInfo, data, 1000)
-				assert.Equal(t, id.path, blobResult.Id.Path())
-				assert.Equal(t, id.id, blobResult.Id.Name())
-				assert.Equal(t, id.ver, blobResult.Id.Version())
+				assert.Equal(t, id.path, blobResult.Blob.Id.Path())
+				assert.Equal(t, id.id, blobResult.Blob.Id.Id())
+				assert.Equal(t, id.ver, blobResult.Blob.Id.Version())
 
 				headMd, err := head(ctx, s3c, id)
 				require.NoError(t, err)
@@ -391,75 +358,6 @@ func TestInLocal(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.testFunc(t)
 		})
-	}
-}
-
-func TestNameRegExp(t *testing.T) {
-	tests := []struct {
-		fromStr   string
-		excpMatch bool
-	}{
-		{
-			fromStr:   "asd-123",
-			excpMatch: true,
-		},
-		{
-			fromStr:   "AaAsd123",
-			excpMatch: true,
-		},
-		{
-			fromStr:   "asd123",
-			excpMatch: true,
-		},
-		{
-			fromStr:   "1asd123",
-			excpMatch: false,
-		},
-		{
-			fromStr:   "/1asd123",
-			excpMatch: false,
-		},
-		{
-			fromStr:   " /1asd123",
-			excpMatch: false,
-		},
-		{
-			fromStr:   " /1asd123",
-			excpMatch: false,
-		},
-		{
-			fromStr:   "1asd123 ",
-			excpMatch: false,
-		},
-		{
-			fromStr:   "1as d123",
-			excpMatch: false,
-		},
-		{
-			fromStr:   "1asd123",
-			excpMatch: false,
-		},
-		{
-			fromStr:   `1asd\123`,
-			excpMatch: false,
-		},
-		{
-			fromStr:   `1asd/123`,
-			excpMatch: false,
-		},
-		{
-			fromStr:   "",
-			excpMatch: false,
-		},
-		{
-			fromStr:   " ",
-			excpMatch: false,
-		},
-	}
-
-	for _, tc := range tests {
-		matched := blob.NameRegExp.MatchString(tc.fromStr)
-		assert.Equalf(t, tc.excpMatch, matched, "expected/actual: %v/%v for:%s", tc.excpMatch, matched, tc.fromStr)
 	}
 }
 

@@ -17,16 +17,16 @@ func TestFileNameFilter(t *testing.T) {
 func TestBasicTypes(t *testing.T) {
 	id := BlobId{
 		path:    "f",
-		name:    "id",
+		id:      "id",
 		version: "ver",
 	}
 	assert.Equal(t, "f", id.Path())
-	assert.Equal(t, "id", id.Name())
+	assert.Equal(t, "id", id.Id())
 	assert.Equal(t, "ver", id.Version())
 	assert.Equal(t, "f/id:ver", id.String())
-	assert.Equal(t, "f/id", id.Key())
-	id.SetVersion("")
-	assert.Equal(t, "f/id", id.String())
+
+	assert.Equal(t, "f/id", id.PathId())
+	assert.Equal(t, "id:ver", id.IdVersion())
 
 	tests := []struct {
 		name string
@@ -86,6 +86,72 @@ func TestBasicTypes(t *testing.T) {
 	}
 }
 
+func TestBlobIdSetIdVersion(t *testing.T) {
+
+	tests := []struct {
+		name       string
+		idVersion  string
+		fromBlobID BlobId
+		toBlobId   BlobId
+		err        error
+	}{
+		{
+			name:       "ok id version",
+			idVersion:  "filename:version",
+			fromBlobID: BlobId{path: "folder-1"},
+			toBlobId:   BlobId{path: "folder-1", id: "filename", version: "version"},
+			err:        nil,
+		},
+		{
+			name:       "ok id no version ",
+			idVersion:  "filename",
+			fromBlobID: BlobId{path: "folder-1"},
+			toBlobId:   BlobId{path: "folder-1", id: "filename", version: ""},
+			err:        nil,
+		},
+		{
+			name:       "ok id: no version ",
+			idVersion:  "filename:",
+			fromBlobID: BlobId{path: "folder-1"},
+			toBlobId:   BlobId{path: "folder-1", id: "filename", version: ""},
+			err:        nil,
+		},
+		{
+			name:       "err id ",
+			idVersion:  "fi  lename:ad",
+			fromBlobID: BlobId{path: "folder-1"},
+			err:        &app.AppError{},
+		},
+		{
+			name:       "err id ",
+			idVersion:  "fi/lename:ad",
+			fromBlobID: BlobId{},
+			err:        &app.AppError{},
+		},
+		{
+			name:       "err version ",
+			idVersion:  "fi  lename://ad",
+			fromBlobID: BlobId{path: "folder-1"},
+			toBlobId:   BlobId{},
+			err:        &app.AppError{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			newBlobId, err := tc.fromBlobID.SetIdVersionFromString(tc.idVersion)
+			if tc.err == nil {
+				require.NoError(t, err)
+				assert.Equal(t, tc.toBlobId, newBlobId)
+			} else {
+				require.Error(t, err)
+
+			}
+
+		})
+	}
+}
+
 func TestParseBlobId(t *testing.T) {
 
 	tests := []struct {
@@ -100,7 +166,7 @@ func TestParseBlobId(t *testing.T) {
 			fromStr: "Mydir-1/Mydir-2/My-id:1",
 			id: BlobId{
 				path:    "Mydir-1/Mydir-2",
-				name:    "My-id",
+				id:      "My-id",
 				version: "1",
 			},
 			err: nil,
@@ -110,7 +176,7 @@ func TestParseBlobId(t *testing.T) {
 			fromStr: "Mydir-1/My-id",
 			id: BlobId{
 				path:    "Mydir-1",
-				name:    "My-id",
+				id:      "My-id",
 				version: "",
 			},
 			err: nil,
@@ -120,7 +186,7 @@ func TestParseBlobId(t *testing.T) {
 			fromStr: "Mydir-1/My-id:",
 			id: BlobId{
 				path:    "Mydir-1",
-				name:    "My-id",
+				id:      "My-id",
 				version: "",
 			},
 			err: nil,
@@ -135,7 +201,7 @@ func TestParseBlobId(t *testing.T) {
 		{
 			name:    "from",
 			fromStr: "from",
-			id:      BlobId{path: "from", name: "", version: ""},
+			id:      BlobId{path: "from", id: "", version: ""},
 			// err: &BlobIdInputError{},
 			err: nil,
 		},

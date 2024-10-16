@@ -37,28 +37,28 @@ func Test_CanDo(t *testing.T) {
 		{
 			test: "ok admin one role",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"admin"}})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"admin"}})
 				assert.NoError(tt, err)
 			},
 		},
 		{
 			test: "ok admin more roles",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"asd", "admin"}})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"asd", "admin"}})
 				assert.NoError(tt, err)
 			},
 		},
 		{
 			test: "ok system ErrForbidden",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", Roles: []string{"asd", "adasdmin"}})
+				err = testCanDo.CanDo(SystemRealm, "", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"asd", "adasdmin"}})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 			},
 		},
 		{
 			test: "ok system ok",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemTenant, "", AuthInfo{Tenant: testTenant, User: "asd", SystemRoles: []string{"asd", "admin"}})
+				err = testCanDo.CanDo(SystemRealm, "", AuthInfo{Realm: testTenant, User: "asd", SystemRoles: []string{"asd", "admin"}})
 				assert.NoError(tt, err)
 			},
 		},

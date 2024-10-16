@@ -39,7 +39,7 @@ func Test_Save(t *testing.T) {
 	w := httptest.NewRecorder()
 	reqStr := `{"data":{"pin":"asdads","email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
-	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemTenant, "asd", roles.Device{})))
+	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", roles.Device{})))
 	testServer.Save(w, httpReq)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 
@@ -71,7 +71,7 @@ func Test_List(t *testing.T) {
 	w := httptest.NewRecorder()
 	reqStr := `{}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
-	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemTenant, "asd", roles.Device{})))
+	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", roles.Device{})))
 	testServer.List(w, httpReq)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 

@@ -17,22 +17,17 @@ type (
 		// somefolder1/someothjerfolder2
 		path string
 		// somefilename.png
-		name string
+		id string
 		// ver1 or 1
 		version string
 	}
 
-	ImageInfo struct {
-		Width  int64
-		Height int64
-	}
-
-	BlobInfo struct {
+	BlobMD struct {
 		// Template, Attachment,
 		Type string
 		// text/html, text/plan, image/png
 		ContentType string
-		ImageInfo   ImageInfo
+		ImageInfo   MDImageInfo
 		// Name of the file when downloading or rendering template
 		Name string
 		// TODO: for future ACL rules
@@ -41,16 +36,24 @@ type (
 		ContentLength int64
 	}
 
-	FetchResult struct {
-		Id         BlobId
-		Info       BlobInfo
+	Blob struct {
+		Id BlobId
+		MD BlobMD
+	}
+
+	MDImageInfo struct {
+		Width  int64
+		Height int64
+	}
+
+	BlobReader struct {
+		Blob       Blob
 		ReadCloser io.ReadCloser
 	}
 
-	HeadResult struct {
-		Id       BlobId
-		Metadata BlobInfo
-		// ReadCloser io.ReadCloser
+	ListResult struct {
+		Blob
+		Versions []Blob
 	}
 )
 
@@ -64,41 +67,74 @@ func FileNameFilter(fromName string) string {
 	return NameFilterRegExp.ReplaceAllString(fromName, "")
 }
 
-func (id *BlobId) Name() string {
-	return id.name
+func (id BlobId) Id() string {
+	return id.id
 }
 
-// return folder/id
-func (id *BlobId) Key() string {
-	return fmt.Sprintf("%s/%s", id.path, id.name)
+// return folder/name
+func (id BlobId) PathId() string {
+	return fmt.Sprintf("%s/%s", id.path, id.id)
 }
 
-func (id *BlobId) Path() string {
+// return folder/name
+func (id BlobId) IdVersion() string {
+	return fmt.Sprintf("%s:%s", id.id, id.version)
+}
+
+func (id BlobId) Path() string {
 	return id.path
 }
 
-func (id *BlobId) Version() string {
+func (id BlobId) Version() string {
 	return id.version
 }
 
-func (id *BlobId) SetVersion(ver string) {
-	id.version = ver
-}
-
-func (id *BlobId) String() string {
-	if id.version == "" {
-		return fmt.Sprintf("%s/%s", id.path, id.name)
+func (blobId BlobId) String() string {
+	if blobId.version == "" {
+		return fmt.Sprintf("%s/%s", blobId.path, blobId.id)
 	}
-	return fmt.Sprintf("%s/%s:%s", id.path, id.name, id.version)
+	return fmt.Sprintf("%s/%s:%s", blobId.path, blobId.id, blobId.version)
 }
 
-func NewBlobId(path, name, ver string) (BlobId, error) {
+func (blobId BlobId) SetIdVersionFromString(idVersion string) (BlobId, error) {
+	if idVersion == "" {
+		return BlobId{}, app.BadRequestError("id is empty", nil)
+	}
+	split := strings.Split(idVersion, ":")
+	id := ""
+	version := ""
+
+	ok := NameRegExp.MatchString(split[0])
+	if !ok {
+		return BlobId{}, app.BadRequestError("id incorrect string", nil)
+	}
+	id = split[0]
+
+	if len(split) > 1 && len(split[1]) > 0 {
+		ok = NameRegExp.MatchString(split[1])
+		if !ok {
+			return BlobId{}, app.BadRequestError("version incorrect string", nil)
+		}
+		version = split[1]
+	}
+
+	newBlobId := BlobId{
+		path:    blobId.path,
+		id:      id,
+		version: version,
+	}
+
+	return newBlobId, nil
+
+}
+
+func NewBlobId(path, id, ver string) (BlobId, error) {
 	// TODO validate strings
 	result := PathRegExp.MatchString(path)
 	if !result {
 		return BlobId{}, fmt.Errorf("path incorrect string")
 	}
-	result = NameRegExp.MatchString(name)
+	result = NameRegExp.MatchString(id)
 	if !result {
 		return BlobId{}, fmt.Errorf("name incorrect string")
 	}
@@ -109,9 +145,10 @@ func NewBlobId(path, name, ver string) (BlobId, error) {
 
 	return BlobId{
 		path:    path,
-		name:    name,
+		id:      id,
 		version: ver,
 	}, nil
+
 }
 
 func ParseBlobId(fromString string) (BlobId, error) {
@@ -125,7 +162,7 @@ func ParseBlobId(fromString string) (BlobId, error) {
 	}
 
 	path := ""
-	name := ""
+	id := ""
 	version := ""
 
 	folders := strings.Split(fromString, "/")
@@ -147,7 +184,7 @@ func ParseBlobId(fromString string) (BlobId, error) {
 		if len(fileVer) == 0 {
 			return BlobId{}, app.BadRequestError("no file name", nil)
 		}
-		name = fileVer[0]
+		id = fileVer[0]
 		if len(fileVer) > 1 {
 			version = fileVer[1]
 		}
@@ -155,7 +192,7 @@ func ParseBlobId(fromString string) (BlobId, error) {
 
 	return BlobId{
 		path:    path,
-		name:    name,
+		id:      id,
 		version: version,
 	}, nil
 }

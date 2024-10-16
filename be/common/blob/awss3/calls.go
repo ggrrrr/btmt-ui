@@ -24,19 +24,19 @@ func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 	}()
 
 	logger.DebugCtx(ctx).
-		Str("Key", id.idPath()).
+		Str("Key", id.pathId()).
 		Msg("awss3.list")
 
 	result, err := c.s3Client.ListObjects(ctx, &s3.ListObjectsInput{
 		Bucket: aws.String(c.bucketName),
-		Prefix: aws.String(id.idPath()),
+		Prefix: aws.String(id.pathId()),
 	})
 	if err != nil {
 		noBucket := &types.NoSuchBucket{}
 		if errors.As(err, &noBucket) {
 			return nil, app.SystemError("store not found", nil)
 		}
-		return nil, fmt.Errorf("awss3.ListObjects[%s]: %w", id.idPath(), err)
+		return nil, fmt.Errorf("awss3.ListObjects[%s]: %w", id.pathId(), err)
 	}
 
 	out := make([]awsId, 0, len(result.Contents))
@@ -44,7 +44,9 @@ func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 		newKey := *v.Key
 		idParts := strings.Split(newKey, "/")
 		partsLen := len(idParts)
-		item := awsId{}
+		item := awsId{
+			createdAt: *v.LastModified,
+		}
 		switch partsLen {
 		case 0:
 			logger.ErrorCtx(ctx, fmt.Errorf("aws key split.len 0")).
@@ -69,13 +71,18 @@ func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 			item.id = idParts[partsLen-2]
 			item.ver = idParts[partsLen-1]
 		}
-
 		out = append(out, item)
 	}
+	// sort.Slice(out, func(i, j int) bool {
+	// fromI := out[i]
+	// fromJ := out[j]
+	// return fromI.createdAt.After(fromJ.createdAt)
+	// })
+
 	return out, nil
 }
 
-func head(ctx context.Context, c s3Client, id awsId) (blob.BlobInfo, error) {
+func head(ctx context.Context, c s3Client, id awsId) (blob.BlobMD, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "awss3.head", nil, logger.AttributeString("id", id.String()))
 	defer func() {
@@ -84,7 +91,7 @@ func head(ctx context.Context, c s3Client, id awsId) (blob.BlobInfo, error) {
 
 	if id.ver == "" {
 		err = fmt.Errorf("awss3.head: ver is empty")
-		return blob.BlobInfo{}, err
+		return blob.BlobMD{}, err
 	}
 	logger.DebugCtx(ctx).
 		Str("Key", id.keyVer()).
@@ -96,13 +103,13 @@ func head(ctx context.Context, c s3Client, id awsId) (blob.BlobInfo, error) {
 	})
 	if err != nil {
 		err = fmt.Errorf("awss3.HeadObject[%s] %w", id.keyVer(), err)
-		return blob.BlobInfo{}, err
+		return blob.BlobMD{}, err
 	}
 
 	return fromAwsHeadToBlobInfo(result), nil
 }
 
-func get(ctx context.Context, c s3Client, id awsId) (blob.FetchResult, error) {
+func get(ctx context.Context, c s3Client, id awsId) (blob.BlobReader, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "awss3.get", nil, logger.AttributeString("id", id.String()))
 	defer func() {
@@ -111,7 +118,7 @@ func get(ctx context.Context, c s3Client, id awsId) (blob.FetchResult, error) {
 
 	if id.ver == "" {
 		err = fmt.Errorf("awss3.get: ver is empty")
-		return blob.FetchResult{}, err
+		return blob.BlobReader{}, err
 	}
 	logger.DebugCtx(ctx).
 		Str("Key", id.keyVer()).
@@ -131,25 +138,28 @@ func get(ctx context.Context, c s3Client, id awsId) (blob.FetchResult, error) {
 		// 	return nil, blob.NewNotFoundError(id.keyVer(), err)
 		// }
 		err = fmt.Errorf("awss3.GetObject[%s]: %w", id.String(), err)
-		return blob.FetchResult{}, err
+		return blob.BlobReader{}, err
 	}
 
-	blobInfo := fromAwsGetToBlobInfo(result)
+	blobMD := fromAwsGetToBlobInfo(result)
 
-	newId, err := blob.NewBlobId(id.path, id.id, id.ver)
+	blobId, err := blob.NewBlobId(id.path, id.id, id.ver)
 	if err != nil {
 		err = fmt.Errorf("awss3.NewBlobId[%s]: %w", id.String(), err)
-		return blob.FetchResult{}, err
+		return blob.BlobReader{}, err
 	}
 
-	return blob.FetchResult{
-		Id:         newId,
-		Info:       blobInfo,
+	return blob.BlobReader{
+
+		Blob: blob.Blob{
+			Id: blobId,
+			MD: blobMD,
+		},
 		ReadCloser: result.Body,
 	}, nil
 }
 
-func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobInfo, reader io.ReadSeeker) (awsId, error) {
+func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobMD, reader io.ReadSeeker) (awsId, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "awss3.put", nil, logger.AttributeString("id", id.String()))
 	defer func() {
@@ -202,7 +212,7 @@ func deleteAll(ctx context.Context, c s3Client, id awsId) error {
 	}()
 
 	logger.InfoCtx(ctx).
-		Str("key", id.idPath()).
+		Str("key", id.pathId()).
 		Msg("awss3.deleteAll")
 
 	result, err := list(ctx, c, id)

@@ -42,7 +42,7 @@ func TestSaveGetList(t *testing.T) {
 		Email:       "emai@asd.com",
 		Passwd:      "pass1",
 		Status:      "stat1",
-		TenantRoles: map[string][]string{"localhost": {"admin"}},
+		RealmRoles:  map[string][]string{"localhost": {"admin"}},
 		SystemRoles: []string{"systemRoleAdmin"},
 	}
 	err = testRepo.Save(ctx, testData)
@@ -118,7 +118,7 @@ func TestUpdate(t *testing.T) {
 		Email:       testData.Email,
 		Status:      ddd.StatusPending,
 		SystemRoles: []string{"notadmin", "other"},
-		TenantRoles: map[string][]string{"t1": {"asd"}},
+		RealmRoles:  map[string][]string{"t1": {"asd"}},
 	}
 	err = testRepo.Update(ctx, updateData)
 	require.NoError(t, err)

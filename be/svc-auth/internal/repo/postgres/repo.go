@@ -90,7 +90,7 @@ func (r *repo) Get(ctx context.Context, email string) (result []ddd.AuthPasswd, 
 		if err != nil {
 			return
 		}
-		row.TenantRoles = m
+		row.RealmRoles = m
 		result = append(result, row)
 	}
 	return
@@ -135,7 +135,7 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 		if err != nil {
 			return
 		}
-		row.TenantRoles = m
+		row.RealmRoles = m
 
 		fmt.Printf("\t\t %v \n", row)
 
@@ -161,7 +161,7 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 		auth.Email,
 		auth.Status,
 		pq.Array(auth.SystemRoles),
-		tRoles(auth.TenantRoles),
+		tRoles(auth.RealmRoles),
 	)
 	if err != nil {
 		return
@@ -186,7 +186,7 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 		auth.Email,
 		auth.Passwd,
 		auth.Status,
-		tRoles(auth.TenantRoles),
+		tRoles(auth.RealmRoles),
 		pq.Array(auth.SystemRoles),
 	)
 	if err != nil {
