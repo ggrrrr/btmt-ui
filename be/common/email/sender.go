@@ -50,7 +50,7 @@ const (
 
 func NewSender(ctx context.Context, cfg Config) (*Sender, error) {
 	var err error
-	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.AttributeString("smtp.host.addr", cfg.SMTPAddr))
+	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.KVString("smtp.host.addr", cfg.SMTPAddr))
 	defer func() {
 		span.End(err)
 	}()
@@ -117,8 +117,8 @@ func (a *Sender) Send(ctx context.Context, email *Msg) error {
 
 	var err error
 	_, span := logger.SpanWithAttributes(ctx, "email.Send", nil,
-		logger.AttributeString("email.from", email.from.addr),
-		logger.AttributeString("email.to", email.to.AddressList()),
+		logger.KVString("email.from", email.from.addr),
+		logger.KVString("email.to", email.to.AddressList()),
 	)
 	defer func() {
 		span.End(err)

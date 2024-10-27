@@ -2,9 +2,16 @@
     <v-main>
         <v-card outlined justify="right">
             <v-card-title>
-                <v-btn variant="tonal" rounded="xl" color="primary" :enabled="routeIs"
-                    to="/templates/images">Images</v-btn>
+                <div d-flex flex-column align-center bg-grey-lighten-4 pa-6>
+
+                    <v-btn-toggle v-model="refs.page" mandatory>
+                        <v-btn value="/templates/images" to="/templates/images">Images</v-btn>
+
+                        <v-btn value="/templates/manage" to="/templates/manage">Templates</v-btn>
+                    </v-btn-toggle>
+                </div>
             </v-card-title>
+            {{ refs }}
             <RouterView>
             </RouterView>
         </v-card>
@@ -12,11 +19,13 @@
 </template>
 
 <script setup>
-// import { useRoute } from 'vue-router'
-// const route = useRoute()
+import { ref } from 'vue';
+import { useRoute } from 'vue-router'
+const route = useRoute()
 
-function routeIs() {
-    // console.log("asd", route.fullPath)
-    return ""
+const refs = ref({
+    page: route.fullPath,
 }
+)
+console.log("route", route)
 </script>

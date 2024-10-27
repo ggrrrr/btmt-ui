@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,17 +17,8 @@ import (
 var _ (Service) = (*System)(nil)
 
 func NewCli(cfg config.AppConfig) (*System, error) {
-	s := System{
-		cfg: cfg,
-	}
-	err := s.initJwt()
-	if err != nil {
-		return nil, err
-	}
-	s.initAws()
-	s.waiter = waiter.New(waiter.CatchSignals())
-	logger.Info().Msg("system init.")
-	return &s, nil
+
+	return nil, fmt.Errorf("not yet")
 }
 
 func NewSystem(cfg config.AppConfig) (*System, error) {
@@ -50,14 +42,6 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	s.initAws()
 	s.waiter = waiter.New(waiter.CatchSignals())
 	s.waiter.Cleanup(logger.Shutdown)
-
-	if cfg.Postgres.Host != "" {
-		err = s.initDB()
-		if err != nil {
-			logger.Error(err).Msg("init db.")
-			return nil, err
-		}
-	}
 
 	logger.Info().Msg("system init.")
 	return &s, nil

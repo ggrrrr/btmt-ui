@@ -2,7 +2,6 @@ package system
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/go-chi/chi/v5"
@@ -22,7 +21,6 @@ type System struct {
 	grpc     *grpc.Server
 	aws      *session.Session
 	verifier token.Verifier
-	db       *sql.DB
 }
 
 type Service interface {
@@ -31,7 +29,6 @@ type Service interface {
 	Waiter() waiter.Waiter
 	RPC() *grpc.Server
 
-	DB() *sql.DB
 	// JS() nats.JetStreamContext
 	// Mux() *chi.Mux
 	// Logger() zerolog.Logger
@@ -44,10 +41,6 @@ type Module interface {
 
 // var _ interface = (*struct)(nil) // Compile error on missing methods
 var _ Service = (*System)(nil)
-
-func (s *System) DB() *sql.DB {
-	return s.db
-}
 
 func (s *System) Config() config.AppConfig {
 	return s.cfg

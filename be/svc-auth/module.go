@@ -7,6 +7,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
@@ -33,7 +34,7 @@ func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
 // Config arr sub services needed for the auth
 func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 	var err error
-	var repo ddd.AuthPasswdRepo
+	var repo ddd.AuthRepo
 	awsCfg := false
 	pgCfg := false
 	logger.Info().
@@ -60,7 +61,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 			SystemRoles: []string{"admin"},
 			Passwd:      pass,
 		}
-		err = repo.Save(ctx, asdUser)
+		err = repo.SavePasswd(ctx, asdUser)
 		if err != nil {
 			logger.Error(err).Msg("InitApp.save")
 		}
@@ -82,7 +83,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 		return nil, errors.New("no repo")
 	}
 
-	tokenSigner, err := token.NewSigner(s.Config().Jwt.TTL, s.Config().Jwt.KeyFile)
+	tokenSigner, err := token.NewSigner(s.Config().Jwt.KeyFile)
 	if err != nil {
 		logger.Error(err).Msg("NewSigner")
 		return nil, err
@@ -90,7 +91,9 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 
 	a, err := app.New(
 		app.WithAuthRepo(repo),
+		app.WithHistoryRepo(repo),
 		app.WithTokenSigner(tokenSigner),
+		app.WithTokenTTL(s.Config().Jwt.Ttl.AccessToken, s.Config().Jwt.Ttl.RefreshToken),
 	)
 	if err != nil {
 		logger.Error(err).Msg("app error")
@@ -100,7 +103,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 	return a, nil
 }
 
-func initAwsRepo(_ context.Context, _ waiter.Waiter, cfg config.AppConfig) (ddd.AuthPasswdRepo, error) {
+func initAwsRepo(_ context.Context, _ waiter.Waiter, cfg config.AppConfig) (ddd.AuthRepo, error) {
 	repo, err := dynamodb.New(cfg.Aws, cfg.Dynamodb)
 	if err != nil {
 		logger.Error(err).Msg("initAwsRepo error")
@@ -112,8 +115,22 @@ func initAwsRepo(_ context.Context, _ waiter.Waiter, cfg config.AppConfig) (ddd.
 	return repo, nil
 }
 
-func initPgRepo(s system.Service) (ddd.AuthPasswdRepo, error) {
-	repo, err := repoPg.Init(s.DB())
+func initPgRepo(s system.Service) (ddd.AuthRepo, error) {
+
+	db, err := postgres.Connect(s.Config().Postgres)
+	if err != nil {
+		logger.Error(err).Msg("cant connect to pg")
+		return nil, err
+	}
+
+	s.Waiter().Cleanup(func() {
+		err := db.Close()
+		if err != nil {
+			logger.Error(err).Msg("postgres.Cleanup")
+		}
+	})
+
+	repo, err := repoPg.Init(db)
 	if err != nil {
 		logger.Error(err).Msg("initPgRepo error")
 		return nil, err

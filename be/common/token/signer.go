@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/base64"
 	"os"
@@ -14,7 +15,6 @@ import (
 
 type (
 	signer struct {
-		ttl        time.Duration
 		signMethod string
 		signKey    *rsa.PrivateKey
 	}
@@ -26,15 +26,18 @@ type (
 	}
 
 	Signer interface {
-		Sign(claims roles.AuthInfo) (string, time.Time, error)
+		Sign(ctx context.Context, ttl time.Duration, claims roles.AuthInfo) (string, time.Time, error)
 	}
 )
 
 func fromAuthInfo(from roles.AuthInfo) *appJwt {
 	out := appJwt{
-		Roles:            []string{},
-		Realm:            string(from.Realm),
-		RegisteredClaims: jwt.RegisteredClaims{Subject: from.User},
+		Roles: []string{},
+		Realm: string(from.Realm),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: from.User,
+			ID:      from.ID.String(),
+		},
 	}
 	for _, v := range from.Roles {
 		out.Roles = append(out.Roles, string(v))
@@ -45,10 +48,9 @@ func fromAuthInfo(from roles.AuthInfo) *appJwt {
 
 var _ (Signer) = (*signer)(nil)
 
-func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
+func NewSigner(keyFile string) (*signer, error) {
 	logger.Info().
 		Str("key_file", keyFile).
-		Str("ttl", ttl.String()).
 		Msg("NewSigner")
 
 	signKeyBytes, err := os.ReadFile(keyFile)
@@ -62,14 +64,18 @@ func NewSigner(ttl time.Duration, keyFile string) (*signer, error) {
 	}
 
 	return &signer{
-		ttl:        ttl,
 		signMethod: "RS256",
 		signKey:    signKey,
 	}, nil
 }
 
-func (c *signer) Sign(authInfo roles.AuthInfo) (string, time.Time, error) {
-	expiresAt := time.Now().UTC().Add(c.ttl)
+func (c *signer) Sign(ctx context.Context, ttl time.Duration, authInfo roles.AuthInfo) (string, time.Time, error) {
+	var err error
+	ctx, span := logger.Span(ctx, "common.Sign", nil)
+	defer func() {
+		span.End(err)
+	}()
+	expiresAt := time.Now().UTC().Add(ttl)
 	claims := fromAuthInfo(authInfo)
 	claims.ExpiresAt = jwt.NewNumericDate(expiresAt)
 	myToken := jwt.NewWithClaims(jwt.GetSigningMethod(c.signMethod), claims)

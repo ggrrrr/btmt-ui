@@ -29,12 +29,14 @@ func TestSaveGetList(t *testing.T) {
 	db, err := postgres.Connect(cfg())
 	require.NoError(t, err)
 
-	testRepo, err := Init(db)
-	require.NoError(t, err)
+	testRepo := authRepo{
+		db:          db,
+		passwdTable: "test_passwd",
+	}
 
-	_, err = testRepo.db.Exec(testRepo.table(`drop table if exists %s`))
+	_, err = testRepo.db.Exec(testRepo.table(`drop table if exists %s`, testRepo.passwdTable))
 	require.NoError(t, err)
-	err = create(db, testRepo.table(createTable))
+	err = create(db, testRepo.table(createPasswdTable, testRepo.passwdTable))
 	require.NoError(t, err)
 
 	ts := time.Now()
@@ -45,10 +47,10 @@ func TestSaveGetList(t *testing.T) {
 		RealmRoles:  map[string][]string{"localhost": {"admin"}},
 		SystemRoles: []string{"systemRoleAdmin"},
 	}
-	err = testRepo.Save(ctx, testData)
+	err = testRepo.SavePasswd(ctx, testData)
 	require.NoError(t, err)
 
-	rows, err := testRepo.Get(ctx, testData.Email)
+	rows, err := testRepo.GetPasswd(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
@@ -58,7 +60,7 @@ func TestSaveGetList(t *testing.T) {
 
 	require.Equal(t, testData, rows[0])
 
-	rows, err = testRepo.List(ctx, nil)
+	rows, err = testRepo.ListPasswd(ctx, nil)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
@@ -66,9 +68,9 @@ func TestSaveGetList(t *testing.T) {
 	require.Equal(t, testData, rows[0])
 
 	testData1 := ddd.AuthPasswd{Email: "email2", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
-	err = testRepo.Save(ctx, testData1)
+	err = testRepo.SavePasswd(ctx, testData1)
 	require.NoError(t, err)
-	rows, err = testRepo.List(ctx, nil)
+	rows, err = testRepo.ListPasswd(ctx, nil)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 2)
 
@@ -83,17 +85,17 @@ func TestUpdate(t *testing.T) {
 	testRepo, err := Init(db)
 	require.NoError(t, err)
 
-	_, err = testRepo.db.Exec(testRepo.table(`drop table if exists %s`))
+	_, err = testRepo.db.Exec(testRepo.table(`drop table if exists %s`, testRepo.passwdTable))
 	require.NoError(t, err)
-	err = create(db, testRepo.table(createTable))
+	err = create(db, testRepo.table(createPasswdTable, testRepo.passwdTable))
 	require.NoError(t, err)
 
 	ts := time.Now()
 	testData := ddd.AuthPasswd{Email: "email11", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
-	err = testRepo.Save(ctx, testData)
+	err = testRepo.SavePasswd(ctx, testData)
 	require.NoError(t, err)
 
-	rows, err := testRepo.Get(ctx, "email11")
+	rows, err := testRepo.GetPasswd(ctx, "email11")
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
@@ -102,14 +104,14 @@ func TestUpdate(t *testing.T) {
 
 	err = testRepo.UpdateStatus(ctx, testData.Email, "ok")
 	require.NoError(t, err)
-	rows, err = testRepo.Get(ctx, testData.Email)
+	rows, err = testRepo.GetPasswd(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, ddd.StatusType("ok"), rows[0].Status)
 
 	err = testRepo.UpdatePassword(ctx, testData.Email, "asdqweasdqwe")
 	require.NoError(t, err)
-	rows, err = testRepo.Get(ctx, testData.Email)
+	rows, err = testRepo.GetPasswd(ctx, testData.Email)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, "asdqweasdqwe", rows[0].Passwd)
@@ -122,7 +124,7 @@ func TestUpdate(t *testing.T) {
 	}
 	err = testRepo.Update(ctx, updateData)
 	require.NoError(t, err)
-	rows, err = testRepo.Get(ctx, testData.Email)
+	rows, err = testRepo.GetPasswd(ctx, testData.Email)
 	require.NoError(t, err)
 	assert.True(t, len(rows) == 1)
 	got := rows[0]

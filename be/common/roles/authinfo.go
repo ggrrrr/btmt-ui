@@ -1,6 +1,10 @@
 package roles
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type (
 	AuthInfo struct {
@@ -9,6 +13,7 @@ type (
 		Roles       []string
 		SystemRoles []string
 		Device      Device
+		ID          uuid.UUID
 	}
 )
 

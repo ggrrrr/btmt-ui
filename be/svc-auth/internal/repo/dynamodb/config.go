@@ -1,14 +1,18 @@
 package dynamodb
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsdynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/google/uuid"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
@@ -22,6 +26,23 @@ type (
 )
 
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
+var _ (ddd.AuthHistoryRepo) = (*repo)(nil)
+
+func (r *repo) ListHistory(ctx context.Context, user string) (authHistory []ddd.AuthHistory, err error) {
+	return nil, app.ErrTeapot
+}
+
+func (r *repo) DeleteHistory(ctx context.Context, id string) (err error) {
+	return
+}
+
+func (r *repo) GetHistory(ctx context.Context, id uuid.UUID) (authHistory *ddd.AuthHistory, err error) {
+	return
+}
+
+func (r *repo) SaveHistory(ctx context.Context, info roles.AuthInfo, method string) (err error) {
+	return app.ErrTeapot
+}
 
 func New(cfg awsclient.AwsConfig, dbCfg awsclient.DynamodbConfig) (*repo, error) {
 	// sess * session.Session,

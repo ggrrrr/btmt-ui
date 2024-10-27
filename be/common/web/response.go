@@ -50,11 +50,11 @@ func SendError(ctx context.Context, w http.ResponseWriter, e error) {
 }
 
 func MethodNotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	send(r.Context(), w, http.StatusNotFound, fmt.Sprintf("StatusNotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
+	send(r.Context(), w, http.StatusNotFound, fmt.Sprintf("MethodNotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
 func MethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
-	send(r.Context(), w, http.StatusMethodNotAllowed, fmt.Sprintf("StatusMethodNotAllowed: [%s] %s", r.Method, r.URL.Path), nil, nil)
+	send(r.Context(), w, http.StatusMethodNotAllowed, fmt.Sprintf("MethodNotAllowed: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
 // HTTP CODE 200
@@ -79,6 +79,8 @@ func DecodeJsonRequest(r *http.Request, payload any) error {
 	if err != nil {
 		return app.SystemError("unable to load http body", err)
 	}
+	defer r.Body.Close()
+
 	err = json.NewDecoder(bytes.NewReader(b)).Decode(&payload)
 	if err != nil {
 		logger.Error(err).Str("body", string(b)).Send()

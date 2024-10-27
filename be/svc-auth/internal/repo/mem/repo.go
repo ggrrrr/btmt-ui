@@ -7,27 +7,53 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
+	"github.com/google/uuid"
 )
 
 type (
 	repo struct {
 		mx *sync.Mutex
 		db map[string]*ddd.AuthPasswd
+		h  []ddd.AuthHistory
 	}
 )
 
+// DeleteHistory implements ddd.AuthHistoryRepo.
+func (r *repo) DeleteHistory(ctx context.Context, id string) (err error) {
+	return nil
+}
+
+func (r *repo) ListHistory(ctx context.Context, user string) (authHistory []ddd.AuthHistory, err error) {
+	return r.h, nil
+}
+
+func (r *repo) GetHistory(ctx context.Context, id uuid.UUID) (authHistory *ddd.AuthHistory, err error) {
+	if len(r.h) == 0 {
+		return authHistory, fmt.Errorf("not found")
+	}
+	return &r.h[0], nil
+}
+
+func (r *repo) SaveHistory(ctx context.Context, info roles.AuthInfo, method string) (err error) {
+	r.h = append(r.h, ddd.AuthHistory{ID: info.ID, User: info.User, Method: method, Device: info.Device})
+	return nil
+}
+
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
+var _ (ddd.AuthHistoryRepo) = (*repo)(nil)
 
 func New() (*repo, error) {
 	logger.Warn().Msg("InMemory auth repo")
 	return &repo{
 		mx: &sync.Mutex{},
 		db: map[string]*ddd.AuthPasswd{},
+		h:  make([]ddd.AuthHistory, 0),
 	}, nil
 }
 
-func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) {
+func (r *repo) GetPasswd(ctx context.Context, email string) ([]ddd.AuthPasswd, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -38,7 +64,7 @@ func (r *repo) Get(ctx context.Context, email string) ([]ddd.AuthPasswd, error) 
 	return []ddd.AuthPasswd{*a}, nil
 }
 
-func (r *repo) List(ctx context.Context, filter app.FilterFactory) ([]ddd.AuthPasswd, error) {
+func (r *repo) ListPasswd(ctx context.Context, filter app.FilterFactory) ([]ddd.AuthPasswd, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -49,7 +75,7 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) ([]ddd.AuthPa
 	return out, nil
 }
 
-func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) error {
+func (r *repo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 

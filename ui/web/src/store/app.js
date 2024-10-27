@@ -4,7 +4,7 @@ let appConfig = {
   //   BASE_URL: "http://localhost:8010/rest",
 };
 
-console.log("asdasd", window.location.href);
+console.log("location.href", window.location.href);
 
 fetch("/config/config.json")
   .then((resp) => {

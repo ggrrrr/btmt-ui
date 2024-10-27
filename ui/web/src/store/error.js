@@ -57,7 +57,7 @@ export const useErrorStore = defineStore({
         error: err,
       };
     },
-    invalidResponse(message, error, response) {
+    responseErr(message, error, response) {
       this.show = true;
       console.log("json.error", error);
       console.log(error);

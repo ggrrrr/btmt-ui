@@ -14,7 +14,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
-func (r *repo) List(ctx context.Context, filter app.FilterFactory) (out []ddd.AuthPasswd, err error) {
+func (r *repo) ListPasswd(ctx context.Context, filter app.FilterFactory) (out []ddd.AuthPasswd, err error) {
 	ctx, span := logger.Span(ctx, "List", nil)
 	defer func() {
 		span.End(err)
@@ -55,7 +55,7 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (out []ddd.Au
 	return
 }
 
-func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
+func (r *repo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 	ctx, span := logger.Span(ctx, "Save", nil)
 	defer func() {
 		span.End(err)
@@ -77,7 +77,7 @@ func (r *repo) Save(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 	return nil
 }
 
-func (r *repo) Get(ctx context.Context, email string) (out []ddd.AuthPasswd, err error) {
+func (r *repo) GetPasswd(ctx context.Context, email string) (out []ddd.AuthPasswd, err error) {
 	ctx, span := logger.Span(ctx, "Get", nil)
 	defer func() {
 		span.End(err)

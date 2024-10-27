@@ -5,32 +5,8 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
-	"github.com/go-chi/chi/v5"
 )
-
-type (
-	server struct {
-		app app.App
-	}
-)
-
-func New(a app.App) *server {
-	return &server{
-		app: a,
-	}
-}
-
-func (s *server) Router() chi.Router {
-	router := chi.NewRouter()
-	router.Post("/update", s.Update)
-	router.Post("/save", s.Save)
-	router.Post("/list", s.List)
-	router.Post("/get", s.Get)
-
-	return router
-}
 
 func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	var err error

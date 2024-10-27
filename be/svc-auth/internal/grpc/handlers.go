@@ -64,9 +64,15 @@ func (s *server) LoginPasswd(ctx context.Context, req *authpb.LoginPasswdRequest
 	}
 	return &authpb.LoginPasswdResponse{
 		Payload: &authpb.LoginTokenPayload{
-			Email:     req.Email,
-			Token:     string(res.Token),
-			ExpiresAt: timestamppb.New(res.ExpiresAt),
+			Email: req.Email,
+			AccessToken: &authpb.LoginToken{
+				Value:     string(res.AccessToken.Value),
+				ExpiresAt: timestamppb.New(res.AccessToken.ExpiresAt),
+			},
+			RefreshToken: &authpb.LoginToken{
+				Value:     string(res.RefreshToken.Value),
+				ExpiresAt: timestamppb.New(res.RefreshToken.ExpiresAt),
+			},
 		},
 	}, nil
 }
@@ -80,17 +86,4 @@ func (s *server) TokenValidate(ctx context.Context, _ *authpb.TokenValidateReque
 	}
 
 	return &authpb.TokenValidateResponse{}, nil
-}
-
-func (s *server) LoginOauth2(ctx context.Context, _ *authpb.LoginOauth2Request) (*authpb.LoginOauth2Response, error) {
-	logger.ErrorCtx(ctx, app.ErrTeapot).Msg("LoginOauth2")
-	return nil, app.ToGrpcError(app.ErrTeapot)
-}
-
-func (s *server) Oauth2Config(ctx context.Context, _ *authpb.Oauth2ConfigRequest) (*authpb.Oauth2ConfigResponse, error) {
-	out := authpb.Oauth2ConfigResponse{
-		Payload: &authpb.Oauth2ConfigPayload{},
-	}
-	return &out, nil
-
 }

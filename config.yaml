@@ -12,11 +12,13 @@ postgres:
 # region: us-east-1
 # endpoint: http://localhost:4566
 otel:
-  Enabled: false
+  Enabled: true
 jwt:
-  ttl: 1h
   crtFile: jwt.crt
   keyFile: jwt.key
+  ttl:
+    accessToken: 1h
+    refreshToken: 360h
   # useMock: mock
 
 rest:

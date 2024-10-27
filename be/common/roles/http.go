@@ -19,9 +19,9 @@ const (
 	HttpUserAgent     string = "User-Agent"
 )
 
-func FromHttp(md http.Header, cookies []*http.Cookie, fullMethod string) UserRequest {
+func FromHttpRequest(md http.Header, cookies []*http.Cookie, r *http.Request) UserRequest {
 	out := UserRequest{
-		FullMethod: fullMethod,
+		FullMethod: r.RequestURI,
 	}
 
 	auth, ok := authorizationFromCokies(cookies)
@@ -31,6 +31,9 @@ func FromHttp(md http.Header, cookies []*http.Cookie, fullMethod string) UserReq
 
 	out.Authorization = auth
 	out.Device = extractHttpDevice(md)
+	remoteAddr := strings.LastIndex(r.RemoteAddr, ":")
+
+	out.Device.RemoteAddr = r.RemoteAddr[0:remoteAddr]
 
 	ua := useragent.Parse(out.Device.DeviceInfo)
 

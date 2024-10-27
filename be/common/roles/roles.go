@@ -19,8 +19,9 @@ type (
 )
 
 const (
-	RoleAdmin   string = "admin"
-	SystemRealm string = "localhost"
+	RoleAdmin        string = "admin"
+	RoleTokenRefresh string = "token.refresh"
+	SystemRealm      string = "localhost"
 )
 
 func HasRole(role string, roles []string) bool {

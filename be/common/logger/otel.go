@@ -19,6 +19,49 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type KV struct {
+	key       string
+	strValue  *string
+	boolValue *bool
+	intValue  *int
+}
+
+func (kv KV) otelKeyValue() attribute.KeyValue {
+	key := fmt.Sprintf("%s.data.%s", spanKeyPrefix, kv.key)
+	if kv.boolValue != nil {
+		return AttributeBool(key, *kv.boolValue)
+	}
+	if kv.strValue != nil {
+		return AttributeString(key, *kv.strValue)
+	}
+	if kv.intValue != nil {
+		return AttributeInt(key, *kv.intValue)
+	}
+	return AttributeString(key, "empty value")
+
+}
+
+func KVBool(key string, val bool) KV {
+	return KV{
+		key:       key,
+		boolValue: &val,
+	}
+}
+
+func KVString(key string, val string) KV {
+	return KV{
+		key:      key,
+		strValue: &val,
+	}
+}
+
+func KVInt(key string, val int) KV {
+	return KV{
+		key:      key,
+		intValue: &val,
+	}
+}
+
 var (
 	rootCtx context.Context
 
@@ -145,7 +188,7 @@ func Span(ctx context.Context, name string, payload AttributeExtractor) (context
 		}
 }
 
-func SpanWithAttributes(ctx context.Context, name string, payload AttributeExtractor, attribs ...attribute.KeyValue) (context.Context, AppSpan) {
+func SpanWithAttributes(ctx context.Context, name string, payload AttributeExtractor, attribs ...KV) (context.Context, AppSpan) {
 	kv := attributeFromCtx(ctx)
 	if payload != nil {
 		traceData := payload.Extractor()
@@ -157,7 +200,9 @@ func SpanWithAttributes(ctx context.Context, name string, payload AttributeExtra
 		}
 	}
 	if len(attribs) > 0 {
-		kv = append(kv, attribs...)
+		for _, v := range attribs {
+			kv = append(kv, v.otelKeyValue())
+		}
 	}
 	ctx, span := tracer.Start(ctx, name, trace.WithAttributes(kv...))
 	return ctx,
@@ -172,6 +217,6 @@ func attributeFromCtx(ctx context.Context) []attribute.KeyValue {
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.user", spanKeyPrefix), authInfo.User))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.device.info", spanKeyPrefix), authInfo.Device.DeviceInfo))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.device.addr", spanKeyPrefix), authInfo.Device.RemoteAddr))
-	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.tenant", spanKeyPrefix), string(authInfo.Realm)))
+	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.realm", spanKeyPrefix), string(authInfo.Realm)))
 	return kv
 }

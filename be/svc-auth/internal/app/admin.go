@@ -41,7 +41,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 		}
 		auth.Passwd = cryptPasswd
 	}
-	err = a.authRepo.Save(ctx, auth)
+	err = a.authRepo.SavePasswd(ctx, auth)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (ap *Application) UserList(ctx context.Context) (result []ddd.AuthPasswd, e
 		return
 	}
 
-	out, err := ap.authRepo.List(ctx, nil)
+	out, err := ap.authRepo.ListPasswd(ctx, nil)
 	if err != nil {
 		return
 	}
@@ -109,7 +109,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 		return
 	}
 
-	list, err := ap.authRepo.Get(ctx, auth.Email)
+	list, err := ap.authRepo.GetPasswd(ctx, auth.Email)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("authRepo.Get")
 		return

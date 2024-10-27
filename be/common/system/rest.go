@@ -82,7 +82,7 @@ func (s *System) httpHandlerAuth(next http.Handler) http.Handler {
 		var authInfo roles.AuthInfo
 		var err error
 
-		userRequest := roles.FromHttp(r.Header, r.Cookies(), r.RequestURI)
+		userRequest := roles.FromHttpRequest(r.Header, r.Cookies(), r)
 
 		if userRequest.Authorization.AuthScheme != "" {
 			authInfo, err = s.verifier.Verify(userRequest.Authorization)
@@ -122,8 +122,8 @@ func (s *System) initMux() {
 	s.mux.Use(middleware.Logger)
 	// s.mux.Use(middleware.Recoverer)
 	s.mux.Use(s.httpHandlerRecoverer)
-	s.mux.Use(middleware.RealIP)
 	s.mux.Use(s.httpHandlerAuth)
+	s.mux.Use(middleware.RealIP)
 	s.mux.Use(middleware.Heartbeat("/liveness"))
 
 	// or use https://github.com/Ecostack/otelchi/blob/master/middleware.go
@@ -142,7 +142,7 @@ func (s *System) WaitForWeb(ctx context.Context) error {
 		Addr:    addr,
 		Handler: s.mux,
 	}
-	s.mux.Mount("/v1", s.gateway)
+	// s.mux.Mount("/v1", s.gateway)
 	group, gCtx := errgroup.WithContext(ctx)
 	group.Go(func() error {
 		logger.Info().Str("address", addr).Msg("rest started")

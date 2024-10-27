@@ -69,13 +69,6 @@ func TestServer(t *testing.T) {
 			},
 		},
 		{
-			test: "login cfg",
-			testFunc: func(tt *testing.T) {
-				_, err = client.Oauth2Config(ctx, &authpb.Oauth2ConfigRequest{})
-				assert.NoError(tt, err)
-			},
-		},
-		{
 			test: "list cfg",
 			testFunc: func(tt *testing.T) {
 				_, err = client.UserList(ctx, &authpb.UserListRequest{})

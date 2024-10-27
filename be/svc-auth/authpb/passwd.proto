@@ -30,9 +30,10 @@ service AuthSvc {
       post: "/v1/auth/user/change/passwd";
     };
   };
-  rpc Oauth2Config(Oauth2ConfigRequest) returns (Oauth2ConfigResponse) {
+  rpc LoginPasswd(LoginPasswdRequest) returns (LoginPasswdResponse) {
     option (google.api.http) = {
-      get: "/v1/auth/oauth2/config";
+      post: "/v1/auth/login/passwd";
+      body: "*";
     };
   };
   rpc TokenValidate(TokenValidateRequest) returns (TokenValidateResponse) {
@@ -41,19 +42,14 @@ service AuthSvc {
       body: "*";
     };
   };
-  rpc LoginPasswd(LoginPasswdRequest) returns (LoginPasswdResponse) {
+  rpc TokenRefresh(TokenRefreshRequest) returns (TokenRefreshResponse) {
     option (google.api.http) = {
-      post: "/v1/auth/login/passwd";
-      body: "*";
-    };
-  };
-  rpc LoginOauth2(LoginOauth2Request) returns (LoginOauth2Response) {
-    option (google.api.http) = {
-      post: "/v1/auth/login/oauth2";
+      post: "/v1/auth/token/refresh";
       body: "*";
     };
   };
 }
+
 message UserUpdateRequest{
   string email = 1;
   string status = 2;
@@ -61,19 +57,6 @@ message UserUpdateRequest{
   repeated string system_roles = 4 [json_name = "system_roles"];
 }
 message UserUpdateResponse{}
-
-message Oauth2ConfigRequest{}
-message Oauth2ConfigPayload{
-  string endpoint = 1;
-  string client_id = 2 [json_name = "client_id"];
-  string redirect_uri = 3 [json_name = "redirect_uri"];
-  string response_type = 4 [json_name = "response_type"];
-  string scope = 5;
-  string include_granted_scopes = 6 [json_name = "include_granted_scopes"];
-}
-message Oauth2ConfigResponse{
-  Oauth2ConfigPayload payload = 1;
-}
 
 message UserCreateRequest {
   string email = 1;
@@ -105,6 +88,9 @@ message LoginPasswdRequest {
   string email = 1;
   string password = 2;
 }
+message LoginPasswdResponse {
+  LoginTokenPayload payload = 1;
+}
 
 message UserChangePasswdRequest {
   string email = 1;
@@ -123,15 +109,27 @@ message LoginOauth2Request {
 	string redirect_url = 4;
 }
 
-message LoginTokenPayload{
-  string email = 1 [json_name = "email"];
-  string token = 2 [json_name = "token"];
-  google.protobuf.Timestamp expires_at = 3 [json_name = "expires_at"];
+message LoginToken{
+  string value = 1 [json_name = "value"];
+  google.protobuf.Timestamp expires_at = 2 [json_name = "expires_at"];
 }
 
-message LoginPasswdResponse {
+
+message LoginTokenPayload{
+  string email = 1 [json_name = "email"];
+  LoginToken access_token = 2 [json_name = "access_token"];
+  LoginToken refresh_token = 3 [json_name = "refresh_token"];
+}
+
+
+
+message LoginOauth2Response {
   LoginTokenPayload payload = 1;
 }
-message LoginOauth2Response {
+
+message TokenRefreshRequest {
+}
+
+message TokenRefreshResponse {
   LoginTokenPayload payload = 1;
 }

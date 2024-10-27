@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
@@ -22,7 +23,8 @@ var (
 )
 
 const (
-	claimKey string = "realm"
+	realmKey string = "realm"
+	idKey    string = "jti"
 	subKey   string = "sub"
 	rolesKey string = "roles"
 	algKey   string = "alg"
@@ -67,25 +69,30 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtBadScheme
 
 	}
-	jwtToken, err := base64.StdEncoding.DecodeString(string(inputToken.AuthCredentials))
+
+	jwtTokenBytes, err := base64.StdEncoding.DecodeString(string(inputToken.AuthCredentials))
 	if err != nil {
 		return roles.AuthInfo{}, err
 	}
-	out, err := jwt.Parse(string(jwtToken), func(token *jwt.Token) (interface{}, error) {
+
+	jwtToken, err := jwt.Parse(string(jwtTokenBytes), func(token *jwt.Token) (interface{}, error) {
 		return c.verifyKey, nil
 	})
 	if err != nil {
 		return roles.AuthInfo{}, err
 	}
-	jwtAlg := out.Header[algKey]
+
+	jwtAlg := jwtToken.Header[algKey]
 	if c.signMethod != jwtAlg {
 		return roles.AuthInfo{}, ErrJwtBadAlg
 	}
-	claims, ok := out.Claims.(jwt.MapClaims)
+
+	claims, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
 		return roles.AuthInfo{}, ErrJwtNotFoundMapClaims
 	}
-	if !out.Valid {
+
+	if !jwtToken.Valid {
 		return roles.AuthInfo{}, ErrJwtInvalid
 	}
 
@@ -94,6 +101,8 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtInvalidSubject
 	}
 
+	id, _ := (claims[idKey]).(string)
+
 	var realm string
 	var listRoles []string
 	tmp, ok := (claims[rolesKey]).([]interface{})
@@ -101,7 +110,7 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		listRoles = listToRoles(tmp)
 	}
 
-	realm, ok = (claims[claimKey]).(string)
+	realm, ok = (claims[realmKey]).(string)
 	if !ok {
 		return roles.AuthInfo{}, ErrJwtNotFoundRealm
 	}
@@ -110,11 +119,17 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtNotFoundRealm
 	}
 
-	return roles.AuthInfo{
+	authInfo := roles.AuthInfo{
 		User:  user,
 		Realm: realm,
 		Roles: listRoles,
-	}, nil
+	}
+
+	tokenID, err := uuid.Parse(id)
+	if err == nil {
+		authInfo.ID = tokenID
+	}
+	return authInfo, nil
 }
 
 func listToRoles(l []interface{}) []string {

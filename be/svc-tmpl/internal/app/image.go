@@ -3,16 +3,10 @@ package app
 import (
 	"context"
 	"fmt"
-	"image"
 	"os"
 
-	"image/color"
-	"image/jpeg"
-	_ "image/jpeg"
-	"image/png"
-	_ "image/png"
-
 	appError "github.com/ggrrrr/btmt-ui/be/common/app"
+	appImage "github.com/ggrrrr/btmt-ui/be/common/image"
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -20,89 +14,9 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
-func headImage(name string) (blob.MDImageInfo, error) {
-	reader, err := os.Open(name)
-	if err != nil {
-		return blob.MDImageInfo{}, fmt.Errorf("headImage[%s] %w", name, err)
-	}
-	m, _, err := image.Decode(reader)
-	if err != nil {
-		return blob.MDImageInfo{}, fmt.Errorf("headImage[%s] %w", name, err)
-	}
-	defer reader.Close()
-
-	bounds := m.Bounds()
-	w := bounds.Dx()
-	h := bounds.Dy()
-	return blob.MDImageInfo{
-		Width:  int64(w),
-		Height: int64(h),
-	}, nil
-}
-
-// go get -u github.com/disintegration/imaging
-// go get -u github.com/rwcarlsen/goexif/exif
-func resizeImage(from blob.BlobReader) (string, error) {
-
-	defer from.ReadCloser.Close()
-
-	img, imgFormat, err := image.Decode(from.ReadCloser)
-	fmt.Printf("image.Decode %s \n", imgFormat)
-	if err != nil {
-		return "", fmt.Errorf("resizeImage.Decode[%s] %w", from.Blob.MD.Name, err)
-	}
-	toHeight := 256 / 2
-
-	bounds := img.Bounds()
-	imgWidth := bounds.Dx()
-	imgHeight := bounds.Dy()
-
-	resizeFactor := float32(imgHeight) / float32(toHeight)
-	ratio := float32(imgWidth) / float32(imgHeight)
-	toWidth := int(float32(toHeight) * ratio)
-
-	resizedImage := image.NewNRGBA(image.Rect(0, 0, toWidth, toHeight))
-	var imgX, imgY int
-	var imgColor color.Color
-	for x := 0; x < toWidth; x++ {
-		for y := 0; y < toHeight; y++ {
-			imgX = int(resizeFactor*float32(x) + 0.5)
-			imgY = int(resizeFactor*float32(y) + 0.5)
-			imgColor = img.At(imgX, imgY)
-			resizedImage.Set(x, y, imgColor)
-		}
-	}
-
-	fmt.Printf("from H / W %5d / %5d \n", imgHeight, imgWidth)
-	fmt.Printf("to         %5d / %5d \n", toHeight, toWidth)
-
-	newImageFile, err := os.CreateTemp("", ".resize.bin")
-	if err != nil {
-		return "", fmt.Errorf("resizeImage.CreateTemp[%s] %w", from.Blob.MD.Name, err)
-	}
-
-	switch imgFormat {
-	case "jpeg":
-		err = jpeg.Encode(newImageFile, resizedImage, nil)
-	case "png":
-		err = png.Encode(newImageFile, resizedImage)
-	default:
-		os.Remove(newImageFile.Name())
-		return "", fmt.Errorf("unsupported file format: %s", imgFormat)
-	}
-
-	if err != nil {
-		os.Remove(newImageFile.Name())
-		return "", fmt.Errorf("%s.Encode error %w", imgFormat, err)
-	}
-
-	defer newImageFile.Close()
-	return newImageFile.Name(), err
-}
-
 func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetResizedImage", nil, logger.AttributeString("fileId", fileId))
+	ctx, span := logger.SpanWithAttributes(ctx, "GetResizedImage", nil, logger.KVString("fileId", fileId))
 	defer func() {
 		span.End(err)
 	}()
@@ -122,44 +36,31 @@ func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWrit
 		Any("info", fileId).
 		Msg("GetResizedImage")
 
-	res, err := a.blobStore.Fetch(ctx, "localhost", imageBlobId)
+	reader, err := a.blobStore.Fetch(ctx, "localhost", imageBlobId)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("Fetch")
 		return nil, err
 	}
 
 	logger.InfoCtx(ctx).
-		Any("info", res).
+		Any("info", reader).
 		Any("id", fileId).
 		Msg("Fetch")
 
-	resizedFile, err := resizeImage(res)
+	res, err := appImage.ResizeImage(ctx, 0, reader)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("resizeImage")
+		logger.ErrorCtx(ctx, err).Msg("Fetch")
 		return nil, err
 	}
 
-	tmpFile, err := os.Open(resizedFile)
-	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Open")
-		return nil, err
-	}
-
-	logger.InfoCtx(ctx).
-		Str("resizedFile", resizedFile).
-		Msg("Open")
-
-	defer func() {
-		tmpFile.Close()
-		// os.Remove(tmpFile.Name())
-	}()
-
+	// res.BlobMd.ContentLength
 	return &ddd.FileWriterTo{
-			ContentType: res.Blob.MD.ContentType,
-			Version:     res.Blob.Id.Version(),
-			Name:        res.Blob.MD.Name,
+			ContentType: reader.Blob.MD.ContentType,
+			Version:     reader.Blob.Id.Version(),
+			Name:        reader.Blob.MD.Name,
+			// : res.BlobMd.ContentLength,
 			WriterTo: &filePipe{
-				reader: tmpFile,
+				reader: &res.ReadCloser,
 			},
 		},
 		nil
@@ -168,7 +69,7 @@ func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWrit
 
 func (a *App) GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetImage", nil, logger.AttributeString("fileId", fileId))
+	ctx, span := logger.SpanWithAttributes(ctx, "GetImage", nil, logger.KVString("fileId", fileId))
 	defer func() {
 		span.End(err)
 	}()
@@ -267,9 +168,9 @@ func (a *App) PutImage(ctx context.Context, tempFile blob.TempFile) error {
 
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "PutImage", nil,
-		logger.AttributeString("FileName", tempFile.FileName),
-		logger.AttributeString("ContentType", tempFile.ContentType),
-		logger.AttributeString("TempFileName", tempFile.TempFileName),
+		logger.KVString("FileName", tempFile.FileName),
+		logger.KVString("ContentType", tempFile.ContentType),
+		logger.KVString("TempFileName", tempFile.TempFileName),
 	)
 	defer func() {
 		span.End(err)
@@ -296,7 +197,7 @@ func (a *App) PutImage(ctx context.Context, tempFile blob.TempFile) error {
 		Name:        tempFile.FileName,
 	}
 
-	imageInfo, err1 := headImage(tempFile.TempFileName)
+	imageInfo, err1 := appImage.HeadImage(tempFile.TempFileName)
 	if err1 == nil {
 		blobInfo.ImageInfo = imageInfo
 	}

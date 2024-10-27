@@ -34,10 +34,10 @@ func Test_List(t *testing.T) {
 
 	_ = r.createTableAuth()
 
-	_, err = r.List(ctx, nil)
+	_, err = r.ListPasswd(ctx, nil)
 	require.NoError(t, err)
 
-	list, err := r.List(ctx, nil)
+	list, err := r.ListPasswd(ctx, nil)
 	assert.NoError(t, err)
 	logger.Info().Any("asda", list)
 }
@@ -58,9 +58,9 @@ func TestSave(t *testing.T) {
 
 	_ = r.createTableAuth()
 
-	err = r.Save(ctx, auth1)
+	err = r.SavePasswd(ctx, auth1)
 	assert.NoError(t, err, err)
-	items, err := r.Get(ctx, email1)
+	items, err := r.GetPasswd(ctx, email1)
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
 	auth1.CreatedAt = items[0].CreatedAt
@@ -68,7 +68,7 @@ func TestSave(t *testing.T) {
 
 	err = r.UpdatePassword(ctx, email1, passwd1)
 	assert.NoError(t, err, err)
-	items, err = r.Get(ctx, email1)
+	items, err = r.GetPasswd(ctx, email1)
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
 	assert.Equal(t, passwd1, items[0].Passwd, "expected email")
@@ -76,7 +76,7 @@ func TestSave(t *testing.T) {
 
 	err = r.UpdateStatus(ctx, email1, ddd.StatusEnabled)
 	assert.NoError(t, err, err)
-	items, err = r.Get(ctx, email1)
+	items, err = r.GetPasswd(ctx, email1)
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
 	assert.Equal(t, ddd.StatusEnabled, items[0].Status, "expected email")
@@ -90,7 +90,7 @@ func TestSave(t *testing.T) {
 
 	err = r.Update(ctx, authUpdate)
 	assert.NoError(t, err)
-	items, err = r.Get(ctx, email1)
+	items, err = r.GetPasswd(ctx, email1)
 	assert.NoError(t, err, err)
 	assert.Equal(t, 1, len(items), "expected email")
 	authUpdate.CreatedAt = items[0].CreatedAt

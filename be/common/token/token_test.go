@@ -1,10 +1,12 @@
 package token
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -14,9 +16,12 @@ import (
 )
 
 func TestSignTTL(t *testing.T) {
+	ctx := context.TODO()
+
+	ttl := 1 * time.Second
 	pwd := help.RepoDir()
 
-	testSigner, err := NewSigner(1*time.Second, fmt.Sprintf("%s/jwt.key", pwd))
+	testSigner, err := NewSigner(fmt.Sprintf("%s/jwt.key", pwd))
 	require.NoError(t, err)
 
 	testVer, err := NewVerifier(fmt.Sprintf("%s/jwt.crt", pwd))
@@ -27,7 +32,7 @@ func TestSignTTL(t *testing.T) {
 		Roles: []string{},
 	}
 
-	jwt, expiresAt, err := testSigner.Sign(apiClaims)
+	jwt, expiresAt, err := testSigner.Sign(ctx, ttl, apiClaims)
 	assert.NoError(t, err)
 	time.Sleep(1 * time.Second)
 	_, err = testVer.Verify(
@@ -41,22 +46,30 @@ func TestSignTTL(t *testing.T) {
 }
 
 func TestSignVerify(t *testing.T) {
-	testSigner, err := NewSigner(1*time.Second, "/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/jwt.key")
+	ctx := context.TODO()
+	pwd := help.RepoDir()
+
+	ttl := 1 * time.Second
+	testSigner, err := NewSigner(fmt.Sprintf("%s/jwt.key", pwd))
 	require.NoError(t, err)
 
-	testVer, err := NewVerifier("/Users/vesko/go/src/github.com/ggrrrr/btmt-ui/jwt.crt")
+	testVer, err := NewVerifier(fmt.Sprintf("%s/jwt.crt", pwd))
 	require.NoError(t, err)
+
+	tokenID := uuid.New()
 
 	apiClaims := roles.AuthInfo{
 		User:  "user1",
 		Realm: "localhost",
 		Roles: []string{"admin"},
+		ID:    tokenID,
 	}
 
 	expClaims := roles.AuthInfo{
 		User:  "user1",
 		Realm: "localhost",
 		Roles: []string{"admin"},
+		ID:    tokenID,
 	}
 
 	_, err = testVer.Verify(
@@ -67,7 +80,7 @@ func TestSignVerify(t *testing.T) {
 	)
 	assert.ErrorIs(t, err, ErrJwtBadScheme)
 
-	jwt, expiresAt, err := testSigner.Sign(apiClaims)
+	jwt, expiresAt, err := testSigner.Sign(ctx, ttl, apiClaims)
 	assert.NoError(t, err)
 	c, err := testVer.Verify(
 		roles.Authorization{

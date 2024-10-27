@@ -57,9 +57,9 @@ func run() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(resp.Payload.Token)
+	fmt.Println(resp.Payload.AccessToken.Value)
 
-	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", roles.AuthSchemeBearer, resp.Payload.Token))
+	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", roles.AuthSchemeBearer, resp.Payload.AccessToken.Value))
 	_, err = client.TokenValidate(ctx, &authpb.TokenValidateRequest{})
 	if err != nil {
 		fmt.Println(err)

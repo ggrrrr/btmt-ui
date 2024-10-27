@@ -5,12 +5,18 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAuth(t *testing.T) {
 	polices := roles.NewAppPolices()
+
+	device := roles.Device{
+		DeviceInfo: "some test device",
+		RemoteAddr: "localtest",
+	}
 
 	tests := []struct {
 		name     string
@@ -74,7 +80,10 @@ func TestAuth(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			authInfo := tc.authPass.ToAuthInfo(tc.domain)
+			authInfo := tc.authPass.ToAuthInfo(device, tc.domain)
+			require.True(t, authInfo.ID != uuid.Nil)
+			require.True(t, authInfo.Realm == tc.domain)
+			require.True(t, authInfo.User == tc.authPass.Email)
 			err := polices.CanDo(tc.domain, "somepath", authInfo)
 			if tc.expErr != nil {
 				require.Error(t, err)

@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -19,9 +20,9 @@ func NewSignerMock() *mocker {
 	return &mocker{}
 }
 
-func (*mocker) Sign(claims roles.AuthInfo) (string, time.Time, error) {
+func (*mocker) Sign(_ context.Context, ttl time.Duration, claims roles.AuthInfo) (string, time.Time, error) {
 	if claims.User == "" {
 		return "", time.Time{}, fmt.Errorf("mock user is empty")
 	}
-	return "ok", time.Now().UTC().Add(1 * time.Hour), nil
+	return "ok", time.Now().UTC().Add(ttl), nil
 }

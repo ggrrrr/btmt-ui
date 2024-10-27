@@ -155,20 +155,36 @@ func local_request_AuthSvc_UserChangePasswd_0(ctx context.Context, marshaler run
 
 }
 
-func request_AuthSvc_Oauth2Config_0(ctx context.Context, marshaler runtime.Marshaler, client AuthSvcClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Oauth2ConfigRequest
+func request_AuthSvc_LoginPasswd_0(ctx context.Context, marshaler runtime.Marshaler, client AuthSvcClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq LoginPasswdRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := client.Oauth2Config(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.LoginPasswd(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_AuthSvc_Oauth2Config_0(ctx context.Context, marshaler runtime.Marshaler, server AuthSvcServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Oauth2ConfigRequest
+func local_request_AuthSvc_LoginPasswd_0(ctx context.Context, marshaler runtime.Marshaler, server AuthSvcServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq LoginPasswdRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := server.Oauth2Config(ctx, &protoReq)
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LoginPasswd(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -207,8 +223,8 @@ func local_request_AuthSvc_TokenValidate_0(ctx context.Context, marshaler runtim
 
 }
 
-func request_AuthSvc_LoginPasswd_0(ctx context.Context, marshaler runtime.Marshaler, client AuthSvcClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq LoginPasswdRequest
+func request_AuthSvc_TokenRefresh_0(ctx context.Context, marshaler runtime.Marshaler, client AuthSvcClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq TokenRefreshRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -219,13 +235,13 @@ func request_AuthSvc_LoginPasswd_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.LoginPasswd(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.TokenRefresh(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_AuthSvc_LoginPasswd_0(ctx context.Context, marshaler runtime.Marshaler, server AuthSvcServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq LoginPasswdRequest
+func local_request_AuthSvc_TokenRefresh_0(ctx context.Context, marshaler runtime.Marshaler, server AuthSvcServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq TokenRefreshRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -236,41 +252,7 @@ func local_request_AuthSvc_LoginPasswd_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.LoginPasswd(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_AuthSvc_LoginOauth2_0(ctx context.Context, marshaler runtime.Marshaler, client AuthSvcClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq LoginOauth2Request
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.LoginOauth2(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_AuthSvc_LoginOauth2_0(ctx context.Context, marshaler runtime.Marshaler, server AuthSvcServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq LoginOauth2Request
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.LoginOauth2(ctx, &protoReq)
+	msg, err := server.TokenRefresh(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -381,7 +363,7 @@ func RegisterAuthSvcHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 
 	})
 
-	mux.Handle("GET", pattern_AuthSvc_Oauth2Config_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AuthSvc_LoginPasswd_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -389,12 +371,12 @@ func RegisterAuthSvcHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/authpb.AuthSvc/Oauth2Config", runtime.WithHTTPPathPattern("/v1/auth/oauth2/config"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/authpb.AuthSvc/LoginPasswd", runtime.WithHTTPPathPattern("/v1/auth/login/passwd"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AuthSvc_Oauth2Config_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AuthSvc_LoginPasswd_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -402,7 +384,7 @@ func RegisterAuthSvcHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 			return
 		}
 
-		forward_AuthSvc_Oauth2Config_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AuthSvc_LoginPasswd_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -431,7 +413,7 @@ func RegisterAuthSvcHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 
 	})
 
-	mux.Handle("POST", pattern_AuthSvc_LoginPasswd_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AuthSvc_TokenRefresh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -439,12 +421,12 @@ func RegisterAuthSvcHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/authpb.AuthSvc/LoginPasswd", runtime.WithHTTPPathPattern("/v1/auth/login/passwd"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/authpb.AuthSvc/TokenRefresh", runtime.WithHTTPPathPattern("/v1/auth/token/refresh"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AuthSvc_LoginPasswd_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AuthSvc_TokenRefresh_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -452,32 +434,7 @@ func RegisterAuthSvcHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 			return
 		}
 
-		forward_AuthSvc_LoginPasswd_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_AuthSvc_LoginOauth2_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/authpb.AuthSvc/LoginOauth2", runtime.WithHTTPPathPattern("/v1/auth/login/oauth2"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AuthSvc_LoginOauth2_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AuthSvc_LoginOauth2_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AuthSvc_TokenRefresh_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -610,25 +567,25 @@ func RegisterAuthSvcHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 
 	})
 
-	mux.Handle("GET", pattern_AuthSvc_Oauth2Config_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AuthSvc_LoginPasswd_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/authpb.AuthSvc/Oauth2Config", runtime.WithHTTPPathPattern("/v1/auth/oauth2/config"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/authpb.AuthSvc/LoginPasswd", runtime.WithHTTPPathPattern("/v1/auth/login/passwd"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AuthSvc_Oauth2Config_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AuthSvc_LoginPasswd_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_AuthSvc_Oauth2Config_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AuthSvc_LoginPasswd_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -654,47 +611,25 @@ func RegisterAuthSvcHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 
 	})
 
-	mux.Handle("POST", pattern_AuthSvc_LoginPasswd_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AuthSvc_TokenRefresh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/authpb.AuthSvc/LoginPasswd", runtime.WithHTTPPathPattern("/v1/auth/login/passwd"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/authpb.AuthSvc/TokenRefresh", runtime.WithHTTPPathPattern("/v1/auth/token/refresh"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AuthSvc_LoginPasswd_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AuthSvc_TokenRefresh_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_AuthSvc_LoginPasswd_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_AuthSvc_LoginOauth2_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/authpb.AuthSvc/LoginOauth2", runtime.WithHTTPPathPattern("/v1/auth/login/oauth2"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AuthSvc_LoginOauth2_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AuthSvc_LoginOauth2_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AuthSvc_TokenRefresh_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -710,13 +645,11 @@ var (
 
 	pattern_AuthSvc_UserChangePasswd_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"v1", "auth", "user", "change", "passwd"}, ""))
 
-	pattern_AuthSvc_Oauth2Config_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "auth", "oauth2", "config"}, ""))
+	pattern_AuthSvc_LoginPasswd_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "auth", "login", "passwd"}, ""))
 
 	pattern_AuthSvc_TokenValidate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "auth", "token", "validate"}, ""))
 
-	pattern_AuthSvc_LoginPasswd_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "auth", "login", "passwd"}, ""))
-
-	pattern_AuthSvc_LoginOauth2_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "auth", "login", "oauth2"}, ""))
+	pattern_AuthSvc_TokenRefresh_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "auth", "token", "refresh"}, ""))
 )
 
 var (
@@ -728,11 +661,9 @@ var (
 
 	forward_AuthSvc_UserChangePasswd_0 = runtime.ForwardResponseMessage
 
-	forward_AuthSvc_Oauth2Config_0 = runtime.ForwardResponseMessage
+	forward_AuthSvc_LoginPasswd_0 = runtime.ForwardResponseMessage
 
 	forward_AuthSvc_TokenValidate_0 = runtime.ForwardResponseMessage
 
-	forward_AuthSvc_LoginPasswd_0 = runtime.ForwardResponseMessage
-
-	forward_AuthSvc_LoginOauth2_0 = runtime.ForwardResponseMessage
+	forward_AuthSvc_TokenRefresh_0 = runtime.ForwardResponseMessage
 )

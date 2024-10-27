@@ -70,7 +70,7 @@ func (s *server) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	imageForm, ok := tmpFiles["file"]
 	if !ok {
-		err := appError.BadRequestError("image form empty", nil)
+		err := appError.BadRequestError("image form[file] empty", nil)
 		logger.ErrorCtx(ctx, err).Send()
 		web.SendError(ctx, w, err)
 		return

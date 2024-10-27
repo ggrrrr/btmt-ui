@@ -30,6 +30,11 @@ func (*canDo) CanDo(tenant string, fullMethodName string, authInfo AuthInfo) err
 	if isAdmin(authInfo) {
 		return nil
 	}
+	if tenant == authInfo.Realm {
+		if HasRole(fullMethodName, authInfo.Roles) {
+			return nil
+		}
+	}
 	return app.ErrForbidden
 }
 

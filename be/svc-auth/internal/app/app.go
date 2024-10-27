@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
@@ -22,8 +23,9 @@ type (
 		UserUpdate(ctx context.Context, email ddd.AuthPasswd) error
 		UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) error
 
-		LoginPasswd(ctx context.Context, email, passwd string) (ddd.AuthToken, error)
+		LoginPasswd(ctx context.Context, email, passwd string) (ddd.LoginToken, error)
 		TokenValidate(ctx context.Context) error
+		TokenRefresh(ctx context.Context) (ddd.LoginToken, error)
 
 		// RegisterEmail(ctx context.Context, email string) (*a.Result[string], error)
 		// EnableEmail(ctx context.Context, email string) (*a.Result[string], error)
@@ -31,9 +33,12 @@ type (
 	}
 
 	Application struct {
-		appPolices roles.AppPolices
-		authRepo   ddd.AuthPasswdRepo
-		signer     token.Signer
+		accessTokenTTL  time.Duration
+		refreshTokenTTL time.Duration
+		appPolices      roles.AppPolices
+		authRepo        ddd.AuthPasswdRepo
+		historyRepo     ddd.AuthHistoryRepo
+		signer          token.Signer
 	}
 )
 
@@ -51,6 +56,10 @@ func New(cfgs ...AppCfgFunc) (*Application, error) {
 		logger.Warn().Msg("use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
+	logger.Info().
+		Int("ttl.refresh.days", int(a.refreshTokenTTL.Hours()/24)).
+		Int("ttl.token.minutes", int(a.accessTokenTTL.Minutes())).
+		Msg("app.New")
 	return a, nil
 }
 
@@ -64,9 +73,33 @@ func WithAuthRepo(repo ddd.AuthPasswdRepo) AppCfgFunc {
 	}
 }
 
+func WithHistoryRepo(repo ddd.AuthHistoryRepo) AppCfgFunc {
+	return func(a *Application) error {
+		if repo == nil {
+			return fmt.Errorf("repo is nil")
+		}
+		a.historyRepo = repo
+		return nil
+	}
+}
+
 func WithTokenSigner(s token.Signer) AppCfgFunc {
 	return func(a *Application) error {
 		a.signer = s
+		return nil
+	}
+}
+
+func WithTokenTTL(tokenTTL time.Duration, refreshTTL time.Duration) AppCfgFunc {
+	return func(a *Application) error {
+		if tokenTTL == 0 {
+			return fmt.Errorf("ttl.token is 0")
+		}
+		if refreshTTL == 0 {
+			return fmt.Errorf("ttl.refresh is 0")
+		}
+		a.accessTokenTTL = tokenTTL
+		a.refreshTokenTTL = refreshTTL
 		return nil
 	}
 }
@@ -92,7 +125,7 @@ func checkPasswordHash(password, hash string) bool {
 }
 
 func (ap *Application) findEmail(ctx context.Context, email string) (*ddd.AuthPasswd, error) {
-	auths, err := ap.authRepo.Get(ctx, email)
+	auths, err := ap.authRepo.GetPasswd(ctx, email)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInternalServerError, err.Error())
 	}

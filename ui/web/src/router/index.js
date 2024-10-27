@@ -44,6 +44,10 @@ const routes = [
             path: "/templates/images",
             component: () => import("@/modules/tmpl/views/ImagesView.vue"),
           },
+          {
+            path: "/templates/manage",
+            component: () => import("@/modules/tmpl/views/TemplateView.vue"),
+          },
         ],
         component: () => import("@/modules/tmpl/views/TemplatesView.vue"),
       },

@@ -18,7 +18,7 @@ import (
 // result is slice of aws keys
 func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.list", nil, logger.AttributeString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.list", nil, logger.KVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -84,7 +84,7 @@ func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 
 func head(ctx context.Context, c s3Client, id awsId) (blob.BlobMD, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.head", nil, logger.AttributeString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.head", nil, logger.KVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -111,7 +111,7 @@ func head(ctx context.Context, c s3Client, id awsId) (blob.BlobMD, error) {
 
 func get(ctx context.Context, c s3Client, id awsId) (blob.BlobReader, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.get", nil, logger.AttributeString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.get", nil, logger.KVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -161,7 +161,7 @@ func get(ctx context.Context, c s3Client, id awsId) (blob.BlobReader, error) {
 
 func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobMD, reader io.ReadSeeker) (awsId, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.put", nil, logger.AttributeString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.put", nil, logger.KVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -188,7 +188,7 @@ func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobMD, reader
 
 func delete(ctx context.Context, c s3Client, id awsId) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.delete", nil, logger.AttributeString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.delete", nil, logger.KVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -206,7 +206,7 @@ func delete(ctx context.Context, c s3Client, id awsId) error {
 
 func deleteAll(ctx context.Context, c s3Client, id awsId) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.deleteAll", nil, logger.AttributeString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.deleteAll", nil, logger.KVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()

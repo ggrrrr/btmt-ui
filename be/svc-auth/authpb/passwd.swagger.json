@@ -16,38 +16,6 @@
     "application/json"
   ],
   "paths": {
-    "/v1/auth/login/oauth2": {
-      "post": {
-        "operationId": "AuthSvc_LoginOauth2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/authpbLoginOauth2Response"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/authpbLoginOauth2Request"
-            }
-          }
-        ],
-        "tags": [
-          "AuthSvc"
-        ]
-      }
-    },
     "/v1/auth/login/passwd": {
       "post": {
         "operationId": "AuthSvc_LoginPasswd",
@@ -80,14 +48,14 @@
         ]
       }
     },
-    "/v1/auth/oauth2/config": {
-      "get": {
-        "operationId": "AuthSvc_Oauth2Config",
+    "/v1/auth/token/refresh": {
+      "post": {
+        "operationId": "AuthSvc_TokenRefresh",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbOauth2ConfigResponse"
+              "$ref": "#/definitions/authpbTokenRefreshResponse"
             }
           },
           "default": {
@@ -97,6 +65,16 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authpbTokenRefreshRequest"
+            }
+          }
+        ],
         "tags": [
           "AuthSvc"
         ]
@@ -295,31 +273,6 @@
         }
       }
     },
-    "authpbLoginOauth2Request": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "type": "string"
-        },
-        "code": {
-          "type": "string"
-        },
-        "provider": {
-          "type": "string"
-        },
-        "redirectUrl": {
-          "type": "string"
-        }
-      }
-    },
-    "authpbLoginOauth2Response": {
-      "type": "object",
-      "properties": {
-        "payload": {
-          "$ref": "#/definitions/authpbLoginTokenPayload"
-        }
-      }
-    },
     "authpbLoginPasswdRequest": {
       "type": "object",
       "properties": {
@@ -339,13 +292,10 @@
         }
       }
     },
-    "authpbLoginTokenPayload": {
+    "authpbLoginToken": {
       "type": "object",
       "properties": {
-        "email": {
-          "type": "string"
-        },
-        "token": {
+        "value": {
           "type": "string"
         },
         "expires_at": {
@@ -354,34 +304,28 @@
         }
       }
     },
-    "authpbOauth2ConfigPayload": {
+    "authpbLoginTokenPayload": {
       "type": "object",
       "properties": {
-        "endpoint": {
+        "email": {
           "type": "string"
         },
-        "client_id": {
-          "type": "string"
+        "access_token": {
+          "$ref": "#/definitions/authpbLoginToken"
         },
-        "redirect_uri": {
-          "type": "string"
-        },
-        "response_type": {
-          "type": "string"
-        },
-        "scope": {
-          "type": "string"
-        },
-        "include_granted_scopes": {
-          "type": "string"
+        "refresh_token": {
+          "$ref": "#/definitions/authpbLoginToken"
         }
       }
     },
-    "authpbOauth2ConfigResponse": {
+    "authpbTokenRefreshRequest": {
+      "type": "object"
+    },
+    "authpbTokenRefreshResponse": {
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/authpbOauth2ConfigPayload"
+          "$ref": "#/definitions/authpbLoginTokenPayload"
         }
       }
     },

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -12,8 +13,8 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
 )
 
@@ -61,7 +62,7 @@ func TestLogin(t *testing.T) {
 	store, err := mem.New()
 	require.NoError(t, err)
 
-	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
+	testApp, err := New(WithTokenTTL(10*time.Minute, 2*time.Hour), WithAuthRepo(store), WithHistoryRepo(store), WithTokenSigner(token.NewSignerMock()))
 	require.NoError(t, err)
 
 	authItem := ddd.AuthPasswd{
@@ -90,9 +91,38 @@ func TestLogin(t *testing.T) {
 		{
 			test: "Login ok",
 			prep: func(t *testing.T) {
-				jwt, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
-				assert.NoError(t, err)
-				testAuthToken(t, jwt, ddd.AuthToken{Token: "ok", ExpiresAt: time.Now().Add(1 * time.Hour)})
+				loginToken, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
+				require.NoError(t, err)
+				testAuthToken(t,
+					ddd.LoginToken{
+						Email:        authItem.Email,
+						AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(10 * time.Minute)},
+						RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
+					},
+					loginToken,
+				)
+				h, err := store.ListHistory(ctx, "")
+				require.NoError(t, err)
+				assert.Equalf(t, 1, len(h), "history not updated")
+				assert.Equal(t, loginToken.ID, h[0].ID)
+
+				refreshCtx := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{
+					ID:    loginToken.ID,
+					User:  loginToken.Email,
+					Realm: "localhost",
+					Roles: []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
+				})
+
+				newLoginToken, err := testApp.TokenRefresh(refreshCtx)
+				require.NoError(t, err)
+				require.NotNil(t, newLoginToken)
+				testAuthToken(t,
+					ddd.LoginToken{
+						Email:       authItem.Email,
+						AccessToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(10 * time.Minute)},
+					},
+					newLoginToken,
+				)
 
 			},
 		},
@@ -221,10 +251,10 @@ func TestUpdate(t *testing.T) {
 	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
-	store, err := dynamodb.New(cfg())
+	store, err := mem.New()
 	require.NoError(t, err)
 
-	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
+	testApp, err := New(WithTokenTTL(1*time.Minute, 2*time.Hour), WithAuthRepo(store), WithHistoryRepo(store), WithTokenSigner(token.NewSignerMock()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +272,14 @@ func TestUpdate(t *testing.T) {
 
 	jwt, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
 	assert.NoError(t, err)
-	testAuthToken(t, jwt, ddd.AuthToken{Token: "ok", ExpiresAt: time.Now().Add(1 * time.Hour)})
+	testAuthToken(t,
+		ddd.LoginToken{
+			Email:        authItem.Email,
+			AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(1 * time.Minute)},
+			RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
+		},
+		jwt,
+	)
 
 	err = testApp.UserChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
 	assert.ErrorIs(t, err, ErrAuthBadPassword)
@@ -252,11 +289,24 @@ func TestUpdate(t *testing.T) {
 
 	jwt, err = testApp.LoginPasswd(ctx, authItem.Email, "newpass")
 	assert.NoError(t, err)
-	testAuthToken(t, jwt, ddd.AuthToken{Token: "ok", ExpiresAt: time.Now().Add(1 * time.Hour)})
+	testAuthToken(t,
+		ddd.LoginToken{
+			Email:        authItem.Email,
+			AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(1 * time.Minute)},
+			RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
+		},
+		jwt,
+	)
 }
 
-func testAuthToken(t *testing.T, expected ddd.AuthToken, actual ddd.AuthToken) bool {
-	assert.WithinDuration(t, expected.ExpiresAt, actual.ExpiresAt, 1*time.Second)
-	assert.Equal(t, expected.Token, actual.Token)
+func testAuthToken(t *testing.T, expected ddd.LoginToken, actual ddd.LoginToken) bool {
+	assert.Truef(t, actual.ID != uuid.Nil, "id must not be nil %+v", actual)
+	assert.WithinDurationf(t, expected.AccessToken.ExpiresAt, actual.AccessToken.ExpiresAt, 1*time.Second, "token expr time")
+	assert.Equalf(t, expected.AccessToken.Value, actual.AccessToken.Value, "token")
+
+	if actual.RefreshToken.Value != "" {
+		assert.WithinDurationf(t, expected.RefreshToken.ExpiresAt, actual.RefreshToken.ExpiresAt, 1*time.Second, "RefreshToken expr time")
+		assert.Equalf(t, expected.RefreshToken.Value, actual.RefreshToken.Value, "RefreshToken")
+	}
 	return true
 }

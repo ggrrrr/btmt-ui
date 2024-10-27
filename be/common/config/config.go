@@ -28,7 +28,10 @@ type (
 		CrtFile string
 		KeyFile string
 		UseMock string
-		TTL     time.Duration
+		Ttl     struct {
+			AccessToken  time.Duration
+			RefreshToken time.Duration
+		}
 	}
 
 	AppConfig struct {

@@ -21,6 +21,13 @@ func Test_CanDo(t *testing.T) {
 
 	tests := []testCase{
 		{
+			test: "ok custom role ok",
+			testFunc: func(tt *testing.T) {
+				err = testCanDo.CanDo(testTenant, "my-new-role", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"my-new-role"}})
+				assert.NoError(tt, err)
+			},
+		},
+		{
 			test: "ErrAuthUnauthenticated",
 			testFunc: func(tt *testing.T) {
 				err = testCanDo.CanDo(testTenant, "", AuthInfo{})
