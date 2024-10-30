@@ -74,7 +74,7 @@ async function inputFileUpload() {
     }
 
     let formData = new FormData();
-    formData.append("file", refs.value.file.fileFormта);
+    formData.append("file", refs.value.file.fileForm);
     // formData.append("file", refs.value.file.fileName);
     let request = {
         method: 'POST',

@@ -27,9 +27,8 @@ import { useConfig } from "@/store/app";
 const config = useConfig;
 
 const refs = ref({
-    row: `
-<html><body>
-<p>{{ .UserInfo.User }}</p>
+    row: `<html><body>
+<p>{{ .UserInfo.Subject }}</p>
 <p>{{ .UserInfo.Device.DeviceInfo }}</p>
 <p>{{ .UserInfo.ID }}</p>
 {{ renderImg "http://localhost:8010/tmpl/image/IMG4945.JPG:1/resized" }}
