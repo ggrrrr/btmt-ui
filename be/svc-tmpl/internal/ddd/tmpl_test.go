@@ -23,6 +23,8 @@ func TestData(t *testing.T) {
 Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 {{range .Tables.table1.Rows}}row   : {{ range .}} {{ . }}{{ end}} 
 {{end}}end
+
+{{ renderImg "imageName" }}
 `,
 	}
 
@@ -34,7 +36,7 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 
 	testData := TemplateData{
 		UserInfo: roles.AuthInfo{
-			User: "test user",
+			Subject: "test user",
 		},
 		Items: map[string]any{
 			"key1": item1,
@@ -53,7 +55,15 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 		},
 	}
 
-	tmpl := template.Must(template.New("template_data").Parse(testTmpl.Body))
+	tmpl, err := template.New("template_data").
+		Funcs(template.FuncMap{
+			"renderImg": func(bane string) string {
+				return fmt.Sprintf("render %s", bane)
+			},
+		}).
+		Parse(testTmpl.Body)
+	require.NoError(t, err)
+
 	require.NotNil(t, tmpl)
 
 	buffer := new(strings.Builder)

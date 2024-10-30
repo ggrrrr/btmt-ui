@@ -35,7 +35,7 @@ func fromAuthInfo(from roles.AuthInfo) *appJwt {
 		Roles: []string{},
 		Realm: string(from.Realm),
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: from.User,
+			Subject: from.Subject,
 			ID:      from.ID.String(),
 		},
 	}
@@ -71,7 +71,7 @@ func NewSigner(keyFile string) (*signer, error) {
 
 func (c *signer) Sign(ctx context.Context, ttl time.Duration, authInfo roles.AuthInfo) (string, time.Time, error) {
 	var err error
-	ctx, span := logger.Span(ctx, "common.Sign", nil)
+	_, span := logger.Span(ctx, "token.Sign", nil)
 	defer func() {
 		span.End(err)
 	}()

@@ -6,7 +6,7 @@ export const userSystemRoles = ["", "admin"];
 
 export class User {
   constructor() {
-    this.email = "";
+    this.username = "";
     this.status = "";
     this.tenant_roles;
     this.system_roles;

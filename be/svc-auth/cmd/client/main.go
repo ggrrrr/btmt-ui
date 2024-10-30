@@ -50,7 +50,7 @@ func run() {
 
 	client := authpb.NewAuthSvcClient(conn)
 	resp, err := client.LoginPasswd(context.Background(), &authpb.LoginPasswdRequest{
-		Email:    email,
+		Username: email,
 		Password: passwd,
 	})
 	if err != nil {

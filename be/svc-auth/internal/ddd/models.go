@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/google/uuid"
 )
 
 type (
@@ -17,7 +18,7 @@ type (
 
 	LoginToken struct {
 		ID           uuid.UUID
-		Email        string
+		Subject      string
 		AccessToken  AuthToken
 		RefreshToken AuthToken
 	}
@@ -25,17 +26,17 @@ type (
 	StatusType string
 
 	AuthPasswd struct {
-		Email       string              `json:"email"`
-		Passwd      string              `json:"passwd"`
-		Status      StatusType          `json:"status"`
-		RealmRoles  map[string][]string `json:"realm_roles"`
-		SystemRoles []string            `json:"system_roles"`
-		CreatedAt   time.Time           `json:"created_at"`
+		Subject     string
+		Passwd      string
+		Status      StatusType
+		RealmRoles  map[string][]string
+		SystemRoles []string
+		CreatedAt   time.Time
 	}
 
 	AuthHistory struct {
 		ID        uuid.UUID
-		User      string
+		Subject   string
 		Method    string
 		Device    roles.Device
 		CreatedAt time.Time
@@ -55,23 +56,23 @@ type AuthRepo interface {
 
 type AuthPasswdRepo interface {
 	SavePasswd(ctx context.Context, auth AuthPasswd) error
-	GetPasswd(ctx context.Context, email string) ([]AuthPasswd, error)
+	GetPasswd(ctx context.Context, subject string) ([]AuthPasswd, error)
 	ListPasswd(ctx context.Context, filter app.FilterFactory) ([]AuthPasswd, error)
-	UpdatePassword(ctx context.Context, email, password string) error
-	UpdateStatus(ctx context.Context, email string, status StatusType) error
+	UpdatePassword(ctx context.Context, subject, password string) error
+	UpdateStatus(ctx context.Context, subject string, status StatusType) error
 	Update(ctx context.Context, auth AuthPasswd) error
 }
 
 type AuthHistoryRepo interface {
 	SaveHistory(ctx context.Context, info roles.AuthInfo, method string) (err error)
-	ListHistory(ctx context.Context, user string) (authHistory []AuthHistory, err error)
+	ListHistory(ctx context.Context, subject string) (authHistory []AuthHistory, err error)
 	GetHistory(ctx context.Context, id uuid.UUID) (authHistory *AuthHistory, err error)
 	DeleteHistory(ctx context.Context, id string) (err error)
 }
 
-func (a *AuthPasswd) ToAuthInfo(device roles.Device, domain string) roles.AuthInfo {
+func (from *AuthPasswd) ToAuthInfo(device roles.Device, domain string) roles.AuthInfo {
 	out := roles.AuthInfo{
-		User:        a.Email,
+		Subject:     from.Subject,
 		Realm:       domain,
 		Device:      device,
 		Roles:       []string{},
@@ -79,11 +80,11 @@ func (a *AuthPasswd) ToAuthInfo(device roles.Device, domain string) roles.AuthIn
 		ID:          uuid.New(),
 	}
 
-	hostRoles, ok := a.RealmRoles[domain]
+	hostRoles, ok := from.RealmRoles[domain]
 	if ok {
 		out.Roles = append(out.Roles, hostRoles...)
 	}
-	out.SystemRoles = append(out.SystemRoles, a.SystemRoles...)
+	out.SystemRoles = append(out.SystemRoles, from.SystemRoles...)
 
 	return out
 }

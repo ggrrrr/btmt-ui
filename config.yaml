@@ -17,7 +17,7 @@ jwt:
   crtFile: jwt.crt
   keyFile: jwt.key
   ttl:
-    accessToken: 1h
+    accessToken: 1m
     refreshToken: 360h
   # useMock: mock
 

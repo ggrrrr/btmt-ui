@@ -57,9 +57,9 @@ function formChange() {
     const regexpSize = /[^0-9a-z\-.]/gi;
 
 
-    if (refs.value.file.fileForm[0].name) {
+    if (refs.value.file.fileForm.name) {
         refs.value.file.ready = true
-        const match = refs.value.file.fileForm[0].name.replace(regexpSize, '');
+        const match = refs.value.file.fileForm.name.replace(regexpSize, '');
         refs.value.file.fileName = match
     }
 
@@ -74,7 +74,7 @@ async function inputFileUpload() {
     }
 
     let formData = new FormData();
-    formData.append("file", refs.value.file.fileForm[0]);
+    formData.append("file", refs.value.file.fileFormта);
     // formData.append("file", refs.value.file.fileName);
     let request = {
         method: 'POST',

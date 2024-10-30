@@ -3,30 +3,31 @@ package postgres
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/google/uuid"
 )
 
 func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.SaveHistory", nil, logger.KVString("email", info.User))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.SaveHistory", nil, logger.KVString("subject", info.Subject))
 	defer func() {
 		span.End(err)
 	}()
 
 	sql := r.table(`
-	insert into %s ("id", "user", "method", "device" )
+	insert into %s ("id", "subject", "method", "device" )
 	values($1, $2, $3, $4)
 	`, r.historyTable)
 	logger.DebugCtx(ctx).
-		Str("email", info.User).
+		Str("email", info.Subject).
 		Str("sql", sql).
 		Msg("SaveHistory")
 
 	_, err = r.db.ExecContext(ctx, sql,
 		info.ID,
-		info.User,
+		info.Subject,
 		method,
 		device{info.Device},
 		// time.Now(),
@@ -35,21 +36,21 @@ func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method 
 	return err
 }
 
-func (r *authRepo) ListHistory(ctx context.Context, user string) (authHistory []ddd.AuthHistory, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.ListHistory", nil, logger.KVString("user", user))
+func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory []ddd.AuthHistory, err error) {
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.ListHistory", nil, logger.KVString("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
 
 	sql := r.table(`
-	select "id", "user", "method", "device", "created_at" from  %s 
+	select "id", "subject", "method", "device", "created_at" from  %s 
 	where "user" = $1
 	`, r.historyTable)
 	logger.DebugCtx(ctx).
-		Str("user", user).
+		Str("subject", subject).
 		Str("sql", sql).Msg("ListHistory")
 
-	rows, err := r.db.QueryContext(ctx, sql, user)
+	rows, err := r.db.QueryContext(ctx, sql, subject)
 	if err != nil {
 		return authHistory, err
 	}
@@ -64,7 +65,7 @@ func (r *authRepo) ListHistory(ctx context.Context, user string) (authHistory []
 		var dev device
 		var row ddd.AuthHistory
 
-		err = rows.Scan(&row.ID, &row.User, &row.Method, &dev, &row.CreatedAt)
+		err = rows.Scan(&row.ID, &row.Subject, &row.Method, &dev, &row.CreatedAt)
 		if err != nil {
 			return authHistory, err
 		}
@@ -82,7 +83,7 @@ func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHisto
 	}()
 
 	sql := r.table(`
-	select "id", "user", "method", "device", "created_at" from  %s 
+	select "id", "subject", "method", "device", "created_at" from  %s 
 	where "id" = $1
 	`, r.historyTable)
 	logger.DebugCtx(ctx).
@@ -104,7 +105,7 @@ func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHisto
 		var authHistory ddd.AuthHistory
 		var dev device
 
-		err = rows.Scan(&authHistory.ID, &authHistory.User, &authHistory.Method, &dev, &authHistory.CreatedAt)
+		err = rows.Scan(&authHistory.ID, &authHistory.Subject, &authHistory.Method, &dev, &authHistory.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

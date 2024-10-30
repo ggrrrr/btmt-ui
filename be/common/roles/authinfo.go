@@ -8,7 +8,7 @@ import (
 
 type (
 	AuthInfo struct {
-		User        string
+		Subject     string
 		Realm       string
 		Roles       []string
 		SystemRoles []string
@@ -17,10 +17,10 @@ type (
 	}
 )
 
-func CreateSystemAdminUser(tenant string, user string, device Device) AuthInfo {
+func CreateSystemAdminUser(tenant string, subject string, device Device) AuthInfo {
 	return AuthInfo{
 		Realm:       tenant,
-		User:        user,
+		Subject:     subject,
 		Roles:       []string{RoleAdmin},
 		SystemRoles: []string{RoleAdmin},
 		Device:      device,

@@ -51,19 +51,20 @@ service AuthSvc {
 }
 
 message UserUpdateRequest{
-  string email = 1;
-  string status = 2;
+  string subject = 1 [json_name = "subject"];
+  string status = 2 [json_name = "status"];
   map<string, ListText> tenant_roles = 3 [json_name = "tenant_roles"];
   repeated string system_roles = 4 [json_name = "system_roles"];
 }
 message UserUpdateResponse{}
 
 message UserCreateRequest {
-  string email = 1;
-  string status = 2;
+  string username = 1 [json_name = "username"];
+  string status = 2 [json_name = "status"];
   repeated string system_roles = 3 [json_name = "system_roles"];
-  string password = 4;
+  string password = 4[json_name = "password"];
 }
+
 message UserCreateResponse {}
 
 message UserListRequest {}
@@ -73,8 +74,8 @@ message ListText {
 }
 
 message UserListPayload {
-  string email = 1;
-  string status = 2;
+  string username = 1 [json_name = "username"];
+  string status = 2 [json_name = "status"];;
   map<string, ListText> tenant_roles = 3 [json_name = "tenant_roles"];
   repeated string system_roles = 4 [json_name = "system_roles"];
   google.protobuf.Timestamp created_at = 5 [json_name = "created_at"];
@@ -85,16 +86,16 @@ message UserListResponse {
 }
 
 message LoginPasswdRequest {
-  string email = 1;
-  string password = 2;
+  string username = 1 [json_name = "username"];
+  string password = 2 [json_name = "password"];
 }
 message LoginPasswdResponse {
   LoginTokenPayload payload = 1;
 }
 
 message UserChangePasswdRequest {
-  string email = 1;
-  string password = 2;
+  string username = 1 [json_name = "username"];
+  string password = 2 [json_name = "password"];
   string new_password = 3 [json_name = "new_password"];
 }
 message UserChangePasswdResponse {}
@@ -116,12 +117,10 @@ message LoginToken{
 
 
 message LoginTokenPayload{
-  string email = 1 [json_name = "email"];
+  string username = 1 [json_name = "username"];
   LoginToken access_token = 2 [json_name = "access_token"];
   LoginToken refresh_token = 3 [json_name = "refresh_token"];
 }
-
-
 
 message LoginOauth2Response {
   LoginTokenPayload payload = 1;

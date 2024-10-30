@@ -34,7 +34,6 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
 
   return fetch(url, options)
     .then((response) => {
-      console.log("fetch.then OK");
       let message = response.statusText;
       let error = response.statusText;
       // response.
@@ -42,7 +41,6 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
         .json()
         .then((data) => {
           if (response.ok) {
-            console.log("fetch.then.json OK", data);
             out.ok = true;
             out.err = null;
             if (data["payload"]) {
@@ -52,14 +50,11 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
             out.result = data;
             return Promise.resolve(out);
           }
-          console.log("fetch.then.json !response.ok");
-          console.log("response.status", response.status);
-          console.log("error.json.data", data);
           message = data.message;
           error = data.error ? data.error : data.message;
           // Auth error
           if (response.status === 401 || response.status === 403) {
-            console.log("json.error 401/403", data);
+            console.log(`json.ok.error[${url}] 401/403`, data);
             errorStore.authError(message);
             resetLogin();
 
@@ -69,7 +64,7 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
             return Promise.resolve(out);
           }
           if (response.status === 400) {
-            console.log("json.error 400", data);
+            console.log(`json.ok.error[${url}] 400`, data);
             out.result = null;
             out.ok = false;
             out.err = error;
@@ -77,14 +72,14 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
             return Promise.resolve(out);
           }
           if (response.status === 404) {
-            console.log("json.error 404", data);
+            console.log(`json.ok.error[${url}] 404`, data);
             out.result = null;
             out.ok = false;
             out.err = error;
             errorStore.networkErr("Please try again later", error);
             return Promise.resolve(out);
           }
-          console.log("json.error unknown", data);
+          console.log(`json.ok.error[${url}] unknown`, data);
           errorStore.networkErr("Please try again later", response.statusText);
           out.result = null;
           out.ok = false;
@@ -92,8 +87,8 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
           return Promise.resolve(out);
         })
         .catch((err) => {
-          console.log("catch.json", err);
-          console.log("catch.json.response", response);
+          console.log(`json.error[${url}] error`, err);
+          console.log(`json.error[${url}] response`, response);
           errorStore.networkErr("response format", err);
 
           out.result = null;

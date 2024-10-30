@@ -30,9 +30,9 @@ func TestHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	info := roles.AuthInfo{
-		ID:    uuid.New(),
-		User:  "someshit",
-		Realm: "localhost",
+		ID:      uuid.New(),
+		Subject: "someshit",
+		Realm:   "localhost",
 		Device: roles.Device{
 			RemoteAddr: "127.0.0.1",
 			DeviceInfo: "some device os",
@@ -41,7 +41,7 @@ func TestHistory(t *testing.T) {
 
 	authHistory := ddd.AuthHistory{
 		ID:        info.ID,
-		User:      info.User,
+		Subject:   info.Subject,
 		Method:    "/some/login",
 		Device:    info.Device,
 		CreatedAt: time.Now(),
@@ -50,7 +50,7 @@ func TestHistory(t *testing.T) {
 	err = testRepo.SaveHistory(ctx, info, authHistory.Method)
 	require.NoError(t, err)
 
-	list, err := testRepo.ListHistory(ctx, info.User)
+	list, err := testRepo.ListHistory(ctx, info.Subject)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(list))
 	require.WithinDuration(t, authHistory.CreatedAt, list[0].CreatedAt, 100*time.Millisecond)

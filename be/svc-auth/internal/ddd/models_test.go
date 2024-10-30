@@ -28,7 +28,7 @@ func TestAuth(t *testing.T) {
 			name:   "system admin",
 			domain: "domain",
 			authPass: AuthPasswd{
-				Email:       "asdasd",
+				Subject:     "asdasd",
 				Passwd:      "",
 				Status:      "",
 				RealmRoles:  map[string][]string{},
@@ -40,9 +40,9 @@ func TestAuth(t *testing.T) {
 			name:   "domain admin role ok",
 			domain: "domain",
 			authPass: AuthPasswd{
-				Email:  "asdasd",
-				Passwd: "",
-				Status: "",
+				Subject: "asdasd",
+				Passwd:  "",
+				Status:  "",
 				RealmRoles: map[string][]string{
 					"domain": {roles.RoleAdmin, "asdasd"},
 				},
@@ -54,9 +54,9 @@ func TestAuth(t *testing.T) {
 			name:   "domain not match no role",
 			domain: "domain",
 			authPass: AuthPasswd{
-				Email:  "asdasd",
-				Passwd: "",
-				Status: "",
+				Subject: "asdasd",
+				Passwd:  "",
+				Status:  "",
 				RealmRoles: map[string][]string{
 					"bad-domain": {roles.RoleAdmin, "asdasd"},
 				},
@@ -68,7 +68,7 @@ func TestAuth(t *testing.T) {
 			name:   "no roles",
 			domain: "domain",
 			authPass: AuthPasswd{
-				Email:       "asdasd",
+				Subject:     "asdasd",
 				Passwd:      "",
 				Status:      "",
 				RealmRoles:  map[string][]string{},
@@ -83,7 +83,7 @@ func TestAuth(t *testing.T) {
 			authInfo := tc.authPass.ToAuthInfo(device, tc.domain)
 			require.True(t, authInfo.ID != uuid.Nil)
 			require.True(t, authInfo.Realm == tc.domain)
-			require.True(t, authInfo.User == tc.authPass.Email)
+			require.True(t, authInfo.Subject == tc.authPass.Subject)
 			err := polices.CanDo(tc.domain, "somepath", authInfo)
 			if tc.expErr != nil {
 				require.Error(t, err)

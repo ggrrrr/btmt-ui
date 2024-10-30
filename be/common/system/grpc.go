@@ -105,7 +105,7 @@ func (s *System) unaryInterceptor(
 					Err(err)
 				return req, status.Error(codes.Unauthenticated, err.Error())
 			}
-			infoLog.Str("user", authInfo.User)
+			infoLog.Str("subject", authInfo.Subject)
 		}
 	}
 

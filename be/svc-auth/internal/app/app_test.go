@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
@@ -42,17 +41,6 @@ type testCase struct {
 	prep func(*testing.T)
 }
 
-func cfg() (awsclient.AwsConfig, awsclient.DynamodbConfig) {
-	return awsclient.AwsConfig{
-			Region:   "us-east-1",
-			Endpoint: "http://localhost:4566",
-		},
-		awsclient.DynamodbConfig{
-			Database: "",
-			Prefix:   "test",
-		}
-}
-
 func TestLogin(t *testing.T) {
 	ctx := context.Background()
 	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
@@ -66,16 +54,16 @@ func TestLogin(t *testing.T) {
 	require.NoError(t, err)
 
 	authItem := ddd.AuthPasswd{
-		Email:       "test@asd",
+		Subject:     "test@asd",
 		Passwd:      "newpass",
 		Status:      ddd.StatusEnabled,
 		SystemRoles: []string{"admin"},
 	}
 
 	authItemLocked := ddd.AuthPasswd{
-		Email:  "test@asdlocked",
-		Passwd: "newpass",
-		Status: ddd.StatusDisable,
+		Subject: "test@asdlocked",
+		Passwd:  "newpass",
+		Status:  ddd.StatusDisable,
 	}
 
 	// if this fail it will attempt to create table.
@@ -91,11 +79,11 @@ func TestLogin(t *testing.T) {
 		{
 			test: "Login ok",
 			prep: func(t *testing.T) {
-				loginToken, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
+				loginToken, err := testApp.LoginPasswd(ctx, authItem.Subject, authItem.Passwd)
 				require.NoError(t, err)
 				testAuthToken(t,
 					ddd.LoginToken{
-						Email:        authItem.Email,
+						Subject:      authItem.Subject,
 						AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(10 * time.Minute)},
 						RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
 					},
@@ -107,10 +95,10 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, loginToken.ID, h[0].ID)
 
 				refreshCtx := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{
-					ID:    loginToken.ID,
-					User:  loginToken.Email,
-					Realm: "localhost",
-					Roles: []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
+					ID:      loginToken.ID,
+					Subject: loginToken.Subject,
+					Realm:   "localhost",
+					Roles:   []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
 				})
 
 				newLoginToken, err := testApp.TokenRefresh(refreshCtx)
@@ -118,7 +106,7 @@ func TestLogin(t *testing.T) {
 				require.NotNil(t, newLoginToken)
 				testAuthToken(t,
 					ddd.LoginToken{
-						Email:       authItem.Email,
+						Subject:     authItem.Subject,
 						AccessToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(10 * time.Minute)},
 					},
 					newLoginToken,
@@ -129,7 +117,7 @@ func TestLogin(t *testing.T) {
 		{
 			test: "wrong pass",
 			prep: func(t *testing.T) {
-				_, err = testApp.LoginPasswd(ctx, authItem.Email, "authItem.Passwd")
+				_, err = testApp.LoginPasswd(ctx, authItem.Subject, "authItem.Passwd")
 				assert.ErrorIs(t, err, ErrAuthBadPassword)
 			},
 		},
@@ -150,7 +138,7 @@ func TestLogin(t *testing.T) {
 		{
 			test: "account locked",
 			prep: func(t *testing.T) {
-				_, err = testApp.LoginPasswd(ctx, authItemLocked.Email, "authItem.Passwd")
+				_, err = testApp.LoginPasswd(ctx, authItemLocked.Subject, "authItem.Passwd")
 				assert.ErrorIs(t, err, ErrAuthEmailLocked)
 			},
 		},
@@ -176,16 +164,16 @@ func TestValidate(t *testing.T) {
 	require.NoError(t, err)
 
 	authItem := ddd.AuthPasswd{
-		Email:       "test@asd",
+		Subject:     "test@asd",
 		Passwd:      "newpass",
 		Status:      ddd.StatusEnabled,
 		SystemRoles: []string{"admin"},
 	}
 
 	authItemLocked := ddd.AuthPasswd{
-		Email:  "test@asdlocked",
-		Passwd: "newpass",
-		Status: ddd.StatusDisable,
+		Subject: "test@asdlocked",
+		Passwd:  "newpass",
+		Status:  ddd.StatusDisable,
 	}
 
 	// if this fail it will attempt to create table.
@@ -209,7 +197,7 @@ func TestValidate(t *testing.T) {
 			test: "Validate ErrAuthEmailNotFound",
 			prep: func(tt *testing.T) {
 				authInfoNotFound := roles.AuthInfo{
-					User: "asdasdasd",
+					Subject: "asdasdasd",
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
@@ -220,7 +208,7 @@ func TestValidate(t *testing.T) {
 			test: "Validate locked",
 			prep: func(tt *testing.T) {
 				authInfoNotFound := roles.AuthInfo{
-					User: authItemLocked.Email,
+					Subject: authItemLocked.Subject,
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
@@ -231,7 +219,7 @@ func TestValidate(t *testing.T) {
 			test: "Validate ok",
 			prep: func(tt *testing.T) {
 				authInfoNotFound := roles.AuthInfo{
-					User: authItem.Email,
+					Subject: authItem.Subject,
 				}
 				testCtx := roles.CtxWithAuthInfo(ctx, authInfoNotFound)
 				err := testApp.TokenValidate(testCtx)
@@ -260,7 +248,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	authItem := ddd.AuthPasswd{
-		Email:       "test@asd",
+		Subject:     "test@asd",
 		Passwd:      "newpass",
 		Status:      ddd.StatusEnabled,
 		SystemRoles: []string{"admin"},
@@ -270,28 +258,28 @@ func TestUpdate(t *testing.T) {
 	err = testApp.UserCreate(ctx, authItem)
 	require.NoError(t, err)
 
-	jwt, err := testApp.LoginPasswd(ctx, authItem.Email, authItem.Passwd)
+	jwt, err := testApp.LoginPasswd(ctx, authItem.Subject, authItem.Passwd)
 	assert.NoError(t, err)
 	testAuthToken(t,
 		ddd.LoginToken{
-			Email:        authItem.Email,
+			Subject:      authItem.Subject,
 			AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(1 * time.Minute)},
 			RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
 		},
 		jwt,
 	)
 
-	err = testApp.UserChangePasswd(ctx, authItem.Email, "authItem.Passwd", "newpass")
+	err = testApp.UserChangePasswd(ctx, authItem.Subject, "authItem.Passwd", "newpass")
 	assert.ErrorIs(t, err, ErrAuthBadPassword)
 
-	err = testApp.UserChangePasswd(ctx, authItem.Email, authItem.Passwd, "newpass")
+	err = testApp.UserChangePasswd(ctx, authItem.Subject, authItem.Passwd, "newpass")
 	assert.NoError(t, err)
 
-	jwt, err = testApp.LoginPasswd(ctx, authItem.Email, "newpass")
+	jwt, err = testApp.LoginPasswd(ctx, authItem.Subject, "newpass")
 	assert.NoError(t, err)
 	testAuthToken(t,
 		ddd.LoginToken{
-			Email:        authItem.Email,
+			Subject:      authItem.Subject,
 			AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(1 * time.Minute)},
 			RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
 		},

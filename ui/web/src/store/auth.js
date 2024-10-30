@@ -15,7 +15,6 @@ export class Token {
 }
 
 export function tokenFromJson(fromStr) {
-  console.log("tokenFromJson", fromStr);
   if (fromStr === undefined) return null;
   if (fromStr === "") return null;
 
@@ -33,7 +32,7 @@ let errorStore = useErrorStore();
 export const useLoginStore = defineStore({
   id: "auth",
   state: () => ({
-    email: localStorage.getItem("email"),
+    username: localStorage.getItem("username"),
     access_token: tokenFromJson(localStorage.getItem("access_token")),
     refresh_token: tokenFromJson(localStorage.getItem("refresh_token")),
     showLogin: false,
@@ -42,13 +41,13 @@ export const useLoginStore = defineStore({
     logout() {
       this.access_token = null;
       this.refresh_token = null;
-      this.email = "";
+      this.username = "";
     },
     loggedIn(result) {
-      this.email = result.email;
+      this.username = result.username;
       this.access_token = result.access_token;
       this.refresh_token = result.refresh_token;
-      localStorage.setItem("email", result.email);
+      localStorage.setItem("username", result.username);
       localStorage.setItem("access_token", JSON.stringify(this.access_token));
       localStorage.setItem("refresh_token", JSON.stringify(this.refresh_token));
       let tokenExpires =
@@ -69,11 +68,11 @@ export const useLoginStore = defineStore({
       this.showLogin = false;
     },
     resetLogin() {
-      this.email = "";
+      this.username = "";
       this.expires_at = null;
       this.access_token = "";
       this.showLogin = true;
-      localStorage.setItem("email", "");
+      localStorage.setItem("username", "");
       localStorage.setItem("access_token", "");
       localStorage.setItem("refresh_token", "");
     },
@@ -84,20 +83,18 @@ export const useLoginStore = defineStore({
         body: JSON.stringify({}),
       };
       const { result, ok, error } = await fetchAPI(url, requestOptions);
-      if (!ok) {
-        console.log(result);
-      } else {
-        console.log("error:", error);
+      if (ok !== true) {
+        console.log("validateRequest.error:", error, result);
       }
     },
-    async loginRequest(email, passwd) {
+    async loginRequest(username, passwd) {
       const url = config.BASE_URL + "/auth/login/passwd";
       const requestOptions = {
         // withCredentials: true,
         // mode: "no-cors",
         method: "POST",
         body: JSON.stringify({
-          email: email,
+          username: username,
           password: passwd,
         }),
       };
@@ -109,14 +106,13 @@ export const useLoginStore = defineStore({
       );
       if (ok) {
         let loginResult = {
-          email: result.email,
+          username: result.username,
           access_token: new Token(result.access_token),
           refresh_token: new Token(result.refresh_token),
         };
-        console.log("loginResult", loginResult);
         this.loggedIn(loginResult);
       } else {
-        console.log("error:", error);
+        console.log("loginRequest.error:", error);
       }
     },
   },
@@ -136,37 +132,26 @@ export const refreshAPI = async function (url, store) {
   );
   if (ok) {
     let loginResult = {
-      email: result.email,
+      username: result.username,
       access_token: new Token(result.access_token),
     };
-    console.log("refreshRequest:", loginResult);
     store.refreshIn(loginResult);
   } else {
-    console.log("error:", error);
+    console.log("refreshAPI.error:", error);
     store.resetLogin();
   }
 };
 
 export const fetchAPI = async function (url, opts = {}) {
   let store = useLoginStore();
-  console.log("store", store);
   if (store.access_token) {
-    console.log("store.token", store.access_token);
-    // let result = store.refreshRequest();
-    // console.log("The token is still valid", result);
-
     const now = Date.now();
     const delta = now - store.access_token.expires_at.getTime();
-    console.log("now", now);
-    console.log("exp", store.access_token.expires_at.getTime());
-    console.log("delta", delta);
-
     if (delta > 0) {
       console.log("The token has expired", delta);
       const url = config.BASE_URL + "/auth/token/refresh";
 
-      let refreshResponse = await refreshAPI(url, store);
-      console.log("refresh", refreshResponse);
+      await refreshAPI(url, store);
     }
     opts.token = store.access_token.value;
   }

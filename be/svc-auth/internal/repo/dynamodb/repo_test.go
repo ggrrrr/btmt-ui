@@ -44,7 +44,7 @@ func Test_List(t *testing.T) {
 
 func TestSave(t *testing.T) {
 	auth1 := ddd.AuthPasswd{
-		Email:       email1,
+		Subject:     email1,
 		Status:      ddd.StatusDisable,
 		RealmRoles:  map[string][]string{"local": {"role1"}},
 		SystemRoles: []string{"admin"},
@@ -82,7 +82,7 @@ func TestSave(t *testing.T) {
 	assert.Equal(t, ddd.StatusEnabled, items[0].Status, "expected email")
 
 	authUpdate := ddd.AuthPasswd{
-		Email:       auth1.Email,
+		Subject:     auth1.Subject,
 		Status:      ddd.StatusPending,
 		SystemRoles: []string{"noadmin", "shit"},
 		RealmRoles:  map[string][]string{"asdasd": {"roles"}},

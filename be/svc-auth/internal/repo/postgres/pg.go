@@ -13,18 +13,18 @@ import (
 )
 
 const createPasswdTable string = `CREATE TABLE IF NOT EXISTS %s (
-	email TEXT  not null,
+	subject TEXT  not null,
 	passwd TEXT  not null,
 	"status" TEXT  not null,
 	system_roles TEXT[] not null,
 	tenant_roles JSONB  not null,
 	created_at TIMESTAMP DEFAULT NOW(),
-	UNIQUE(email)
+	UNIQUE(subject)
 )`
 
 const createHistoryTable string = `CREATE TABLE IF NOT EXISTS %s (
 	"id" TEXT not null,
-	"user" TEXT not null,
+	"subject" TEXT not null,
 	"method" TEXT not null,
 	"device" JSONB not null,
 	"created_at" TIMESTAMP DEFAULT NOW(),

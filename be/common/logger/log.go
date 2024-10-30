@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/rs/zerolog"
 )
 
 var log zerolog.Logger
@@ -40,7 +40,7 @@ func traceMap(ctx context.Context) map[string]any {
 	out["device"] = authInfo.Device.DeviceInfo
 	out["remote"] = authInfo.Device.RemoteAddr
 	out["tenant"] = authInfo.Realm
-	out["user"] = authInfo.User
+	out["subject"] = authInfo.Subject
 	if traceId.IsValid() {
 		out["trace"] = traceId.String()
 	}

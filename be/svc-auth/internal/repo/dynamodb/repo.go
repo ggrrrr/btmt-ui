@@ -22,7 +22,7 @@ func (r *repo) ListPasswd(ctx context.Context, filter app.FilterFactory) (out []
 
 	input := &dynamodb.ScanInput{
 		ExpressionAttributeNames: map[string]*string{
-			"#E": aws.String("email"),
+			"#E": aws.String("subject"),
 			"#S": aws.String("status"),
 			"#T": aws.String("created_at"),
 			"#L": aws.String("system_roles"),
@@ -63,21 +63,21 @@ func (r *repo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err error) 
 
 	defer func() {
 		if err != nil {
-			logger.Error(err).Str("email", auth.Email).Err(err).Msg("ops")
+			logger.Error(err).Str("subject", auth.Subject).Err(err).Msg("ops")
 		}
 	}()
 	auth.CreatedAt = time.Now()
 	if err := r.saveItem(ctx, r.table(), auth); err != nil {
 		r.errorIsNotFound(err)
-		return fmt.Errorf("unable to save(%s.%s): %v", r.table(), auth.Email, err)
+		return fmt.Errorf("unable to save(%s.%s): %v", r.table(), auth.Subject, err)
 	}
 	logger.DebugCtx(ctx).
-		Str("email", auth.Email).
+		Str("subject", auth.Subject).
 		Msg("Save")
 	return nil
 }
 
-func (r *repo) GetPasswd(ctx context.Context, email string) (out []ddd.AuthPasswd, err error) {
+func (r *repo) GetPasswd(ctx context.Context, subject string) (out []ddd.AuthPasswd, err error) {
 	ctx, span := logger.Span(ctx, "Get", nil)
 	defer func() {
 		span.End(err)
@@ -88,10 +88,10 @@ func (r *repo) GetPasswd(ctx context.Context, email string) (out []ddd.AuthPassw
 	}
 	input.ExpressionAttributeValues = map[string]*dynamodb.AttributeValue{
 		":val": {
-			S: aws.String(email),
+			S: aws.String(subject),
 		},
 	}
-	input.KeyConditionExpression = aws.String("email = :val")
+	input.KeyConditionExpression = aws.String("subject = :val")
 	result, err := r.svc.Query(input)
 	if err != nil {
 		r.errorIsNotFound(err)
@@ -109,18 +109,18 @@ func (r *repo) GetPasswd(ctx context.Context, email string) (out []ddd.AuthPassw
 		out = append(out, auth)
 	}
 	logger.DebugCtx(ctx).
-		Str("email", email).
+		Str("subject", subject).
 		Msg("Get")
 	return
 }
 
-func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) (err error) {
+func (r *repo) UpdatePassword(ctx context.Context, subject string, passwd string) (err error) {
 	ctx, span := logger.Span(ctx, "UpdatePassword", nil)
 	defer func() {
 		span.End(err)
 	}()
 
-	logger.DebugCtx(ctx).Str("email", email).Msg("UpdatePassword")
+	logger.DebugCtx(ctx).Str("subject", subject).Msg("UpdatePassword")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":passwd": {
@@ -130,7 +130,7 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) 
 		TableName: aws.String(r.table()),
 		Key: map[string]*dynamodb.AttributeValue{
 			"email": {
-				S: aws.String(string(email)),
+				S: aws.String(string(subject)),
 			},
 		},
 		UpdateExpression: aws.String("set #passwd = :passwd"),
@@ -144,13 +144,13 @@ func (r *repo) UpdatePassword(ctx context.Context, email string, passwd string) 
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).
-		Str("email", email).
+		Str("subject", subject).
 		Msg("UpdatePassword")
 	return err
 }
 
-func (r *repo) EnableEmail(ctx context.Context, email string) (err error) {
-	ctx, span := logger.Span(ctx, "EnableEmail", nil)
+func (r *repo) EnableEmail(ctx context.Context, subject string) (err error) {
+	ctx, span := logger.Span(ctx, "EnableSubject", nil)
 	defer func() {
 		span.End(err)
 	}()
@@ -163,8 +163,8 @@ func (r *repo) EnableEmail(ctx context.Context, email string) (err error) {
 		},
 		TableName: aws.String(r.table()),
 		Key: map[string]*dynamodb.AttributeValue{
-			"email": {
-				S: aws.String(string(email)),
+			"subject": {
+				S: aws.String(string(subject)),
 			},
 		},
 		UpdateExpression: aws.String("set #enabled = :enabled"),
@@ -178,18 +178,18 @@ func (r *repo) EnableEmail(ctx context.Context, email string) (err error) {
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).
-		Str("email", email).
-		Msg("EnableEmail")
+		Str("subject", subject).
+		Msg("EnableSubject")
 	return
 }
 
-func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.StatusType) (err error) {
+func (r *repo) UpdateStatus(ctx context.Context, subject string, status ddd.StatusType) (err error) {
 	ctx, span := logger.Span(ctx, "UpdateStatus", nil)
 	defer func() {
 		span.End(err)
 	}()
 
-	logger.DebugCtx(ctx).Str("email", email).Str("status", string(status)).Msg("UpdateStatus")
+	logger.DebugCtx(ctx).Str("subject", subject).Str("status", string(status)).Msg("UpdateStatus")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":status": {
@@ -198,8 +198,8 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 		},
 		TableName: aws.String(r.table()),
 		Key: map[string]*dynamodb.AttributeValue{
-			"email": {
-				S: aws.String(string(email)),
+			"subject": {
+				S: aws.String(string(subject)),
 			},
 		},
 		UpdateExpression: aws.String("set #status = :status"),
@@ -213,7 +213,7 @@ func (r *repo) UpdateStatus(ctx context.Context, email string, status ddd.Status
 	}
 	logger.DebugCtx(ctx).
 		Any("res", res).
-		Str("email", email).
+		Str("subject", subject).
 		Msg("UpdateStatus")
 	return
 }
@@ -233,7 +233,7 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 		span.End(err)
 	}()
 
-	logger.DebugCtx(ctx).Str("email", auth.Email).Msg("Update")
+	logger.DebugCtx(ctx).Str("subject", auth.Subject).Msg("Update")
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":status": {
@@ -248,8 +248,8 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
 		},
 		TableName: aws.String(r.table()),
 		Key: map[string]*dynamodb.AttributeValue{
-			"email": {
-				S: aws.String(auth.Email),
+			"subject": {
+				S: aws.String(auth.Subject),
 			},
 		},
 		UpdateExpression: aws.String("set #status = :status, #system_roles = :system_roles, #tenant_roles = :tenant_roles"),
@@ -281,10 +281,10 @@ func (r *repo) errorIsNotFound(err error) {
 func (r *repo) createTableAuth() error {
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{AttributeName: aws.String("email"), AttributeType: aws.String("S")},
+			{AttributeName: aws.String("subject"), AttributeType: aws.String("S")},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
-			{AttributeName: aws.String("email"), KeyType: aws.String("HASH")},
+			{AttributeName: aws.String("subject"), KeyType: aws.String("HASH")},
 		},
 		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
 			ReadCapacityUnits:  aws.Int64(5),

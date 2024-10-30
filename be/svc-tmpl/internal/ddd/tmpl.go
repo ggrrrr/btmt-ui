@@ -1,17 +1,8 @@
 package ddd
 
 import (
-	"io"
-
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
-
-type FileWriterTo struct {
-	ContentType string
-	Version     string
-	Name        string
-	WriterTo    io.WriterTo
-}
 
 type DataTable struct {
 	Name    string

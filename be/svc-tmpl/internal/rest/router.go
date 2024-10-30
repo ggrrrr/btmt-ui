@@ -1,8 +1,12 @@
 package rest
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 
 	appError "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -10,7 +14,6 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
-	"github.com/go-chi/chi/v5"
 )
 
 type server struct {
@@ -43,7 +46,63 @@ func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
 	web.SendError(r.Context(), w, fmt.Errorf("asdasd"))
 }
 
+type RenderRequest struct {
+	Items        map[string]any `json:"items"`
+	TemplateBody string         `json:"body"`
+}
+
 func (s *server) Render(w http.ResponseWriter, r *http.Request) {
+	var err error
+	ctx, span := logger.Span(r.Context(), "Render", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	request := RenderRequest{}
+
+	err = web.DecodeJsonRequest(r, &request)
+	if err != nil {
+		web.SendErrorBadRequest(ctx, w, "json parsing", err)
+		return
+	}
+
+	fmt.Printf("\n\n%v\n\n", request.TemplateBody)
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+
+	data := ddd.TemplateData{
+		UserInfo: authInfo,
+		Items:    request.Items,
+	}
+
+	tmpl, err := template.New("template_data").
+		Funcs(template.FuncMap{
+			"renderImg": func(bane string) template.HTML {
+				return template.HTML(fmt.Sprintf(`<img src="%s" ></img>`, bane))
+			},
+		}).
+		Parse(request.TemplateBody)
+	if err != nil {
+		web.SendErrorBadRequest(ctx, w, "template parsing", err)
+		return
+	}
+
+	bytes := bytes.NewBuffer([]byte{})
+
+	err = tmpl.Execute(bytes, data)
+	if err != nil {
+		web.SendErrorBadRequest(ctx, w, "template exec", err)
+		return
+	}
+
+	out := struct {
+		Payload string `json:"payload"`
+	}{
+		Payload: bytes.String(),
+	}
+
+	web.SendPayload(ctx, w, "asd", out)
+	// tmpl := template.Mu
 }
 
 /*
@@ -58,7 +117,7 @@ func (s *server) UploadImage(w http.ResponseWriter, r *http.Request) {
 		span.End(err)
 	}()
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if authInfo.User == "" {
+	if authInfo.Subject == "" {
 		web.SendError(ctx, w, appError.ErrAuthUnauthenticated)
 	}
 

@@ -28,7 +28,7 @@ func (*verifier_mock) Verify(auth roles.Authorization) (roles.AuthInfo, error) {
 	}
 
 	return roles.AuthInfo{
-		User:        strings.Split(string(auth.AuthCredentials), " ")[0],
+		Subject:     strings.Split(string(auth.AuthCredentials), " ")[0],
 		Roles:       []string{"admin"},
 		SystemRoles: []string{"admin"},
 		Realm:       roles.SystemRealm,

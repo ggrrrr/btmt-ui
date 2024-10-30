@@ -23,7 +23,7 @@ func Test_CanDo(t *testing.T) {
 		{
 			test: "ok custom role ok",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "my-new-role", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"my-new-role"}})
+				err = testCanDo.CanDo(testTenant, "my-new-role", AuthInfo{Realm: testTenant, Subject: "asd", Roles: []string{"my-new-role"}})
 				assert.NoError(tt, err)
 			},
 		},
@@ -37,35 +37,35 @@ func Test_CanDo(t *testing.T) {
 		{
 			test: "ErrForbidden",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{User: "asd"})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Subject: "asd"})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 			},
 		},
 		{
 			test: "ok admin one role",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"admin"}})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Realm: testTenant, Subject: "asd", Roles: []string{"admin"}})
 				assert.NoError(tt, err)
 			},
 		},
 		{
 			test: "ok admin more roles",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(testTenant, "", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"asd", "admin"}})
+				err = testCanDo.CanDo(testTenant, "", AuthInfo{Realm: testTenant, Subject: "asd", Roles: []string{"asd", "admin"}})
 				assert.NoError(tt, err)
 			},
 		},
 		{
 			test: "ok system ErrForbidden",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemRealm, "", AuthInfo{Realm: testTenant, User: "asd", Roles: []string{"asd", "adasdmin"}})
+				err = testCanDo.CanDo(SystemRealm, "", AuthInfo{Realm: testTenant, Subject: "asd", Roles: []string{"asd", "adasdmin"}})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 			},
 		},
 		{
 			test: "ok system ok",
 			testFunc: func(tt *testing.T) {
-				err = testCanDo.CanDo(SystemRealm, "", AuthInfo{Realm: testTenant, User: "asd", SystemRoles: []string{"asd", "admin"}})
+				err = testCanDo.CanDo(SystemRealm, "", AuthInfo{Realm: testTenant, Subject: "asd", SystemRoles: []string{"asd", "admin"}})
 				assert.NoError(tt, err)
 			},
 		},

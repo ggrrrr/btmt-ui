@@ -3,10 +3,11 @@ package grpc
 import (
 	"context"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var _ authpb.AuthSvcServer = (*server)(nil)
@@ -30,7 +31,7 @@ func (s *server) UserList(ctx context.Context, _ *authpb.UserListRequest) (*auth
 
 	for _, a := range list {
 		out.Payload = append(out.Payload, &authpb.UserListPayload{
-			Email:       a.Email,
+			Username:    a.Subject,
 			Status:      string(a.Status),
 			SystemRoles: a.SystemRoles,
 			CreatedAt:   timestamppb.New(a.CreatedAt),
@@ -46,7 +47,7 @@ func (*server) UserUpdate(context.Context, *authpb.UserUpdateRequest) (*authpb.U
 
 func (s *server) UserChangePasswd(ctx context.Context, req *authpb.UserChangePasswdRequest) (*authpb.UserChangePasswdResponse, error) {
 	logger.InfoCtx(ctx).Msg("UserChangePasswd")
-	err := s.app.UserChangePasswd(ctx, req.Email, req.Password, req.NewPassword)
+	err := s.app.UserChangePasswd(ctx, req.Username, req.Password, req.NewPassword)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("UserChangePasswd")
 		return nil, app.ToGrpcError(err)
@@ -56,15 +57,15 @@ func (s *server) UserChangePasswd(ctx context.Context, req *authpb.UserChangePas
 }
 
 func (s *server) LoginPasswd(ctx context.Context, req *authpb.LoginPasswdRequest) (*authpb.LoginPasswdResponse, error) {
-	logger.InfoCtx(ctx).Str("email", req.Email).Msg("LoginPasswd")
-	res, err := s.app.LoginPasswd(ctx, req.Email, req.Password)
+	logger.InfoCtx(ctx).Str("Username", req.Username).Msg("LoginPasswd")
+	res, err := s.app.LoginPasswd(ctx, req.Username, req.Password)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("LoginPasswd")
 		return nil, app.ToGrpcError(err)
 	}
 	return &authpb.LoginPasswdResponse{
 		Payload: &authpb.LoginTokenPayload{
-			Email: req.Email,
+			Username: req.Username,
 			AccessToken: &authpb.LoginToken{
 				Value:     string(res.AccessToken.Value),
 				ExpiresAt: timestamppb.New(res.AccessToken.ExpiresAt),

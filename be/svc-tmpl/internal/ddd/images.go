@@ -1,8 +1,18 @@
 package ddd
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 type (
+	FileWriterTo struct {
+		ContentType string
+		Version     string
+		Name        string
+		WriterTo    io.WriterTo
+	}
+
 	ImageInfo struct {
 		Id          string
 		Version     string

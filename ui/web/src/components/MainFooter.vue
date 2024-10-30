@@ -6,5 +6,5 @@ let loginStore = useLoginStore()
 </script>
 
 <template>
-    <v-footer small padless>{{ loginStore.email }}</v-footer>
+    <v-footer small padless>{{ loginStore.username }}</v-footer>
 </template>

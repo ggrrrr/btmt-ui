@@ -21,7 +21,7 @@ func NewSignerMock() *mocker {
 }
 
 func (*mocker) Sign(_ context.Context, ttl time.Duration, claims roles.AuthInfo) (string, time.Time, error) {
-	if claims.User == "" {
+	if claims.Subject == "" {
 		return "", time.Time{}, fmt.Errorf("mock user is empty")
 	}
 	return "ok", time.Now().UTC().Add(ttl), nil

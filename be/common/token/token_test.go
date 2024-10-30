@@ -28,8 +28,8 @@ func TestSignTTL(t *testing.T) {
 	require.NoError(t, err)
 
 	apiClaims := roles.AuthInfo{
-		User:  "user1",
-		Roles: []string{},
+		Subject: "user1",
+		Roles:   []string{},
 	}
 
 	jwt, expiresAt, err := testSigner.Sign(ctx, ttl, apiClaims)
@@ -59,17 +59,17 @@ func TestSignVerify(t *testing.T) {
 	tokenID := uuid.New()
 
 	apiClaims := roles.AuthInfo{
-		User:  "user1",
-		Realm: "localhost",
-		Roles: []string{"admin"},
-		ID:    tokenID,
+		Subject: "user1",
+		Realm:   "localhost",
+		Roles:   []string{"admin"},
+		ID:      tokenID,
 	}
 
 	expClaims := roles.AuthInfo{
-		User:  "user1",
-		Realm: "localhost",
-		Roles: []string{"admin"},
-		ID:    tokenID,
+		Subject: "user1",
+		Realm:   "localhost",
+		Roles:   []string{"admin"},
+		ID:      tokenID,
 	}
 
 	_, err = testVer.Verify(
@@ -82,14 +82,14 @@ func TestSignVerify(t *testing.T) {
 
 	jwt, expiresAt, err := testSigner.Sign(ctx, ttl, apiClaims)
 	assert.NoError(t, err)
-	c, err := testVer.Verify(
+	authInfo, err := testVer.Verify(
 		roles.Authorization{
 			AuthScheme:      roles.AuthSchemeBearer,
 			AuthCredentials: roles.AuthCredentials(jwt),
 		},
 	)
 	assert.NoError(t, err)
-	logger.Info().Any("c", c).Msg("v")
-	assert.Equal(t, expClaims, c)
+	logger.Info().Any("c", authInfo).Msg("v")
+	assert.Equal(t, expClaims, authInfo)
 	assert.True(t, !expiresAt.IsZero())
 }

@@ -96,7 +96,7 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 		return roles.AuthInfo{}, ErrJwtInvalid
 	}
 
-	user, ok := (claims[subKey]).(string)
+	subject, ok := (claims[subKey]).(string)
 	if !ok {
 		return roles.AuthInfo{}, ErrJwtInvalidSubject
 	}
@@ -120,9 +120,9 @@ func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error
 	}
 
 	authInfo := roles.AuthInfo{
-		User:  user,
-		Realm: realm,
-		Roles: listRoles,
+		Subject: subject,
+		Realm:   realm,
+		Roles:   listRoles,
 	}
 
 	tokenID, err := uuid.Parse(id)

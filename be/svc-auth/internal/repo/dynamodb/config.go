@@ -28,7 +28,7 @@ type (
 var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
 var _ (ddd.AuthHistoryRepo) = (*repo)(nil)
 
-func (r *repo) ListHistory(ctx context.Context, user string) (authHistory []ddd.AuthHistory, err error) {
+func (r *repo) ListHistory(ctx context.Context, subject string) (authHistory []ddd.AuthHistory, err error) {
 	return nil, app.ErrTeapot
 }
 

@@ -4,14 +4,15 @@
             <v-row no-gutters>
                 <v-col class="d-flex justify-start">
                     <v-chip color="primary">User </v-chip>
-                    <v-chip v-if="refs.isNew == false">{{ refs.user.email }} </v-chip>
+                    <v-chip v-if="refs.isNew == false">{{ refs.user.username }} </v-chip>
                     <v-chip v-else>New</v-chip>
                 </v-col>
                 <v-col class="d-flex justify-end"><v-btn rounded @click="submit">{{ refs.submitTitle }}</v-btn></v-col>
             </v-row>
             <v-row no-gutters>
                 <v-col v-if="refs.isNew" class="d-flex justify-start">
-                    <v-text-field v-model="refs.user.email" label="Email" hint="email address"></v-text-field>
+                    <v-text-field v-model="refs.user.username" label="Username"
+                        hint="email/username address"></v-text-field>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -37,9 +38,9 @@ import { User, EditUser } from "@/store/users.js";
 const config = useConfig;
 
 onMounted(() => {
-    console.log("onMounted.", props.modelValue.user.email)
+    console.log("onMounted.", props.modelValue.user.username)
     refs.value.user = props.modelValue.user
-    if (props.modelValue.user.email.length > 0) {
+    if (props.modelValue.user.username.length > 0) {
         refs.value.submitTitle = "Save"
         refs.value.isNew = false
     } else {
@@ -114,7 +115,7 @@ async function updateUser(user) {
 
 async function submit() {
     let emit = "add"
-    if (refs.value.user.email.length == 0) {
+    if (refs.value.user.username.length == 0) {
         addUser(refs.value.user)
         emit = "save"
     } else {

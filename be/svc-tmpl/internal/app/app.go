@@ -1,15 +1,11 @@
 package app
 
 import (
-	"context"
 	"fmt"
-
-	appError "github.com/ggrrrr/btmt-ui/be/common/app"
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
 type (
@@ -53,13 +49,4 @@ func WithBlobStore(blobStore blob.Store) OptionsFunc {
 		a.blobStore = blobStore
 		return nil
 	}
-}
-
-func (a *App) GetTmpl(ctx context.Context, tmplId string, tmplVersion string) (*ddd.Template, error) {
-	var err error
-	ctx, span := logger.Span(ctx, "GetTmpl", nil)
-	defer func() {
-		span.End(err)
-	}()
-	return nil, appError.ErrTeapot
 }

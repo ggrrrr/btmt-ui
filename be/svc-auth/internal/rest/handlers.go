@@ -39,7 +39,7 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 	out := []*authpb.UserListPayload{}
 	for _, a := range list {
 		line := &authpb.UserListPayload{
-			Email:       a.Email,
+			Username:    a.Subject,
 			Status:      string(a.Status),
 			SystemRoles: a.SystemRoles,
 			CreatedAt:   timestamppb.New(a.CreatedAt),
@@ -74,7 +74,7 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	res, err := s.app.LoginPasswd(ctx, req.Email, req.Password)
+	res, err := s.app.LoginPasswd(ctx, req.Username, req.Password)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("LoginPasswd")
 		web.SendError(ctx, w, err)
@@ -82,12 +82,12 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.InfoCtx(ctx).
-		Str("email", req.Email).
+		Str("Username", req.Username).
 		Str("exp", res.AccessToken.ExpiresAt.String()).
 		Msg("LoginPasswd")
 
 	out := authpb.LoginTokenPayload{
-		Email: req.Email,
+		Username: req.Username,
 		AccessToken: &authpb.LoginToken{
 			Value:     res.AccessToken.Value,
 			ExpiresAt: timestamppb.New(res.AccessToken.ExpiresAt),
@@ -143,7 +143,7 @@ func (s *server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := authpb.LoginTokenPayload{
-		Email: loginToken.Email,
+		Username: loginToken.Subject,
 		AccessToken: &authpb.LoginToken{
 			Value:     loginToken.AccessToken.Value,
 			ExpiresAt: timestamppb.New(loginToken.AccessToken.ExpiresAt),

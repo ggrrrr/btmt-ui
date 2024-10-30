@@ -20,7 +20,7 @@ func NewAppPolices() *canDo {
 }
 
 func (*canDo) CanDo(tenant string, fullMethodName string, authInfo AuthInfo) error {
-	if authInfo.User == "" {
+	if authInfo.Subject == "" {
 		return app.ErrAuthUnauthenticated
 	}
 	if isSystemAdmin(authInfo) {

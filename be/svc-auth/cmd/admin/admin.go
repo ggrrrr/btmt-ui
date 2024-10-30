@@ -86,8 +86,8 @@ func runNewEmail() error {
 		return err
 	}
 	err = a.UserCreate(ctx, ddd.AuthPasswd{
-		Email:  newEmail,
-		Passwd: newPasswd,
+		Subject: newEmail,
+		Passwd:  newPasswd,
 		RealmRoles: map[string][]string{
 			string(roles.SystemRealm): {roles.RoleAdmin},
 		},

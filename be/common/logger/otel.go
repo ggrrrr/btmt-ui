@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -17,50 +16,9 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
-
-type KV struct {
-	key       string
-	strValue  *string
-	boolValue *bool
-	intValue  *int
-}
-
-func (kv KV) otelKeyValue() attribute.KeyValue {
-	key := fmt.Sprintf("%s.data.%s", spanKeyPrefix, kv.key)
-	if kv.boolValue != nil {
-		return AttributeBool(key, *kv.boolValue)
-	}
-	if kv.strValue != nil {
-		return AttributeString(key, *kv.strValue)
-	}
-	if kv.intValue != nil {
-		return AttributeInt(key, *kv.intValue)
-	}
-	return AttributeString(key, "empty value")
-
-}
-
-func KVBool(key string, val bool) KV {
-	return KV{
-		key:       key,
-		boolValue: &val,
-	}
-}
-
-func KVString(key string, val string) KV {
-	return KV{
-		key:      key,
-		strValue: &val,
-	}
-}
-
-func KVInt(key string, val int) KV {
-	return KV{
-		key:      key,
-		intValue: &val,
-	}
-}
 
 var (
 	rootCtx context.Context
@@ -214,7 +172,7 @@ func SpanWithAttributes(ctx context.Context, name string, payload AttributeExtra
 func attributeFromCtx(ctx context.Context) []attribute.KeyValue {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	kv := []attribute.KeyValue{}
-	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.user", spanKeyPrefix), authInfo.User))
+	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.subject", spanKeyPrefix), authInfo.Subject))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.device.info", spanKeyPrefix), authInfo.Device.DeviceInfo))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.device.addr", spanKeyPrefix), authInfo.Device.RemoteAddr))
 	kv = append(kv, attribute.String(fmt.Sprintf("%s.auth.realm", spanKeyPrefix), string(authInfo.Realm)))

@@ -12,7 +12,7 @@ import (
 
 func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (ddd.LoginToken, error) {
 	var err error
-	ctx, span := logger.Span(ctx, "LoginPasswd", nil)
+	ctx, span := logger.SpanWithAttributes(ctx, "LoginPasswd", nil, logger.KVString("email", email))
 	defer func() {
 		span.End(err)
 	}()
@@ -58,10 +58,10 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 	}
 
 	refreshRole := roles.AuthInfo{
-		User:  authPasswd.Email,
-		Realm: roles.SystemRealm,
-		Roles: []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
-		ID:    authInfo.ID,
+		Subject: authPasswd.Subject,
+		Realm:   roles.SystemRealm,
+		Roles:   []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
+		ID:      authInfo.ID,
 	}
 
 	// asd := authpb.AuthSvc_To/
@@ -78,8 +78,8 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 	}
 
 	return ddd.LoginToken{
-		ID:    authInfo.ID,
-		Email: email,
+		ID:      authInfo.ID,
+		Subject: email,
 		AccessToken: ddd.AuthToken{
 			Value:     accessToken,
 			ExpiresAt: expiresAt,
@@ -92,17 +92,15 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 }
 
 func (ap *Application) TokenValidate(ctx context.Context) (err error) {
-	ctx, span := logger.Span(ctx, "TokenValidate", nil)
-	defer func() {
-		span.End(err)
-	}()
-
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	if authInfo.User == "" {
+	ctx, span := logger.SpanWithAttributes(ctx, "TokenValidate", nil, logger.KVString("email", authInfo.Subject))
+	defer span.End(err)
+
+	if authInfo.Subject == "" {
 		err = app.ErrAuthUnauthenticated
 		return
 	}
-	auth, err := ap.findEmail(ctx, authInfo.User)
+	auth, err := ap.findEmail(ctx, authInfo.Subject)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("Validate")
 		return app.SystemError("failed to fetch email", err)
@@ -119,19 +117,16 @@ func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 }
 
 func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginToken, err error) {
-	ctx, span := logger.Span(ctx, "TokenRefresh", nil)
-	defer func() {
-		span.End(err)
-	}()
-
 	authInfo := roles.AuthInfoFromCtx(ctx)
+	ctx, span := logger.SpanWithAttributes(ctx, "TokenRefresh", nil, logger.KVString("email", authInfo.Subject))
+	defer span.End(err)
 
 	err = ap.appPolices.CanDo(authInfo.Realm, authpb.AuthSvc_TokenRefresh_FullMethodName, authInfo)
 	if err != nil {
 		return loginToken, app.PermissionDeniedError("token refresh roles", err)
 	}
 
-	auth, err := ap.findEmail(ctx, authInfo.User)
+	auth, err := ap.findEmail(ctx, authInfo.Subject)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("TokenRefresh")
 		return loginToken, app.SystemError("failed to fetch email", err)
@@ -165,8 +160,8 @@ func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginTo
 	}
 
 	loginToken = ddd.LoginToken{
-		ID:    authInfo.ID,
-		Email: authInfo.User,
+		ID:      authInfo.ID,
+		Subject: authInfo.Subject,
 		AccessToken: ddd.AuthToken{
 			Value:     jwtValue,
 			ExpiresAt: expiresAt,

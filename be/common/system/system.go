@@ -3,7 +3,6 @@ package system
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,11 +14,6 @@ import (
 )
 
 var _ (Service) = (*System)(nil)
-
-func NewCli(cfg config.AppConfig) (*System, error) {
-
-	return nil, fmt.Errorf("not yet")
-}
 
 func NewSystem(cfg config.AppConfig) (*System, error) {
 	s := System{

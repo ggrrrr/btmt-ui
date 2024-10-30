@@ -6,17 +6,18 @@ import (
 	"net"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/test/bufconn"
+
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/test/bufconn"
 )
 
 type (
@@ -44,13 +45,13 @@ func TestServer(t *testing.T) {
 	store, err := mem.New()
 	require.NoError(t, err)
 
-	testApp, err := app.New(app.WithAuthRepo(store), app.WithTokenSigner(token.NewSignerMock()))
+	testApp, err := app.New(app.WithAuthRepo(store), app.WithHistoryRepo(store), app.WithTokenSigner(token.NewSignerMock()))
 	require.NoError(t, err)
 
 	err = testApp.UserCreate(ctxAdmin, ddd.AuthPasswd{
-		Email:  "asd@asd",
-		Passwd: "asdasdasd",
-		Status: ddd.StatusEnabled,
+		Subject: "asd@asd",
+		Passwd:  "asdasdasd",
+		Status:  ddd.StatusEnabled,
 	})
 	require.NoError(t, err)
 
@@ -62,7 +63,7 @@ func TestServer(t *testing.T) {
 			test: "login ok",
 			testFunc: func(tt *testing.T) {
 				_, err = client.LoginPasswd(ctx, &authpb.LoginPasswdRequest{
-					Email:    "asd@asd",
+					Username: "asd@asd",
 					Password: "asdasdasd",
 				})
 				assert.NoError(tt, err)

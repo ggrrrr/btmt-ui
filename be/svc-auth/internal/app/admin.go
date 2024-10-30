@@ -11,7 +11,7 @@ import (
 )
 
 func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.Span(ctx, "UserCreate", nil)
+	ctx, span := logger.SpanWithAttributes(ctx, "UserCreate", nil, logger.KVString("email", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -22,7 +22,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 		return err
 	}
 
-	if auth.Email == "" {
+	if auth.Subject == "" {
 		err = ErrAuthEmailEmpty
 		return
 	}
@@ -32,7 +32,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 		return err
 	}
 
-	logger.InfoCtx(ctx).Any("email", auth.Email).Msg("CreateAuth")
+	logger.InfoCtx(ctx).Any("email", auth.Subject).Msg("CreateAuth")
 	if auth.Passwd != "" {
 		cryptPasswd, err := HashPassword(string(auth.Passwd))
 		if err != nil {
@@ -49,7 +49,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 }
 
 func (ap *Application) Get(ctx context.Context, email string) (result ddd.AuthPasswd, err error) {
-	ctx, span := logger.Span(ctx, "Get", nil)
+	ctx, span := logger.SpanWithAttributes(ctx, "Get", nil, logger.KVString("email", email))
 	defer func() {
 		span.End(err)
 	}()
@@ -98,7 +98,7 @@ func (ap *Application) UserList(ctx context.Context) (result []ddd.AuthPasswd, e
 }
 
 func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.Span(ctx, "UserUpdate", nil)
+	ctx, span := logger.SpanWithAttributes(ctx, "UserUpdate", nil, logger.KVString("email", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -109,7 +109,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 		return
 	}
 
-	list, err := ap.authRepo.GetPasswd(ctx, auth.Email)
+	list, err := ap.authRepo.GetPasswd(ctx, auth.Subject)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("authRepo.Get")
 		return
@@ -125,7 +125,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 }
 
 func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) (err error) {
-	ctx, span := logger.Span(ctx, "UserChangePasswd", nil)
+	ctx, span := logger.SpanWithAttributes(ctx, "UserChangePasswd", nil, logger.KVString("email", email))
 	defer func() {
 		span.End(err)
 	}()

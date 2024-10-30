@@ -56,7 +56,7 @@ func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
 		pass, _ := app.HashPassword("asdasd")
 		repo, _ = mem.New()
 		asdUser := ddd.AuthPasswd{
-			Email:       "asd@asd",
+			Subject:     "asd@asd",
 			Status:      ddd.StatusEnabled,
 			SystemRoles: []string{"admin"},
 			Passwd:      pass,

@@ -131,7 +131,7 @@
         },
         "parameters": [
           {
-            "name": "email",
+            "name": "username",
             "in": "query",
             "required": false,
             "type": "string"
@@ -227,7 +227,7 @@
         },
         "parameters": [
           {
-            "name": "email",
+            "name": "subject",
             "in": "query",
             "required": false,
             "type": "string"
@@ -276,7 +276,7 @@
     "authpbLoginPasswdRequest": {
       "type": "object",
       "properties": {
-        "email": {
+        "username": {
           "type": "string"
         },
         "password": {
@@ -307,7 +307,7 @@
     "authpbLoginTokenPayload": {
       "type": "object",
       "properties": {
-        "email": {
+        "username": {
           "type": "string"
         },
         "access_token": {
@@ -341,7 +341,7 @@
     "authpbUserCreateRequest": {
       "type": "object",
       "properties": {
-        "email": {
+        "username": {
           "type": "string"
         },
         "status": {
@@ -364,7 +364,7 @@
     "authpbUserListPayload": {
       "type": "object",
       "properties": {
-        "email": {
+        "username": {
           "type": "string"
         },
         "status": {

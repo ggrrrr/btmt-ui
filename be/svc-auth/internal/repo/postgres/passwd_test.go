@@ -41,7 +41,7 @@ func TestSaveGetList(t *testing.T) {
 
 	ts := time.Now()
 	testData := ddd.AuthPasswd{
-		Email:       "emai@asd.com",
+		Subject:     "emai@asd.com",
 		Passwd:      "pass1",
 		Status:      "stat1",
 		RealmRoles:  map[string][]string{"localhost": {"admin"}},
@@ -50,7 +50,7 @@ func TestSaveGetList(t *testing.T) {
 	err = testRepo.SavePasswd(ctx, testData)
 	require.NoError(t, err)
 
-	rows, err := testRepo.GetPasswd(ctx, testData.Email)
+	rows, err := testRepo.GetPasswd(ctx, testData.Subject)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.WithinDuration(t, rows[0].CreatedAt, ts, 1*time.Second)
@@ -67,7 +67,7 @@ func TestSaveGetList(t *testing.T) {
 	testData.CreatedAt = rows[0].CreatedAt
 	require.Equal(t, testData, rows[0])
 
-	testData1 := ddd.AuthPasswd{Email: "email2", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
+	testData1 := ddd.AuthPasswd{Subject: "email2", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
 	err = testRepo.SavePasswd(ctx, testData1)
 	require.NoError(t, err)
 	rows, err = testRepo.ListPasswd(ctx, nil)
@@ -91,7 +91,7 @@ func TestUpdate(t *testing.T) {
 	require.NoError(t, err)
 
 	ts := time.Now()
-	testData := ddd.AuthPasswd{Email: "email11", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
+	testData := ddd.AuthPasswd{Subject: "email11", Passwd: "pass1", Status: "stat1", SystemRoles: []string{"r1"}}
 	err = testRepo.SavePasswd(ctx, testData)
 	require.NoError(t, err)
 
@@ -102,29 +102,29 @@ func TestUpdate(t *testing.T) {
 	testData.CreatedAt = rows[0].CreatedAt
 	require.Equal(t, testData, rows[0])
 
-	err = testRepo.UpdateStatus(ctx, testData.Email, "ok")
+	err = testRepo.UpdateStatus(ctx, testData.Subject, "ok")
 	require.NoError(t, err)
-	rows, err = testRepo.GetPasswd(ctx, testData.Email)
+	rows, err = testRepo.GetPasswd(ctx, testData.Subject)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, ddd.StatusType("ok"), rows[0].Status)
 
-	err = testRepo.UpdatePassword(ctx, testData.Email, "asdqweasdqwe")
+	err = testRepo.UpdatePassword(ctx, testData.Subject, "asdqweasdqwe")
 	require.NoError(t, err)
-	rows, err = testRepo.GetPasswd(ctx, testData.Email)
+	rows, err = testRepo.GetPasswd(ctx, testData.Subject)
 	require.NoError(t, err)
 	require.True(t, len(rows) == 1)
 	require.Equal(t, "asdqweasdqwe", rows[0].Passwd)
 
 	updateData := ddd.AuthPasswd{
-		Email:       testData.Email,
+		Subject:     testData.Subject,
 		Status:      ddd.StatusPending,
 		SystemRoles: []string{"notadmin", "other"},
 		RealmRoles:  map[string][]string{"t1": {"asd"}},
 	}
 	err = testRepo.Update(ctx, updateData)
 	require.NoError(t, err)
-	rows, err = testRepo.GetPasswd(ctx, testData.Email)
+	rows, err = testRepo.GetPasswd(ctx, testData.Subject)
 	require.NoError(t, err)
 	assert.True(t, len(rows) == 1)
 	got := rows[0]
