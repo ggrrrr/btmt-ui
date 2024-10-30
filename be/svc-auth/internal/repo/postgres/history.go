@@ -44,7 +44,7 @@ func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory
 
 	sql := r.table(`
 	select "id", "subject", "method", "device", "created_at" from  %s 
-	where "user" = $1
+	where "subject" = $1
 	`, r.historyTable)
 	logger.DebugCtx(ctx).
 		Str("subject", subject).

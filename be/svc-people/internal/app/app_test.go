@@ -6,13 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type (
@@ -27,7 +28,7 @@ func TestSave(t *testing.T) {
 	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "mock", roles.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{Subject: "some"})
 
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test-people")
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)

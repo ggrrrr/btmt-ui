@@ -9,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_Save(t *testing.T) {
@@ -23,7 +24,7 @@ func Test_Save(t *testing.T) {
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test-people")
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
@@ -55,7 +56,7 @@ func Test_List(t *testing.T) {
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test-people")
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)

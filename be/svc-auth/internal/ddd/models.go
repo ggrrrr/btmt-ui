@@ -26,12 +26,12 @@ type (
 	StatusType string
 
 	AuthPasswd struct {
-		Subject     string
-		Passwd      string
-		Status      StatusType
-		RealmRoles  map[string][]string
-		SystemRoles []string
-		CreatedAt   time.Time
+		Subject     string              `json:"subject"`
+		Passwd      string              `json:"passwd"`
+		Status      StatusType          `json:"status"`
+		RealmRoles  map[string][]string `json:"realm_roles"`
+		SystemRoles []string            `json:"system_roles"`
+		CreatedAt   time.Time           `json:"created_at"`
 	}
 
 	AuthHistory struct {

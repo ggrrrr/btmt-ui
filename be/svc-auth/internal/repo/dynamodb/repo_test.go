@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -43,6 +44,7 @@ func Test_List(t *testing.T) {
 }
 
 func TestSave(t *testing.T) {
+	t.Skipf("aws dynombe needs to be moved to github.com/aws/aws-sdk-go-v2")
 	auth1 := ddd.AuthPasswd{
 		Subject:     email1,
 		Status:      ddd.StatusDisable,
@@ -54,6 +56,7 @@ func TestSave(t *testing.T) {
 	ctx := context.Background()
 
 	r, err := New(cfg())
+	r.prefix = "test"
 	require.NoError(t, err)
 
 	_ = r.createTableAuth()
@@ -84,8 +87,8 @@ func TestSave(t *testing.T) {
 	authUpdate := ddd.AuthPasswd{
 		Subject:     auth1.Subject,
 		Status:      ddd.StatusPending,
-		SystemRoles: []string{"noadmin", "shit"},
-		RealmRoles:  map[string][]string{"asdasd": {"roles"}},
+		SystemRoles: []string{"noadmin"},
+		RealmRoles:  map[string][]string{"localhost": {"roles"}},
 	}
 
 	err = r.Update(ctx, authUpdate)

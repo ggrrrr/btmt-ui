@@ -43,7 +43,7 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 			"key2": item2,
 		},
 		Lists: map[string][]string{"list1": {"item 1", "item 2", "item 3"}},
-		Tables: map[string]DataTable{
+		Tables: map[string]TemplateTable{
 			"table1": {
 				Name:    "table 1",
 				Headers: []string{"name 1", "name 2"},

@@ -24,7 +24,7 @@ type (
 
 func TestSave(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test_people")
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	// defer testRepo.Close()
@@ -37,7 +37,7 @@ func TestSave(t *testing.T) {
 
 	tests := []testCase{
 		{
-			test: "happy get nil",
+			test: "happy get not found",
 			run: (func(t *testing.T) {
 				noRec, err := testRepo.GetById(ctx, primitive.NewObjectID().Hex())
 				assert.NoError(t, err)
@@ -64,9 +64,10 @@ func TestSave(t *testing.T) {
 				assert.True(t, p1.Id != "")
 				assert.True(t, !p1.CreatedTime.IsZero(), "Created Time must be set")
 				assert.WithinDuration(t, ts, p1.CreatedTime, 1*time.Second)
-
+				fmt.Printf("p1.Idp1.Idp1.Idp1.Idp1.Id: %v \n", p1.Id)
 				p2, err := testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
+				require.NotNil(t, p2)
 				t.Logf("%+v \n", p1)
 				t.Logf("%+v \n", p2)
 				assert.WithinDuration(t, ts, p2.CreatedTime, 1*time.Second)
@@ -104,6 +105,7 @@ func TestSave(t *testing.T) {
 				require.NoError(t, err)
 				p3, err := testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
+				require.NotNil(t, p3)
 				logger.Info().Any("got", p3).Msg("Asd")
 
 				p3.CreatedTime = p1.CreatedTime
@@ -155,7 +157,7 @@ func TestSave(t *testing.T) {
 // https://github.com/mongodb/mongo-go-driver/blob/v1.12.1/examples/documentation_examples/examples.go
 func TestList(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test_people")
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
@@ -404,7 +406,7 @@ func TestList(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test-people")
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)

@@ -129,7 +129,7 @@ func (r *repo) UpdatePassword(ctx context.Context, subject string, passwd string
 		},
 		TableName: aws.String(r.table()),
 		Key: map[string]*dynamodb.AttributeValue{
-			"email": {
+			"subject": {
 				S: aws.String(string(subject)),
 			},
 		},
@@ -310,7 +310,9 @@ func (r *repo) saveItem(ctx context.Context, table string, item interface{}) (er
 		Item:      av,
 		TableName: aws.String(table),
 	}
+	logger.DebugCtx(ctx).Any("asdasd", av).Msg("asdasd")
 	if _, err := r.svc.PutItem(input); err != nil {
+		logger.ErrorCtx(ctx, err).Msg("asdasd")
 		return err
 	}
 	return nil

@@ -7,16 +7,17 @@ import (
 	"net"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
+
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
+	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
 )
 
 type (
@@ -29,7 +30,7 @@ type (
 func TestTelephoneServer_GetContact(t *testing.T) {
 	ctx := context.Background()
 
-	cfg := mgo.MgoTestCfg()
+	cfg := mgo.MgoTestCfg("test-people")
 
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)

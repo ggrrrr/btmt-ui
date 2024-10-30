@@ -158,15 +158,21 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 }
 
 func (r *repo) GetById(ctx context.Context, fromId string) (result *ddd.Person, err error) {
-	_, span := logger.Span(ctx, "repo.GetById", nil)
+	_, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.KVString("id", fromId))
 	defer func() {
 		span.End(err)
 	}()
 
-	id, err := convertPersonId(fromId)
+	id, err := mgo.ConvertFromId(fromId)
 	if err != nil {
 		return
 	}
+
+	logger.DebugCtx(ctx).
+		Str("fromId", fromId).
+		Str("id.Hex", id.Hex()).
+		Str("id", id.String()).
+		Send()
 
 	var out person
 	res := r.db.FindOne(ctx, r.collection, bson.M{"_id": id})

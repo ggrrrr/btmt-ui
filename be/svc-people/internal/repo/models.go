@@ -5,9 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
 const (
@@ -43,8 +45,6 @@ type (
 		Labels      []string           `bson:"labels"`
 		Attr        []string           `bson:"attr"`
 		CreatedTime primitive.DateTime `bson:"created_ts"`
-
-		// Age         string             `bson:"-" json:"age"`
 	}
 )
 
@@ -74,13 +74,6 @@ func toMap(in []string) map[string]string {
 	return out
 }
 
-func convertPersonId(fromId string) (primitive.ObjectID, error) {
-	if fromId == "" {
-		return primitive.NewObjectID(), nil
-	}
-	return primitive.ObjectIDFromHex(fromId)
-}
-
 func fromDob(fromDob *ddd.Dob) *dob {
 	if fromDob == nil {
 		return nil
@@ -104,7 +97,7 @@ func toDob(fromDob *dob) *ddd.Dob {
 }
 
 func fromPerson(p *ddd.Person) (*person, error) {
-	id, err := convertPersonId(p.Id)
+	id, err := mgo.ConvertFromId(p.Id)
 	if err != nil {
 		return nil, app.BadRequestError("invalid person.id", err)
 	}
@@ -121,14 +114,8 @@ func fromPerson(p *ddd.Person) (*person, error) {
 		Phones:      toSlice(p.Phones),
 		Labels:      p.Labels,
 		Attr:        toSlice(p.Attr),
-		CreatedTime: primitive.NewDateTimeFromTime(p.CreatedTime),
+		CreatedTime: mgo.FromTimeOrNow(p.CreatedTime),
 	}
-
-	ts := primitive.NewDateTimeFromTime(time.Now())
-	if !p.CreatedTime.IsZero() {
-		ts = primitive.NewDateTimeFromTime(p.CreatedTime)
-	}
-	out.CreatedTime = ts
 
 	return &out, nil
 }

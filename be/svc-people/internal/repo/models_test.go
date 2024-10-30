@@ -5,10 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
 func Test_objectId(t *testing.T) {
@@ -17,7 +19,7 @@ func Test_objectId(t *testing.T) {
 	hex := uuid1.Hex()
 	fmt.Printf("uuid: %x %v\n", hex, len(hex))
 
-	uuid1p, err := convertPersonId(hex)
+	uuid1p, err := mgo.ConvertFromId(hex)
 	assert.NoError(t, err)
 	assert.Equal(t, uuid1, uuid1p)
 	fmt.Printf("uuid : %s \n", uuid1p.String())

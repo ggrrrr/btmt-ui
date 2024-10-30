@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
 	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -40,7 +39,8 @@ type (
 		ctx    context.Context
 		client *mongo.Client
 		db     *mongo.Database
-		cfg    Config
+		ttl    time.Duration
+		// cfg    Config
 	}
 )
 
@@ -114,15 +114,16 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 
 	logger.Info().Msg("ok")
 	return &repo{
-		cfg:    cfg,
+		// cfg:    cfg,
 		client: client,
 		ctx:    ctx,
 		db:     db,
+		ttl:    cfg.TTL,
 	}, nil
 }
 
 func (r *repo) Close(ctx context.Context) {
-	ctx, cancel := context.WithTimeout(ctx, r.cfg.TTL)
+	ctx, cancel := context.WithTimeout(ctx, r.ttl)
 	defer cancel()
 
 	err := r.db.Client().Disconnect(ctx)
@@ -137,14 +138,14 @@ func (r *repo) Collection(c string) *mongo.Collection {
 }
 
 func (r *repo) Find(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
-	ctx, cancel := context.WithTimeout(ctx, r.cfg.TTL)
+	ctx, cancel := context.WithTimeout(ctx, r.ttl)
 	defer cancel()
 	col := r.db.Collection(collection)
 	return col.Find(ctx, filter, opts...)
 }
 
 func (r *repo) InsertOne(ctx context.Context, collection string, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.cfg.TTL)
+	ctx, cancel := context.WithTimeout(ctx, r.ttl)
 	defer cancel()
 
 	col := r.db.Collection(collection)
@@ -152,18 +153,18 @@ func (r *repo) InsertOne(ctx context.Context, collection string, document interf
 }
 
 func (r *repo) UpdateByID(ctx context.Context, collection string, id interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.cfg.TTL)
+	ctx, cancel := context.WithTimeout(ctx, r.ttl)
 	defer cancel()
 
-	col := r.db.Collection(r.cfg.Collection)
+	col := r.db.Collection(collection)
 	return col.UpdateByID(ctx, id, update, opts...)
 }
 
 func (r *repo) FindOne(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult {
-	ctx, cancel := context.WithTimeout(ctx, r.cfg.TTL)
+	ctx, cancel := context.WithTimeout(ctx, r.ttl)
 	defer cancel()
 
-	col := r.db.Collection(r.cfg.Collection)
+	col := r.db.Collection(collection)
 	return col.FindOne(ctx, filter, opts...)
 }
 

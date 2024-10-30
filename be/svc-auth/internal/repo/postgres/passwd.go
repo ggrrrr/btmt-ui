@@ -188,7 +188,7 @@ func (r *authRepo) UpdateStatus(ctx context.Context, subject string, status ddd.
 
 	sql := r.table(`
 	update  %s set "status" = $1
-	where email = $2
+	where subject = $2
 	`, r.passwdTable)
 	logger.DebugCtx(ctx).
 		Str("subject", subject).
