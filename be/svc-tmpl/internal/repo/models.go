@@ -12,7 +12,7 @@ type (
 		Id          primitive.ObjectID `bson:"_id"`
 		Labels      []string           `bson:"labels"`
 		ContentType string             `bson:"content_type"`
-		Name        string             `bson:"Name"`
+		Name        string             `bson:"name"`
 		Body        string             `bson:"body"`
 		CreatedAt   primitive.DateTime `bson:"created_at"`
 	}

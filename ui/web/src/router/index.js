@@ -41,12 +41,16 @@ const routes = [
         // which is lazy-loaded when the route is visited.
         children: [
           {
-            path: "/templates/images",
-            component: () => import("@/modules/tmpl/views/ImagesView.vue"),
+            path: "/templates/manage",
+            component: () => import("@/modules/tmpl/views/ManageView.vue"),
           },
           {
-            path: "/templates/manage",
-            component: () => import("@/modules/tmpl/views/TemplateView.vue"),
+            path: "/templates/manage/edit/:id",
+            component: () => import("@/modules/tmpl/views/EditView.vue"),
+          },
+          {
+            path: "/templates/images",
+            component: () => import("@/modules/tmpl/views/ImagesView.vue"),
           },
         ],
         component: () => import("@/modules/tmpl/views/TemplatesView.vue"),

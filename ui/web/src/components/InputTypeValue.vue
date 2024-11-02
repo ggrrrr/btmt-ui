@@ -2,8 +2,8 @@
     <div class="d-flex">
         <v-select v-model="type" :label="props.typeLabel" :items="props.typeItems" density="compact"
             variant="underlined"></v-select>
-        <v-text-field :rules="props.rules" v-model="value" @update:focused="onFocus" :label="props.label" :hint="props.hint"
-            @keydown.enter="handleAdd" density="compact" variant="underlined"></v-text-field>
+        <v-text-field :rules="props.rules" v-model="value" @update:focused="onFocus" :label="props.label"
+            :hint="props.hint" @keydown.enter="handleAdd" density="compact" variant="underlined"></v-text-field>
     </div>
 </template>
 <!--  https://webmound.com/use-v-model-custom-components-vue-3/ -->
@@ -74,5 +74,3 @@ function handleAdd() {
 }
 
 </script>
-
-

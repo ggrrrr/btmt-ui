@@ -11,10 +11,11 @@ const props = defineProps(['labels'])
 
 function formatList() {
     let out = []
-    props['labels'].forEach((k) => {
-        out.push(k)
-
-    });
+    if (props['labels']) {
+        props['labels'].forEach((k) => {
+            out.push(k)
+        });
+    }
     return out
 }
 

@@ -7,8 +7,10 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob/awss3"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/repo"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/rest"
 )
 
@@ -27,6 +29,18 @@ func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
 func Root(ctx context.Context, s system.Service) error {
 	logger.Info().Msg("Root")
 
+	db, err := mgo.New(ctx, s.Config().Mgo)
+	if err != nil {
+		logger.Error(err).Msg("db")
+		return err
+	}
+	fn := func() {
+		db.Close(ctx)
+	}
+	s.Waiter().Cleanup(fn)
+
+	appRepo := repo.New("tmpl", db)
+
 	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.AwsConfig{
 		Region:   "us-east-1",
 		Endpoint: "http://localhost:4566",
@@ -35,7 +49,10 @@ func Root(ctx context.Context, s system.Service) error {
 		return err
 	}
 
-	a, _ := app.New(app.WithBlobStore(blobClient))
+	a, _ := app.New(
+		app.WithBlobStore(blobClient),
+		app.WithTmplRepo(appRepo),
+	)
 
 	if s.Mux() == nil {
 		return fmt.Errorf("system.Mux is nil")

@@ -16,7 +16,7 @@ import (
 func TestSave(t *testing.T) {
 	var err error
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg("test-temp")
+	cfg := mgo.MgoTestCfg("tmpl")
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	// defer testRepo.Close()
@@ -34,8 +34,10 @@ func TestSave(t *testing.T) {
 		Labels:      []string{"label1"},
 		Name:        "test template",
 		ContentType: "ctx/html",
-		Body:        `some shit asdasd <asd></asd>`,
-		CreatedAt:   time.Now(),
+		Body: `<p> {{ .UserInfo.Device.DeviceInfo }}</p>
+<p> {{ .UserInfo.Subject }}</p>
+{{ renderImg "http://localhost:8010/tmpl/image/IMG4944.JPG:1/resized" }}`,
+		CreatedAt: time.Now(),
 	}
 	err = testRepo.Save(ctx, firstTmpl)
 	require.NoError(t, err)
@@ -55,4 +57,27 @@ func TestSave(t *testing.T) {
 	assert.WithinDuration(t, firstTmpl.CreatedAt, listResult[0].CreatedAt, 100*time.Millisecond)
 	firstTmpl.CreatedAt = actualTmpl.CreatedAt
 	assert.Equal(t, firstTmpl, actualTmpl)
+
+	updateTmpl := &ddd.Template{
+		Id:          firstTmpl.Id,
+		Labels:      []string{"label1", "label2"},
+		Name:        "updated template",
+		ContentType: "ctx/html",
+		Body: `<p>From update</p>
+<p> {{ .UserInfo.Device.DeviceInfo }}</p>
+<p> {{ .UserInfo.Subject }}</p>
+{{ renderImg "http://localhost:8010/tmpl/image/IMG4944.JPG:1/resized" }}`,
+		CreatedAt: time.Now(),
+	}
+
+	err = testRepo.Update(ctx, updateTmpl)
+	require.NoError(t, err)
+	actualTmpl, err = testRepo.GetById(ctx, firstTmpl.Id)
+	require.NoError(t, err)
+
+	require.NotNil(t, actualTmpl)
+	assert.WithinDuration(t, updateTmpl.CreatedAt, actualTmpl.CreatedAt, 100*time.Millisecond)
+	updateTmpl.CreatedAt = actualTmpl.CreatedAt
+	assert.Equal(t, updateTmpl, actualTmpl)
+
 }

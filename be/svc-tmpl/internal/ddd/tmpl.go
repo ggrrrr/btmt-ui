@@ -20,14 +20,14 @@ type TemplateData struct {
 }
 
 type Template struct {
-	Id          string
-	ContentType string
-	Name        string
-	Labels      []string
-	Attachments map[string]string
-	Images      map[string]string
-	Body        string
-	CreatedAt   time.Time
+	Id          string            `json:"id,omitempty"`
+	ContentType string            `json:"content_type,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Labels      []string          `json:"labels,omitempty"`
+	Attachments map[string]string `json:"attachments,omitempty"`
+	Images      map[string]string `json:"images,omitempty"`
+	Body        string            `json:"body,omitempty"`
+	CreatedAt   time.Time         `json:"created_at,omitempty"`
 }
 
 func (t Template) Extractor() map[string]string {

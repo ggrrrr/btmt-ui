@@ -16,6 +16,7 @@ type (
 
 	tmplRepo interface {
 		Save(ctx context.Context, template *ddd.Template) error
+		Update(ctx context.Context, template *ddd.Template) error
 		List(ctx context.Context, filter app.FilterFactory) (result []ddd.Template, err error)
 		GetById(ctx context.Context, fromId string) (*ddd.Template, error)
 	}

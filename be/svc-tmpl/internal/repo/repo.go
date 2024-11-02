@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -43,6 +44,7 @@ func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 	defer func() {
 		span.End(err)
 	}()
+	logger.InfoCtx(ctx).Msg("repo.List")
 
 	cur, err := r.db.Find(ctx, r.collection, bson.M{})
 	if err != nil {
@@ -106,4 +108,56 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error
 	out := internal.toTemplate()
 
 	return &out, err
+}
+
+func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil,
+		logger.KVString("template.id", template.Id),
+		logger.KVString("template.name", template.Name),
+	)
+	defer func() {
+		span.End(err)
+	}()
+
+	id, err := mgo.ConvertFromId(template.Id)
+	if err != nil {
+		return
+	}
+
+	setReq := bson.M{}
+	if len(template.Name) > 0 {
+		setReq["name"] = template.Name
+	}
+	if len(template.ContentType) > 0 {
+		setReq["content_type"] = template.ContentType
+	}
+	if len(template.Body) > 0 {
+		setReq["body"] = template.Body
+	}
+	if len(template.Labels) > 0 {
+		setReq["labels"] = template.Labels
+	}
+
+	setReq["created_at"] = mgo.FromTimeOrNow(time.Now())
+
+	updateReq := bson.M{
+		"$set": setReq,
+	}
+
+	logger.DebugCtx(ctx).
+		Any("updateReq", updateReq).
+		Str("id", template.Id).
+		Msg("UpdateByID")
+	resp, err := r.db.UpdateByID(ctx, r.collection, id, updateReq)
+	if err != nil {
+		return
+	}
+
+	logger.InfoCtx(ctx).
+		Any("id", template.Id).
+		Any("matchedCount", resp.MatchedCount).
+		Msg("update")
+
+	return
+
 }

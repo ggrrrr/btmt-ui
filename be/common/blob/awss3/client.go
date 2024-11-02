@@ -196,6 +196,7 @@ func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobI
 
 	tempMap := map[string]*blob.ListResult{}
 
+	// TODO consider multi threading here, to speedup long lists
 	for _, awsId := range blobs {
 		blobMD, err := head(ctx, c, awsId)
 		if err != nil {

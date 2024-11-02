@@ -17,9 +17,16 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 
 	// Fetch images and other blobs to verify all is good
 	// test if we can parse the body with template
+	if tmpl.Id == "" {
+		err = a.repo.Save(ctx, tmpl)
+	} else {
+		err = a.repo.Update(ctx, tmpl)
+	}
+	if err != nil {
 
-	err = a.repo.Save(ctx, tmpl)
+	}
 	return err
+
 }
 
 func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Template, error) {
@@ -29,11 +36,12 @@ func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Tem
 		span.End(err)
 	}()
 
+	logger.InfoCtx(ctx).Msg("ListTmpl")
+
 	result, err := a.repo.List(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-
 	return result, nil
 }
 
