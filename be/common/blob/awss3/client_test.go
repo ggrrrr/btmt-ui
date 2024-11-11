@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
-	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
+	"github.com/ggrrrr/btmt-ui/be/common/blob"
 )
 
 var testBucket string = "test-bucket-1"
@@ -38,7 +39,7 @@ func TestList2(t *testing.T) {
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				testClient := &Client{
-					s3Clients: map[string]s3Client{
+					s3Clients: map[realmKey]s3Client{
 						"localhost": s3c,
 					},
 				}
@@ -113,7 +114,7 @@ func TestCallsListPushFetchHead(t *testing.T) {
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				testClient := &Client{
-					s3Clients: map[string]s3Client{
+					s3Clients: map[realmKey]s3Client{
 						"localhost": s3c,
 					},
 				}
@@ -157,7 +158,7 @@ func TestCallsListPushFetchHead(t *testing.T) {
 			name: "ok tenent not found",
 			testFunc: func(t *testing.T) {
 				testClient := &Client{
-					s3Clients: map[string]s3Client{},
+					s3Clients: map[realmKey]s3Client{},
 				}
 
 				folder1v1, _ = blob.ParseBlobId("asdasdasd/asd")
@@ -183,7 +184,7 @@ func TestCallsListPushFetchHead(t *testing.T) {
 				s3c.bucketName = testBucket
 
 				testClient := &Client{
-					s3Clients: map[string]s3Client{
+					s3Clients: map[realmKey]s3Client{
 						"localhost": s3c,
 					},
 				}

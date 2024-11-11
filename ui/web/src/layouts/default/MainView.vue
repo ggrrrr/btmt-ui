@@ -1,10 +1,12 @@
 <template>
-  <v-app>
+  <v-layout class="rounded rounded-md">
     <main-toolbar />
     <error-dialog />
-    <router-view />
-    <main-footer />
-  </v-app>
+    <v-main>
+      <router-view />
+    </v-main>
+  </v-layout>
+  <main-footer />
 </template>
 
 <script setup>

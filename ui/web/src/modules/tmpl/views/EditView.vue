@@ -1,35 +1,21 @@
 <template>
-    <v-main no-gutters>
-        <v-container no-gutters>
-            <v-card outlined no-gutters justify="right">
-                <v-card-title>
-                    <v-col no-gutters cols="4" sm="6" md="4">
-                        <BtnLoadData @click="renderRequest" text="Render"></BtnLoadData>
-                        <BtnLoadData @click="saveRequest" text="Save"></BtnLoadData>
-                        <BtnLoadData to="/templates/manage" text="Cancel"></BtnLoadData>
-                    </v-col>
-                </v-card-title>
-                <v-row>
-                    <v-col>
-                        <v-text-field v-model="refs.tmpl.name" label="Name"></v-text-field>
-                    </v-col>
-                    <v-col>
-                        <v-text-field v-model="refs.tmpl.content_type" label="Type"></v-text-field>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col>
-                        <v-textarea label="New html" v-model="refs.tmpl.body" variant="outlined"></v-textarea>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col>
-                        <span v-html="refs.render"></span>
-                    </v-col>
-                </v-row>
-            </v-card>
-        </v-container>
-    </v-main>
+    <v-container no-gutters>
+        <v-row>
+            <v-col no-gutters cols="6" sm="6" md="6">
+                <BtnLoadData @click="renderRequest" text="Render"></BtnLoadData>
+                <BtnLoadData @click="saveRequest" text="Save"></BtnLoadData>
+                <BtnLoadData to="/templates/manage" text="Cancel"></BtnLoadData>
+                <v-text-field v-model="refs.tmpl.name" label="Name"></v-text-field>
+                <v-text-field v-model="refs.tmpl.content_type" label="Type"></v-text-field>
+                <v-textarea label="New html" v-model="refs.tmpl.body" variant="outlined"></v-textarea>
+            </v-col>
+            <v-col no-gutters cols="6" sm="6" md="4">
+                <v-container no-gutters>
+                    <span v-html="refs.render"></span>
+                </v-container>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script setup>

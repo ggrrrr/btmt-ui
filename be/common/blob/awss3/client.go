@@ -19,10 +19,13 @@ import (
 )
 
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
-type Client struct {
-	s3Clients map[string]s3Client
-}
+type (
+	realmKey string
 
+	Client struct {
+		s3Clients map[realmKey]s3Client
+	}
+)
 type s3Client struct {
 	s3Client   *s3.Client
 	bucketName string
@@ -68,8 +71,8 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 		Msg("bucket")
 
 	return &Client{
-		s3Clients: map[string]s3Client{
-			"localhost": {
+		s3Clients: map[realmKey]s3Client{
+			realmKey("localhost"): {
 				s3Client:   s3client,
 				bucketName: bucketName,
 				region:     cfg.Region,
@@ -285,8 +288,8 @@ func (client *Client) Push(ctx context.Context, tenant string, blobId blob.BlobI
 	return newBlobId, err
 }
 
-func (c *Client) getClient(tenant string) (s3Client, error) {
-	s3C, ok := c.s3Clients[tenant]
+func (c *Client) getClient(realm string) (s3Client, error) {
+	s3C, ok := c.s3Clients[realmKey(realm)]
 	if !ok {
 		return s3Client{}, app.SystemError("tenant not configured", nil)
 	}

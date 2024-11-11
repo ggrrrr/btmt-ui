@@ -1,7 +1,7 @@
 <template>
-  <v-main>
+  <v-container>
     <div>ToDo</div>
-  </v-main>
+  </v-container>
 </template>
 
 <script setup>

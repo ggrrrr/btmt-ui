@@ -23,6 +23,7 @@ type testApp struct {
 }
 
 func (a *testApp) testHandler(w http.ResponseWriter, r *http.Request) {
+
 	fmt.Printf("testHandler %+v %+v \n", r.Method, r.URL.Path)
 	body := "ok"
 	w.Header().Add("Content-Type", "application/json")

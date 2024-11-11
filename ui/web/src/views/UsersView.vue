@@ -1,5 +1,5 @@
 <template>
-    <v-main>
+    <v-container>
         <v-card outlined justify="right">
             <v-card-text>
                 <v-container fill-height no-gutters class="ma-0 mp-0">
@@ -64,7 +64,8 @@
                     </v-icon> -->
                 </template>
             </v-data-table-server>
-        </v-card> </v-main>
+        </v-card>
+    </v-container>
 </template>
 <script setup>
 

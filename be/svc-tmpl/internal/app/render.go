@@ -10,31 +10,30 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
-type RenderRequest struct {
-	Items        map[string]any
-	TemplateBody string
-}
-
-func (a *App) RenderHtml(ctx context.Context, request RenderRequest) (*ddd.FileWriterTo, error) {
+func (a *App) RenderHtml(ctx context.Context, template ddd.Template, data ddd.TemplateData) (string, error) {
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
 
-	data := ddd.TemplateData{
-		UserInfo: authInfo,
-		Items:    request.Items,
+	tmplValidator := validator(ctx, authInfo.Realm, a)
+	tmplValidator.resized = true
+
+	tmpl, err := htmltemplate.New("template_data").
+		Funcs(htmltemplate.FuncMap{
+			"renderImg": tmplValidator.RenderImg,
+		}).
+		Parse(template.Body)
+	if err != nil {
+		return "", err
 	}
 
-	tmpl, err := htmltemplate.New("template_data").Parse(request.TemplateBody)
-	if err != nil {
-		return nil, err
+	if len(tmplValidator.errors) > 0 {
+		fmt.Printf("\n\n, %+v \n", tmplValidator.errors)
 	}
 
 	buf := bytes.NewBuffer([]byte{})
 
 	err = tmpl.Execute(buf, data)
-	// tmpl := template.Mu
 
-	fmt.Printf("result %s\n", buf.String())
-	return nil, err
+	return buf.String(), err
 
 }

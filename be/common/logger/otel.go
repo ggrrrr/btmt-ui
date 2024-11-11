@@ -151,12 +151,13 @@ func SpanWithAttributes(ctx context.Context, name string, payload AttributeExtra
 	if payload != nil {
 		traceData := payload.Extractor()
 		if len(traceData) > 0 {
-			ctx = context.WithValue(ctx, traceDataCtxKey{}, traceData)
 			for k, v := range traceData {
 				kv = append(kv, AttributeString(k, v))
 			}
+			ctx = context.WithValue(ctx, traceDataCtxKey{}, traceData)
 		}
 	}
+
 	if len(attribs) > 0 {
 		for _, v := range attribs {
 			kv = append(kv, v.otelKeyValue())

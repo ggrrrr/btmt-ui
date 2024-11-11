@@ -108,10 +108,18 @@ services:
     volumes:
       - ./be/postgres:/docker-entrypoint-initdb.d
 
+  nats:
+    hostname: nats
+    container_name: nats
+    image: nats:2.10.22-alpine3.20
+    ports:
+      - "4222:4222"
+    command: -js
+
   mongo-express:
-    hostname: mongo-express:18-alpine3.18
+    hostname: mongo-express
     container_name: mongo-express
-    image: mongo-express
+    image: mongo-express:18-alpine3.18
     ports:
       - "8081:8081"
     environment:

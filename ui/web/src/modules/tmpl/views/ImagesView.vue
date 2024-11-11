@@ -1,39 +1,37 @@
 <template>
-    <v-main no-gutters>
-        <v-container no-gutters>
-            <v-card outlined no-gutters justify="right">
-                <v-card-title>
-                    <v-row>
-                        <v-col no-gutters cols="4" sm="6" md="4">
-                            <BtnLoadData @click="loadImages" text="List"></BtnLoadData>
-                            <BtnLoadData @click="showUploadImage" text="add"></BtnLoadData>
-                            <v-dialog v-model="refs.addImage" max-width="600">
-                                <!-- <PersonEditForm v-model="refs.edit" @add="addPerson" @save="savePerson" /> -->
-                                <ImageAddForm @save="showUploadImage"></ImageAddForm>
-                            </v-dialog>
-                            <!-- <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load people"></BtnLoadData> -->
-                        </v-col>
-                    </v-row>
-                </v-card-title>
-                <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
-                    :items="refs.data" multi-sort class="elevation-1">
-                    <template v-slot:[`item.name`]="{ item }">
-                        {{ item.name }} ( {{ item.width }} X {{ item.height }})
-                    </template>
-                    <template v-slot:[`item.src`]="{ item }">
-                        <v-img :src="item.src" :alt="item.name" height="120" aspect-ratio="1">
-                            <template v-slot:placeholder>
-                                <div class="d-flex align-center justify-center fill-height">
-                                    <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
-                                </div>
-                            </template>
-                        </v-img>
-                        <!-- <img src="http://localhost:8010/tmpl/image/glass-mug-variant2.png" :alt="item.name" /> -->
-                    </template>
-                </v-data-table-server>
-            </v-card>
-        </v-container>
-    </v-main>
+    <v-container no-gutters>
+        <v-card outlined no-gutters justify="right">
+            <v-card-title>
+                <v-row>
+                    <v-col no-gutters cols="4" sm="6" md="4">
+                        <BtnLoadData @click="loadImages" text="List"></BtnLoadData>
+                        <BtnLoadData @click="showUploadImage" text="add"></BtnLoadData>
+                        <v-dialog v-model="refs.addImage" max-width="600">
+                            <!-- <PersonEditForm v-model="refs.edit" @add="addPerson" @save="savePerson" /> -->
+                            <ImageAddForm @save="showUploadImage"></ImageAddForm>
+                        </v-dialog>
+                        <!-- <BtnLoadData :disabled="refs.loading" @click="loadData" text="Load people"></BtnLoadData> -->
+                    </v-col>
+                </v-row>
+            </v-card-title>
+            <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
+                :items="refs.data" multi-sort class="elevation-1">
+                <template v-slot:[`item.name`]="{ item }">
+                    {{ item.name }} ( {{ item.width }} X {{ item.height }})
+                </template>
+                <template v-slot:[`item.src`]="{ item }">
+                    <v-img :src="item.src" :alt="item.name" height="120" aspect-ratio="1">
+                        <template v-slot:placeholder>
+                            <div class="d-flex align-center justify-center fill-height">
+                                <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
+                            </div>
+                        </template>
+                    </v-img>
+                    <!-- <img src="http://localhost:8010/tmpl/image/glass-mug-variant2.png" :alt="item.name" /> -->
+                </template>
+            </v-data-table-server>
+        </v-card>
+    </v-container>
 
 
 </template>

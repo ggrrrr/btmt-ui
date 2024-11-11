@@ -1,9 +1,6 @@
 package rest
 
 import (
-	"bytes"
-	"fmt"
-	"html/template"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -106,32 +103,23 @@ func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 		Items:    request.Items,
 	}
 
-	tmpl, err := template.New("template_data").
-		Funcs(template.FuncMap{
-			"renderImg": func(bane string) template.HTML {
-				return template.HTML(fmt.Sprintf(`<img src="%s" ></img>`, bane))
-			},
-		}).
-		Parse(request.TemplateBody)
-	if err != nil {
-		web.SendErrorBadRequest(ctx, w, "template parsing", err)
-		return
-	}
+	result, err := s.app.RenderHtml(
+		ctx,
+		ddd.Template{
+			Body: request.TemplateBody,
+		},
+		data,
+	)
 
-	bytes := bytes.NewBuffer([]byte{})
-
-	err = tmpl.Execute(bytes, data)
 	if err != nil {
-		web.SendErrorBadRequest(ctx, w, "template exec", err)
-		return
+		web.SendError(ctx, w, err)
 	}
 
 	out := struct {
 		Payload string `json:"payload"`
 	}{
-		Payload: bytes.String(),
+		Payload: result,
 	}
 
-	web.SendPayload(ctx, w, "asd", out)
-	// tmpl := template.Mu
+	web.SendPayload(ctx, w, "ok", out)
 }

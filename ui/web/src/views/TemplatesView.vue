@@ -1,8 +1,6 @@
 <template>
-  <v-main>
+  <v-container>
     <v-tabs>
-
-
     </v-tabs>
     <v-form>
       <v-text-field v-model="refs.file.fileName"></v-text-field>
@@ -10,7 +8,7 @@
         label="Image file" variant="solo-inverted" @update="inputFileUpload"></v-file-input>
     </v-form>
     <BtnLoadData @click="inputFileUpload" text="Upload"></BtnLoadData>
-  </v-main>
+  </v-container>
 </template>
 
 <script setup>

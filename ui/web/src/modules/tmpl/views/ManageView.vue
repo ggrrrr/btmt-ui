@@ -1,57 +1,55 @@
 <template>
-    <v-main no-gutters>
-        <v-container no-gutters>
-            <v-card outlined no-gutters justify="right">
-                <v-card-title>
-                    <v-row>
-                        <v-col no-gutters cols="4" sm="6" md="4">
-                            <BtnLoadData @click="listRequest" text="List"></BtnLoadData>
-                            <BtnLoadData to="/templates/manage/edit/new" text="Add"></BtnLoadData>
-                        </v-col>
+    <v-container no-gutters>
+        <v-card outlined no-gutters justify="right">
+            <v-card-title>
+                <v-row>
+                    <v-col no-gutters cols="4" sm="6" md="4">
+                        <BtnLoadData @click="listRequest" text="List"></BtnLoadData>
+                        <BtnLoadData to="/templates/manage/edit/new" text="Add"></BtnLoadData>
+                    </v-col>
 
-                    </v-row>
-                </v-card-title>
-                <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
-                    :items="refs.data" multi-sort class="elevation-1">
-                    <template v-slot:[`item.id`]="{ item }">
-                        <BtnLoadData :to="item.editUrl" :text="item.id.substring(0, 10)"> {{ item.id.substring(0, 10) }}
-                        </BtnLoadData>
-                    </template>
-                    <template v-slot:[`item.name`]="{ item }">
-                        {{ item.name }}
-                    </template>
-                    <template v-slot:[`item.body`]="{ item }">
-                        {{ item.body.substring(0, 20) }}...
-                    </template>
-                    <template v-slot:[`item.labels`]="{ item }">
-                        <FieldLabelsList :labels="item.labels"></FieldLabelsList>
-                    </template>
+                </v-row>
+            </v-card-title>
+            <v-data-table-server :loading="refs.loading" :items-length="refs.totalItems" :headers="refs.headers"
+                :items="refs.data" multi-sort class="elevation-1">
+                <template v-slot:[`item.id`]="{ item }">
+                    <BtnLoadData :to="item.editUrl" :text="item.id.substring(0, 10)"> {{ item.id.substring(0, 10) }}
+                    </BtnLoadData>
+                </template>
+                <template v-slot:[`item.name`]="{ item }">
+                    {{ item.name }}
+                </template>
+                <template v-slot:[`item.body`]="{ item }">
+                    {{ item.body.substring(0, 20) }}...
+                </template>
+                <template v-slot:[`item.labels`]="{ item }">
+                    <FieldLabelsList :labels="item.labels"></FieldLabelsList>
+                </template>
 
-                    <template v-slot:[`item.src`]="{ item }">
-                        <v-img :src="item.src" :alt="item.name" height="120" aspect-ratio="1">
-                            <template v-slot:placeholder>
-                                <div class="d-flex align-center justify-center fill-height">
-                                    <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
-                                </div>
-                            </template>
-                        </v-img>
-                        <!-- <img src="http://localhost:8010/tmpl/image/glass-mug-variant2.png" :alt="item.name" /> -->
-                    </template>
-                    <template v-slot:[`item.created_at`]="{ item }">
-                        <field-time-stamp :timeStamp="item.created_at"></field-time-stamp>
-                    </template>
-                    <template v-slot:[`item.actions`]="{ item }">
-                        <v-btn title="Edit" :to="item.editUrl" rounded="xl" class="me-2">
-                            <v-icon size="large">
-                                mdi-pencil
-                            </v-icon>
-                        </v-btn>
-                    </template>
+                <template v-slot:[`item.src`]="{ item }">
+                    <v-img :src="item.src" :alt="item.name" height="120" aspect-ratio="1">
+                        <template v-slot:placeholder>
+                            <div class="d-flex align-center justify-center fill-height">
+                                <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
+                            </div>
+                        </template>
+                    </v-img>
+                    <!-- <img src="http://localhost:8010/tmpl/image/glass-mug-variant2.png" :alt="item.name" /> -->
+                </template>
+                <template v-slot:[`item.created_at`]="{ item }">
+                    <field-time-stamp :timeStamp="item.created_at"></field-time-stamp>
+                </template>
+                <template v-slot:[`item.actions`]="{ item }">
+                    <v-btn title="Edit" :to="item.editUrl" rounded="xl" class="me-2">
+                        <v-icon size="large">
+                            mdi-pencil
+                        </v-icon>
+                    </v-btn>
+                </template>
 
-                </v-data-table-server>
-            </v-card>
-        </v-container>
-    </v-main>
+            </v-data-table-server>
+        </v-card>
+    </v-container>
 </template>
 
 <script setup>
