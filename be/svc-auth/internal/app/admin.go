@@ -11,7 +11,7 @@ import (
 )
 
 func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "UserCreate", nil, logger.KVString("email", auth.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "UserCreate", nil, logger.TraceKVString("email", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -49,7 +49,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 }
 
 func (ap *Application) Get(ctx context.Context, email string) (result ddd.AuthPasswd, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "Get", nil, logger.KVString("email", email))
+	ctx, span := logger.SpanWithAttributes(ctx, "Get", nil, logger.TraceKVString("email", email))
 	defer func() {
 		span.End(err)
 	}()
@@ -98,7 +98,7 @@ func (ap *Application) UserList(ctx context.Context) (result []ddd.AuthPasswd, e
 }
 
 func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "UserUpdate", nil, logger.KVString("email", auth.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "UserUpdate", nil, logger.TraceKVString("email", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -125,7 +125,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 }
 
 func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "UserChangePasswd", nil, logger.KVString("email", email))
+	ctx, span := logger.SpanWithAttributes(ctx, "UserChangePasswd", nil, logger.TraceKVString("email", email))
 	defer func() {
 		span.End(err)
 	}()

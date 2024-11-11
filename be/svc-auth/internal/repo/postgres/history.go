@@ -11,7 +11,7 @@ import (
 )
 
 func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.SaveHistory", nil, logger.KVString("subject", info.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.SaveHistory", nil, logger.TraceKVString("subject", info.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -37,7 +37,7 @@ func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method 
 }
 
 func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory []ddd.AuthHistory, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.ListHistory", nil, logger.KVString("subject", subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.ListHistory", nil, logger.TraceKVString("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -77,7 +77,7 @@ func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory
 }
 func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHistory, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetHistory", nil, logger.KVString("id", id.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetHistory", nil, logger.TraceKVString("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -116,7 +116,7 @@ func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHisto
 }
 
 func (r *authRepo) DeleteHistory(ctx context.Context, id string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.DeleteHistory", nil, logger.KVString("id", id))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.DeleteHistory", nil, logger.TraceKVString("id", id))
 	defer func() {
 		span.End(err)
 	}()

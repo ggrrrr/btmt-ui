@@ -27,7 +27,7 @@ func NewPublisher(conn *Nats, subject string) *NatsPublisher {
 
 func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.publish", nil, logger.KVString("subject", msg.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.publish", nil, logger.TraceKVString("subject", msg.Subject))
 	defer func() {
 		span.End(err)
 	}()

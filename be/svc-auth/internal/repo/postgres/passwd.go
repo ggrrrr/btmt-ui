@@ -12,7 +12,7 @@ import (
 )
 
 func (r *authRepo) GetPasswd(ctx context.Context, subject string) (result []ddd.AuthPasswd, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Get", nil, logger.KVString("subject", subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.Get", nil, logger.TraceKVString("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -107,7 +107,7 @@ func (r *authRepo) ListPasswd(ctx context.Context, filter app.FilterFactory) (re
 }
 
 func (r *authRepo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Update", nil, logger.KVString("email", auth.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.Update", nil, logger.TraceKVString("email", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -132,7 +132,7 @@ func (r *authRepo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) 
 }
 
 func (r *authRepo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.KVString("subject", auth.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.TraceKVString("subject", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -158,7 +158,7 @@ func (r *authRepo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err err
 }
 
 func (r *authRepo) UpdatePassword(ctx context.Context, subject string, password string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdatePassword", nil, logger.KVString("subject", subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdatePassword", nil, logger.TraceKVString("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -181,7 +181,7 @@ func (r *authRepo) UpdatePassword(ctx context.Context, subject string, password 
 }
 
 func (r *authRepo) UpdateStatus(ctx context.Context, subject string, status ddd.StatusType) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdateStatus", nil, logger.KVString("subject", subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdateStatus", nil, logger.TraceKVString("subject", subject))
 	defer func() {
 		span.End(err)
 	}()

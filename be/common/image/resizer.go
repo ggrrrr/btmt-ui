@@ -75,7 +75,7 @@ func HeadImage(name string) (blob.MDImageInfo, error) {
 // go get -u github.com/rwcarlsen/goexif/exif
 func ResizeImage(ctx context.Context, toHeight int, from blob.BlobReader) (*ResizedImage, error) {
 	var err error
-	_, span := logger.SpanWithAttributes(ctx, "common.image.ResizeImage", nil, logger.KVString("image.name", from.Blob.MD.Name))
+	_, span := logger.SpanWithAttributes(ctx, "common.image.ResizeImage", nil, logger.TraceKVString("image.name", from.Blob.MD.Name))
 	defer func() {
 		span.End(err)
 	}()

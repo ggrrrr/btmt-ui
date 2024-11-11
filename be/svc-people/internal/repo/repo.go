@@ -158,7 +158,7 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 }
 
 func (r *repo) GetById(ctx context.Context, fromId string) (result *ddd.Person, err error) {
-	_, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.KVString("id", fromId))
+	_, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.TraceKVString("id", fromId))
 	defer func() {
 		span.End(err)
 	}()

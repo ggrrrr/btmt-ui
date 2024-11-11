@@ -21,7 +21,7 @@ type (
 )
 
 func (r *Repo) Save(ctx context.Context, template *ddd.Template) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.KVString("template.name", template.Name))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.TraceKVString("template.name", template.Name))
 	defer func() {
 		span.End(err)
 	}()
@@ -75,7 +75,7 @@ func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 
 func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.KVString("id", fromId), logger.KVString("collection", r.collection))
+	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.TraceKVString("id", fromId), logger.TraceKVString("collection", r.collection))
 	defer func() {
 		span.End(err)
 	}()
@@ -112,8 +112,8 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error
 
 func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil,
-		logger.KVString("template.id", template.Id),
-		logger.KVString("template.name", template.Name),
+		logger.TraceKVString("template.id", template.Id),
+		logger.TraceKVString("template.name", template.Name),
 	)
 	defer func() {
 		span.End(err)

@@ -6,9 +6,8 @@ import (
 	"os"
 
 	appError "github.com/ggrrrr/btmt-ui/be/common/app"
-	appImage "github.com/ggrrrr/btmt-ui/be/common/image"
-
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
+	appImage "github.com/ggrrrr/btmt-ui/be/common/image"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
@@ -16,7 +15,7 @@ import (
 
 func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetResizedImage", nil, logger.KVString("fileId", fileId))
+	ctx, span := logger.SpanWithAttributes(ctx, "GetResizedImage", nil, logger.TraceKVString("fileId", fileId))
 	defer func() {
 		span.End(err)
 	}()
@@ -69,7 +68,7 @@ func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWrit
 
 func (a *App) GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetImage", nil, logger.KVString("fileId", fileId))
+	ctx, span := logger.SpanWithAttributes(ctx, "GetImage", nil, logger.TraceKVString("fileId", fileId))
 	defer func() {
 		span.End(err)
 	}()
@@ -168,9 +167,9 @@ func (a *App) PutImage(ctx context.Context, tempFile blob.TempFile) error {
 
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "PutImage", nil,
-		logger.KVString("FileName", tempFile.FileName),
-		logger.KVString("ContentType", tempFile.ContentType),
-		logger.KVString("TempFileName", tempFile.TempFileName),
+		logger.TraceKVString("FileName", tempFile.FileName),
+		logger.TraceKVString("ContentType", tempFile.ContentType),
+		logger.TraceKVString("TempFileName", tempFile.TempFileName),
 	)
 	defer func() {
 		span.End(err)

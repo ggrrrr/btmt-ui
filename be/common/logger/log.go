@@ -44,6 +44,12 @@ func traceMap(ctx context.Context) map[string]any {
 	if traceId.IsValid() {
 		out["trace"] = traceId.String()
 	}
+
+	td := TraceDataFromCtx(ctx)
+	for k, v := range td {
+		out[k] = v.Value()
+	}
+
 	return out
 }
 

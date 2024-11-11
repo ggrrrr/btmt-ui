@@ -83,7 +83,7 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 
 func (client *Client) Fetch(ctx context.Context, tenant string, blobId blob.BlobId) (blob.BlobReader, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Fetch", nil, logger.KVString("id", blobId.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Fetch", nil, logger.TraceKVString("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -123,7 +123,7 @@ func (client *Client) Fetch(ctx context.Context, tenant string, blobId blob.Blob
 
 func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobId) (blob.BlobMD, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Head", nil, logger.KVString("id", blobId.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Head", nil, logger.TraceKVString("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -166,7 +166,7 @@ func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobI
 
 func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobId) ([]blob.ListResult, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.ListDir", nil, logger.KVString("id", blobId.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.ListDir", nil, logger.TraceKVString("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -240,7 +240,7 @@ func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobI
 
 func (client *Client) Push(ctx context.Context, tenant string, blobId blob.BlobId, blobInfo blob.BlobMD, reader io.ReadSeeker) (blob.BlobId, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Push", nil, logger.KVString("id", blobId.String()))
+	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Push", nil, logger.TraceKVString("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()

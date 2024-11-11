@@ -12,7 +12,7 @@ import (
 
 func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (ddd.LoginToken, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "LoginPasswd", nil, logger.KVString("email", email))
+	ctx, span := logger.SpanWithAttributes(ctx, "LoginPasswd", nil, logger.TraceKVString("email", email))
 	defer func() {
 		span.End(err)
 	}()
@@ -93,7 +93,7 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 
 func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	ctx, span := logger.SpanWithAttributes(ctx, "TokenValidate", nil, logger.KVString("email", authInfo.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "TokenValidate", nil, logger.TraceKVString("email", authInfo.Subject))
 	defer span.End(err)
 
 	if authInfo.Subject == "" {
@@ -118,7 +118,7 @@ func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 
 func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginToken, err error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	ctx, span := logger.SpanWithAttributes(ctx, "TokenRefresh", nil, logger.KVString("email", authInfo.Subject))
+	ctx, span := logger.SpanWithAttributes(ctx, "TokenRefresh", nil, logger.TraceKVString("email", authInfo.Subject))
 	defer span.End(err)
 
 	err = ap.appPolices.CanDo(authInfo.Realm, authpb.AuthSvc_TokenRefresh_FullMethodName, authInfo)

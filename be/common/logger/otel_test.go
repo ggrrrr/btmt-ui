@@ -20,10 +20,10 @@ type person struct {
 	Name string
 }
 
-func (d person) Extractor() map[string]string {
-	return map[string]string{
-		"person.id":   fmt.Sprintf("%d", d.Id),
-		"person.name": d.Name,
+func (d person) Extract() TraceData {
+	return map[string]TraceValue{
+		"person.id":   TraceValueInt(d.Id),
+		"person.name": TraceValueString(d.Name),
 	}
 }
 

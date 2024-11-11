@@ -6,6 +6,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -57,9 +58,9 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 			md, _ := msg.Metadata()
 			if md != nil {
 				attr := oteltrace.WithAttributes(
-					logger.AttributeString("nats.js.domain", md.Domain),
-					logger.AttributeString("nats.js.stream", md.Stream),
-					logger.AttributeString("nats.js.sequence", fmt.Sprintf("%d/%d", md.Sequence.Stream, md.Sequence.Consumer)),
+					attribute.String("nats.js.domain", md.Domain),
+					attribute.String("nats.js.stream", md.Stream),
+					attribute.String("nats.js.sequence", fmt.Sprintf("%d/%d", md.Sequence.Stream, md.Sequence.Consumer)),
 				)
 				spanOpts = append(spanOpts, attr)
 			}

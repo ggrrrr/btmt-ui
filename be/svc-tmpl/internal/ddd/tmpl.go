@@ -3,6 +3,7 @@ package ddd
 import (
 	"time"
 
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -30,13 +31,15 @@ type Template struct {
 	CreatedAt   time.Time         `json:"created_at,omitempty"`
 }
 
-func (t Template) Extractor() map[string]string {
-	out := map[string]string{
-		"tmpl.Name":        t.Name,
-		"tmpl.ContentType": t.ContentType,
+var _ (logger.TraceDataExtractor) = (Template)(Template{})
+
+func (t Template) Extract() logger.TraceData {
+	out := logger.TraceData{
+		"tmpl.Name":        logger.TraceValueString(t.Name),
+		"tmpl.ContentType": logger.TraceValueString(t.ContentType),
 	}
 	if t.Id == "" {
-		out["tmpl.id"] = t.Id
+		out["tmpl.id"] = logger.TraceValueString(t.Id)
 	}
 	return out
 }

@@ -66,7 +66,7 @@ func (s *server) ListTmpl(w http.ResponseWriter, r *http.Request) {
 func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
 	tmplId := chi.URLParam(r, "id")
 	var err error
-	ctx, span := logger.SpanWithAttributes(r.Context(), "rest.GetTmpl", nil, logger.KVString("id", tmplId))
+	ctx, span := logger.SpanWithAttributes(r.Context(), "rest.GetTmpl", nil, logger.TraceKVString("id", tmplId))
 	defer func() {
 		span.End(err)
 	}()

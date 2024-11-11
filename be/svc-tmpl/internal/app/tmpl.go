@@ -47,7 +47,7 @@ func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Tem
 
 func (a *App) GetTmpl(ctx context.Context, id string) (*ddd.Template, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetTmpl", nil, logger.KVString("id", id))
+	ctx, span := logger.SpanWithAttributes(ctx, "GetTmpl", nil, logger.TraceKVString("id", id))
 	defer func() {
 		span.End(err)
 	}()

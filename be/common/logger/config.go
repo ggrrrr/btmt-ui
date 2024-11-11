@@ -10,10 +10,6 @@ import (
 
 type traceDataCtxKey struct{}
 
-type AttributeExtractor interface {
-	Extractor() map[string]string
-}
-
 func init() {
 	initLog()
 	initNoopOtel()
