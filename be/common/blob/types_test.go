@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 func TestFileNameFilter(t *testing.T) {
@@ -95,6 +96,13 @@ func TestBlobIdSetIdVersion(t *testing.T) {
 		toBlobId   BlobId
 		err        error
 	}{
+		{
+			name:       "ok id version",
+			idVersion:  "filename:version",
+			fromBlobID: BlobId{path: "folder-1"},
+			toBlobId:   BlobId{path: "folder-1", id: "filename", version: "version"},
+			err:        nil,
+		},
 		{
 			name:       "ok id version",
 			idVersion:  "filename:version",

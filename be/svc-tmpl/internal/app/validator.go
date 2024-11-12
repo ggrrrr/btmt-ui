@@ -17,6 +17,17 @@ type (
 	}
 )
 
+func (t tmplValidator) Errros() []error {
+	if len(t.errors) == 0 {
+		return []error{}
+	}
+	out := []error{}
+	for k := range t.errors {
+		out = append(out, t.errors[k])
+	}
+	return out
+}
+
 func validator(ctx context.Context, realm string, app *App) *tmplValidator {
 	return &tmplValidator{
 		ctx:     ctx,
@@ -30,6 +41,7 @@ func validator(ctx context.Context, realm string, app *App) *tmplValidator {
 
 func (v *tmplValidator) RenderImg(imageName string) template.HTML {
 	imageId, err := v.app.imagesFolder.SetIdVersionFromString(imageName)
+	fmt.Printf("\n\t\t %#v \n", imageId)
 	if err != nil {
 		v.errors[imageName] = fmt.Errorf("incorrect image[%s] name %w", imageName, err)
 		return template.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
@@ -37,15 +49,15 @@ func (v *tmplValidator) RenderImg(imageName string) template.HTML {
 
 	_, err = v.app.blobStore.Head(v.ctx, v.realm, imageId)
 	if err != nil {
-		v.errors[imageName] = fmt.Errorf("image[%s] not found %w", imageName, err)
+		v.errors[imageName] = fmt.Errorf("imageName[%s] not found %w", imageName, err)
 		return template.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
 	}
 
-	prefix := ""
+	suffixUrl := ""
 
 	if v.resized {
-		prefix = "/resized"
+		suffixUrl = "/resized"
 	}
 
-	return template.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, prefix))
+	return template.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, suffixUrl))
 }

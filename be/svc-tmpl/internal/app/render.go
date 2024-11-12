@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"context"
-	"fmt"
 	htmltemplate "html/template"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -36,13 +35,12 @@ func (a *App) RenderHtml(ctx context.Context, template ddd.Template, data ddd.Te
 		return "", err
 	}
 
-	if len(tmplValidator.errors) > 0 {
-		fmt.Printf("\n\n, %+v \n", tmplValidator.errors)
-	}
-
 	buf := bytes.NewBuffer([]byte{})
-
 	err = tmpl.Execute(buf, data)
+
+	if len(tmplValidator.errors) > 0 {
+		logger.ErrorCtx(ctx, tmplValidator.Errros()[0]).Errs("errors", tmplValidator.Errros()).Msg("validator")
+	}
 
 	return buf.String(), err
 

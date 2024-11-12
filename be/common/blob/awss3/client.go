@@ -151,9 +151,10 @@ func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobI
 	}
 
 	lastVersion := versions[len(versions)-1]
+	// TODO check all version in the list
 	if id.ver != "" {
 		if lastVersion.ver != id.ver {
-			return blob.BlobMD{}, app.ItemNotFoundError("blob version", id.String())
+			return blob.BlobMD{}, app.ItemNotFoundError("blob version", id.keyVer())
 		}
 	}
 

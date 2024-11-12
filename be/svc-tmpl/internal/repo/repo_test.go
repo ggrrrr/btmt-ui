@@ -36,7 +36,7 @@ func TestSave(t *testing.T) {
 		ContentType: "ctx/html",
 		Body: `<p> {{ .UserInfo.Device.DeviceInfo }}</p>
 <p> {{ .UserInfo.Subject }}</p>
-{{ renderImg "http://localhost:8010/tmpl/image/IMG4944.JPG:1/resized" }}`,
+{{ renderImg "IMG4944.JPG:1" }}`,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -69,7 +69,7 @@ func TestSave(t *testing.T) {
 		Body: `<p>From update</p>
 <p> {{ .UserInfo.Device.DeviceInfo }}</p>
 <p> {{ .UserInfo.Subject }}</p>
-{{ renderImg "http://localhost:8010/tmpl/image/IMG4944.JPG:1/resized" }}`,
+{{ renderImg "IMG4944.JPG:1" }}`,
 		UpdatedAt: time.Now(),
 	}
 
