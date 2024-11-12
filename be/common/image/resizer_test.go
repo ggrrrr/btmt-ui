@@ -3,13 +3,15 @@ package image
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/blob"
-	"github.com/ggrrrr/btmt-ui/be/help"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/blob"
+	"github.com/ggrrrr/btmt-ui/be/help"
 )
 
 func TestHead(t *testing.T) {
@@ -27,11 +29,13 @@ func TestHead(t *testing.T) {
 
 	_, err = HeadImage(fmt.Sprintf("%s/notfound", pwd))
 	require.Error(t, err)
-	fmt.Printf("%v \n", err)
+	expErr := &fs.PathError{}
+	assert.ErrorAs(t, err, &expErr)
+	fmt.Printf("HeadImage: %#v \n", err)
 
 	_, err = HeadImage(fmt.Sprintf("%s/test.txt", pwd))
 	require.Error(t, err)
-	fmt.Printf("%v \n", err)
+	fmt.Printf("HeadImage: %#v \n", err)
 
 }
 
@@ -56,7 +60,11 @@ func TestResize(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	fmt.Printf("tmpfile: %v \n", resizedImage.ReadCloser.tmpFile.Name())
 	fmt.Printf("resizedImage: %+v \n", resizedImage)
-	// defer os.Remove(resizedImage.TmpFile)
+	defer func() {
+		err = resizedImage.ReadCloser.Close()
+		fmt.Printf("ReadCloser.Close: %+v \n", err)
+	}()
 
 }
