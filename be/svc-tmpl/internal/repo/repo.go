@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -19,6 +18,13 @@ type (
 		db         mgo.Repo
 	}
 )
+
+func New(collection string, db mgo.Repo) *Repo {
+	return &Repo{
+		collection: collection,
+		db:         db,
+	}
+}
 
 func (r *Repo) Save(ctx context.Context, template *ddd.Template) (err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.TraceKVString("template.name", template.Name))
@@ -138,7 +144,7 @@ func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
 		setReq["labels"] = template.Labels
 	}
 
-	setReq["created_at"] = mgo.FromTimeOrNow(time.Now())
+	setReq["updated_at"] = mgo.FromTimeOrNow(template.UpdatedAt)
 
 	updateReq := bson.M{
 		"$set": setReq,

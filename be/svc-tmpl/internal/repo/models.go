@@ -15,15 +15,9 @@ type (
 		Name        string             `bson:"name"`
 		Body        string             `bson:"body"`
 		CreatedAt   primitive.DateTime `bson:"created_at"`
+		UpdatedAt   primitive.DateTime `bson:"updated_at"`
 	}
 )
-
-func New(collection string, db mgo.Repo) *Repo {
-	return &Repo{
-		collection: collection,
-		db:         db,
-	}
-}
 
 func (from internalTmpl) toTemplate() ddd.Template {
 	return ddd.Template{
@@ -33,6 +27,7 @@ func (from internalTmpl) toTemplate() ddd.Template {
 		Labels:      from.Labels,
 		Body:        from.Body,
 		CreatedAt:   from.CreatedAt.Time(),
+		UpdatedAt:   from.UpdatedAt.Time(),
 	}
 }
 
@@ -50,5 +45,6 @@ func fromTemplate(from *ddd.Template) (internalTmpl, error) {
 		Name:        from.Name,
 		Body:        from.Body,
 		CreatedAt:   mgo.FromTimeOrNow(from.CreatedAt),
+		UpdatedAt:   mgo.FromTimeOrNow(from.UpdatedAt),
 	}, nil
 }

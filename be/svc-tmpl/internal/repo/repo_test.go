@@ -38,6 +38,7 @@ func TestSave(t *testing.T) {
 <p> {{ .UserInfo.Subject }}</p>
 {{ renderImg "http://localhost:8010/tmpl/image/IMG4944.JPG:1/resized" }}`,
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	err = testRepo.Save(ctx, firstTmpl)
 	require.NoError(t, err)
@@ -48,7 +49,9 @@ func TestSave(t *testing.T) {
 	fmt.Printf("  %+v \n", actualTmpl)
 	require.NotNil(t, actualTmpl)
 	assert.WithinDuration(t, firstTmpl.CreatedAt, actualTmpl.CreatedAt, 100*time.Millisecond)
+	assert.WithinDuration(t, firstTmpl.UpdatedAt, actualTmpl.UpdatedAt, 100*time.Millisecond)
 	firstTmpl.CreatedAt = actualTmpl.CreatedAt
+	firstTmpl.UpdatedAt = actualTmpl.UpdatedAt
 	assert.Equal(t, firstTmpl, actualTmpl)
 
 	listResult, err := testRepo.List(ctx, nil)
@@ -67,7 +70,7 @@ func TestSave(t *testing.T) {
 <p> {{ .UserInfo.Device.DeviceInfo }}</p>
 <p> {{ .UserInfo.Subject }}</p>
 {{ renderImg "http://localhost:8010/tmpl/image/IMG4944.JPG:1/resized" }}`,
-		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	err = testRepo.Update(ctx, updateTmpl)
@@ -76,8 +79,9 @@ func TestSave(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotNil(t, actualTmpl)
-	assert.WithinDuration(t, updateTmpl.CreatedAt, actualTmpl.CreatedAt, 100*time.Millisecond)
+	assert.WithinDuration(t, updateTmpl.UpdatedAt, actualTmpl.UpdatedAt, 100*time.Millisecond)
 	updateTmpl.CreatedAt = actualTmpl.CreatedAt
+	updateTmpl.UpdatedAt = actualTmpl.UpdatedAt
 	assert.Equal(t, updateTmpl, actualTmpl)
 
 }

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -22,11 +23,15 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 		return err
 	}
 
-	// Fetch images and other blobs to verify all is good
+	// TODO Verify that the template can be rendered
+	// TODO Fetch images and other blobs to verify all is good
 	// test if we can parse the body with template
 	if tmpl.Id == "" {
+		tmpl.UpdatedAt = time.Now()
+		tmpl.CreatedAt = time.Now()
 		err = a.repo.Save(ctx, tmpl)
 	} else {
+		tmpl.UpdatedAt = time.Now()
 		err = a.repo.Update(ctx, tmpl)
 	}
 	return err

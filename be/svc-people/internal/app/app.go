@@ -71,7 +71,7 @@ func WithAppPolicies(appPolices roles.AppPolices) AppConfiguration {
 }
 
 func (a *application) Save(ctx context.Context, p *ddd.Person) (err error) {
-	ctx, span := logger.Span(ctx, "Save", nil)
+	ctx, span := logger.Span(ctx, "Save", p)
 	defer func() {
 		span.End(err)
 	}()
@@ -106,7 +106,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) (err error) {
 }
 
 func (a *application) GetById(ctx context.Context, id string) (person *ddd.Person, err error) {
-	ctx, span := logger.Span(ctx, "Save", nil)
+	ctx, span := logger.SpanWithAttributes(ctx, "Save", nil, logger.TraceKVString("person.id", id))
 	defer func() {
 		span.End(err)
 	}()
@@ -171,7 +171,7 @@ func (a *application) List(ctx context.Context, filters Filters) (result []ddd.P
 }
 
 func (a *application) Update(ctx context.Context, p *ddd.Person) (err error) {
-	ctx, span := logger.Span(ctx, "Update", nil)
+	ctx, span := logger.Span(ctx, "Update", p)
 	defer func() {
 		span.End(err)
 	}()

@@ -29,8 +29,10 @@ type Template struct {
 	Images      map[string]string `json:"images,omitempty"`
 	Body        string            `json:"body,omitempty"`
 	CreatedAt   time.Time         `json:"created_at,omitempty"`
+	UpdatedAt   time.Time         `json:"updated_at,omitempty"`
 }
 
+// We need this implemented coz of easy tracing
 var _ (logger.TraceDataExtractor) = (Template)(Template{})
 
 func (t Template) Extract() logger.TraceData {

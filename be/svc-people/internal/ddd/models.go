@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 type (
@@ -41,3 +42,12 @@ type (
 		GetById(ctx context.Context, id string) (*Person, error)
 	}
 )
+
+// We need this implemented coz of easy tracing
+var _ (logger.TraceDataExtractor) = (Person)(Person{})
+
+func (p Person) Extract() logger.TraceData {
+	return logger.TraceData{
+		"person.id": logger.TraceValueString(p.Id),
+	}
+}
