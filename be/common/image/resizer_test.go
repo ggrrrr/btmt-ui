@@ -17,6 +17,7 @@ import (
 func TestHead(t *testing.T) {
 
 	pwd := help.RepoDir()
+	fmt.Println("RepoDir: ", pwd)
 
 	want := blob.MDImageInfo{
 		Width:  256,
