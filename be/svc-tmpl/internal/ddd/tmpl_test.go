@@ -6,8 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
 func TestData(t *testing.T) {
@@ -67,6 +69,8 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 	require.NotNil(t, tmpl)
 
 	buffer := new(strings.Builder)
-	tmpl.Execute(buffer, testData)
+	err = tmpl.Execute(buffer, testData)
+	assert.NoError(t, err)
+
 	fmt.Printf("----\n%s\n-----\n", buffer.String())
 }

@@ -16,14 +16,19 @@ type (
 	DataHandler func(ctx context.Context, subject string, data []byte)
 
 	NatsConsumer struct {
-		conn     *Nats
+		conn     *natsConn
 		stream   jetstream.Stream
 		consumer jetstream.Consumer
 		shutdown func()
 	}
 )
 
-func NewConsumer(ctx context.Context, conn Nats, streamName string, group string) (*NatsConsumer, error) {
+func NewConsumer(ctx context.Context, url string, streamName string, group string) (*NatsConsumer, error) {
+	conn, err := connect(url)
+	if err != nil {
+		return nil, err
+	}
+
 	stream, err := conn.js.Stream(ctx, streamName)
 	if err != nil {
 		return nil, err
@@ -39,7 +44,7 @@ func NewConsumer(ctx context.Context, conn Nats, streamName string, group string
 	}
 
 	return &NatsConsumer{
-		conn:     &conn,
+		conn:     conn,
 		stream:   stream,
 		consumer: c,
 	}, nil
@@ -48,38 +53,38 @@ func NewConsumer(ctx context.Context, conn Nats, streamName string, group string
 func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 	consLoop, err := c.consumer.Consume(
 		func(msg jetstream.Msg) {
-			m := &jsMsg{
+			intMsg := &jsMsg{
 				msg: msg,
 			}
+
+			// TODO how to decorate the root span ?
 			spanOpts := []oteltrace.SpanStartOption{
 				// oteltrace.WithAttributes(logger.AttributeString("asd")),
 				// oteltrace.WithSpanKind(oteltrace.SpanKindServer),
 			}
+
+			// We dont care if metadata fail
 			md, _ := msg.Metadata()
 			if md != nil {
 				attr := oteltrace.WithAttributes(
 					attribute.String("nats.js.domain", md.Domain),
 					attribute.String("nats.js.stream", md.Stream),
-					attribute.String("nats.js.sequence", fmt.Sprintf("%d/%d", md.Sequence.Stream, md.Sequence.Consumer)),
+					attribute.String("nats.js.sequence.stream", fmt.Sprintf("%d", md.Sequence.Stream)),
+					attribute.String("nats.js.sequence.consumer", fmt.Sprintf("%d", md.Sequence.Consumer)),
 				)
 				spanOpts = append(spanOpts, attr)
 			}
 
-			ctx := otel.GetTextMapPropagator().Extract(context.Background(), m)
-			// spanCtx := oteltrace.SpanContextFromContext(ctx)
-			// if spanCtx.IsValid() && spanCtx.IsRemote() {
-			// 	// spanOpts = append(
-			// 	// spanOpts,
-			// 	// oteltrace.WithLinks(oteltrace.Link{
-			// 	// SpanContext: spanCtx,
-			// 	// }),
-			// 	// )
-			// }
+			// TODO try to pass context from executer
+			ctx := otel.GetTextMapPropagator().Extract(context.Background(), intMsg)
 
 			ctx, span := logger.Tracer().Start(ctx, msg.Subject(), spanOpts...)
 			defer span.End()
 
-			msg.Ack()
+			err := msg.Ack()
+			if err != nil {
+				logger.ErrorCtx(ctx, err).Msg("msg.Ack failed")
+			}
 			handler(ctx, msg.Subject(), msg.Data())
 		},
 		jetstream.ConsumeErrHandler(func(consumeCtx jetstream.ConsumeContext, err error) {
@@ -93,9 +98,14 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 	return nil
 }
 
-func (c *NatsConsumer) Shutdown() {
+func (c *NatsConsumer) Shutdown() error {
 	if c.shutdown != nil {
 		c.shutdown()
 		fmt.Printf("ConsumerLoop.Shutdown.\n")
 	}
+
+	if c.conn == nil {
+		return nil
+	}
+	return c.conn.shutdown()
 }

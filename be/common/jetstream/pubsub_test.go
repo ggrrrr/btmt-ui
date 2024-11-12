@@ -12,6 +12,8 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
+var natsUrl = "localhost:4222"
+
 func TestPublish(t *testing.T) {
 	wg := sync.WaitGroup{}
 
@@ -28,7 +30,7 @@ func TestPublish(t *testing.T) {
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	conn, err := Connect("localhost:4222")
+	conn, err := connect("localhost:4222")
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()
@@ -43,12 +45,17 @@ func TestPublish(t *testing.T) {
 	ctx, span := logger.Span(rootCtx, "main.Method", nil)
 	logger.InfoCtx(ctx).Msg("main.Method")
 
-	testPublisher := NewPublisher(conn, "test")
-
-	consumer, err := NewConsumer(rootCtx, *conn, "test", "group2")
+	testPublisher, err := NewPublisher(natsUrl, "test")
 	require.NoError(t, err)
 	defer func() {
-		consumer.Shutdown()
+		_ = testPublisher.Shutdown()
+		fmt.Println("testPublisher.Shutdown")
+	}()
+
+	consumer, err := NewConsumer(rootCtx, natsUrl, "test", "group2")
+	require.NoError(t, err)
+	defer func() {
+		_ = consumer.Shutdown()
 		fmt.Println("consumer.Shutdown")
 	}()
 
@@ -56,7 +63,7 @@ func TestPublish(t *testing.T) {
 	require.NoError(t, err)
 	wg.Add(1)
 
-	consumer.ConsumerLoop(
+	err = consumer.ConsumerLoop(
 		func(ctx context.Context, subject string, data []byte) {
 			defer wg.Done()
 			_, span := logger.Span(ctx, "ConsumerLoop.handler", nil)

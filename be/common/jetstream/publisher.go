@@ -12,17 +12,29 @@ import (
 
 type (
 	NatsPublisher struct {
-		conn    *Nats
+		conn    *natsConn
 		subject string
 	}
 )
 
-func NewPublisher(conn *Nats, subject string) *NatsPublisher {
+func NewPublisher(url string, subject string) (*NatsPublisher, error) {
+
+	conn, err := connect(url)
+	if err != nil {
+		return nil, err
+	}
 
 	return &NatsPublisher{
 		conn:    conn,
 		subject: subject,
+	}, nil
+}
+
+func (c *NatsPublisher) Shutdown() error {
+	if c.conn == nil {
+		return nil
 	}
+	return c.conn.shutdown()
 }
 
 func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {

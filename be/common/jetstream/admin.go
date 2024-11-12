@@ -6,7 +6,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-func (c *Nats) CreateStream(ctx context.Context, name string, descr string, subjects []string) (jetstream.Stream, error) {
+func (c *natsConn) CreateStream(ctx context.Context, name string, descr string, subjects []string) (jetstream.Stream, error) {
 
 	stream, err := c.js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:        name,
@@ -18,11 +18,11 @@ func (c *Nats) CreateStream(ctx context.Context, name string, descr string, subj
 	})
 	return stream, err
 }
-func (c *Nats) PruneStream(ctx context.Context, name string) error {
+func (c *natsConn) PruneStream(ctx context.Context, name string) error {
 	return c.js.DeleteStream(ctx, name)
 }
 
-func (c *Nats) Stream(ctx context.Context, name string) (jetstream.Stream, error) {
+func (c *natsConn) Stream(ctx context.Context, name string) (jetstream.Stream, error) {
 	s, err := c.js.Stream(ctx, name)
 	return s, err
 }

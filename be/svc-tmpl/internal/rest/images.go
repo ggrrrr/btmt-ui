@@ -95,8 +95,10 @@ func (s *server) GetImage(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
-	attch.WriterTo.WriteTo(w)
-
+	_, err = attch.WriterTo.WriteTo(w)
+	if err != nil {
+		logger.ErrorCtx(ctx, err).Msg("unable to write file")
+	}
 }
 
 /*
@@ -131,7 +133,10 @@ func (s *server) GetResizedImage(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
-	attch.WriterTo.WriteTo(w)
+	_, err = attch.WriterTo.WriteTo(w)
+	if err != nil {
+		logger.ErrorCtx(ctx, err).Msg("unable to write file")
+	}
 
 }
 

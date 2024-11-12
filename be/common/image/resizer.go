@@ -87,11 +87,9 @@ func ResizeImage(ctx context.Context, toHeight int, from blob.BlobReader) (*Resi
 	defer from.ReadCloser.Close()
 
 	img, imgFormat, err := image.Decode(from.ReadCloser)
-	fmt.Printf("image.Decode %s \n", imgFormat)
 	if err != nil {
 		return nil, fmt.Errorf("ResizeImage.Decode[%s] %w", from.Blob.MD.Name, err)
 	}
-	// toHeight := 256 / 2
 
 	bounds := img.Bounds()
 	imgWidth := bounds.Dx()
@@ -113,9 +111,6 @@ func ResizeImage(ctx context.Context, toHeight int, from blob.BlobReader) (*Resi
 		}
 	}
 
-	fmt.Printf("from H / W %5d / %5d \n", imgHeight, imgWidth)
-	fmt.Printf("to         %5d / %5d \n", toHeight, toWidth)
-
 	newImageFile, err := os.CreateTemp("", ".resize.bin")
 	if err != nil {
 		return nil, fmt.Errorf("ResizeImage.CreateTemp[%s] %w", from.Blob.MD.Name, err)
@@ -133,7 +128,7 @@ func ResizeImage(ctx context.Context, toHeight int, from blob.BlobReader) (*Resi
 
 	if err != nil {
 		os.Remove(newImageFile.Name())
-		return nil, fmt.Errorf("%s.Encode error %w", imgFormat, err)
+		return nil, fmt.Errorf("img.Encode[%s/%s] %w", imgFormat, from.Blob.MD.Name, err)
 	}
 
 	stat, err := newImageFile.Stat()

@@ -6,10 +6,12 @@
         <template v-slot:append>
             <login-dialog />
             <v-chip v-if="loginStore.username" rounded color="primary">{{ loginStore.username }}</v-chip>
-            <v-btn color="warning" dense v-show="loginStore.username" icon="mdi-logout"
+            <v-btn color="warning" title="exit" dense rounded v-show="loginStore.username" icon="mdi-logout"
                 @click="loginStore.resetLogin" />
-            <v-btn color="secondary" dense v-show="!loginStore.username" icon="mdi-login" @click="showLogin" />
-            <v-btn color="secondary" dense v-show="loginStore.username" icon="mdi-refresh" @click="validateClick" />
+            <v-btn color="secondary" title="login" dense v-show="!loginStore.username" icon="mdi-login"
+                @click="showLogin" />
+            <v-btn color="secondary" title="refresh" dense v-show="loginStore.username" icon="mdi-refresh"
+                @click="validateClick" />
         </template>
         <v-toolbar-title small>
             <!-- <v-spacer flat></v-spacer> -->

@@ -5,6 +5,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
@@ -15,6 +16,12 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 		span.End(err)
 	}()
 
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
+	if err != nil {
+		return err
+	}
+
 	// Fetch images and other blobs to verify all is good
 	// test if we can parse the body with template
 	if tmpl.Id == "" {
@@ -22,11 +29,7 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 	} else {
 		err = a.repo.Update(ctx, tmpl)
 	}
-	if err != nil {
-
-	}
 	return err
-
 }
 
 func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Template, error) {
@@ -35,6 +38,12 @@ func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Tem
 	defer func() {
 		span.End(err)
 	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
+	if err != nil {
+		return nil, err
+	}
 
 	logger.InfoCtx(ctx).Msg("ListTmpl")
 
@@ -51,6 +60,12 @@ func (a *App) GetTmpl(ctx context.Context, id string) (*ddd.Template, error) {
 	defer func() {
 		span.End(err)
 	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
+	if err != nil {
+		return nil, err
+	}
 
 	result, err := a.repo.GetById(ctx, id)
 	if err != nil {

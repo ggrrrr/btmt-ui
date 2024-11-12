@@ -20,7 +20,7 @@ func TestList2(t *testing.T) {
 	ctx := context.TODO()
 
 	folderName := "root/folder-1"
-	fileFolderId, _ := blob.ParseBlobId(fmt.Sprintf("%s", folderName))
+	fileFolderId, _ := blob.ParseBlobId(folderName)
 
 	file1v1, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-1:1", folderName))
 	file1v2, _ := blob.ParseBlobId(fmt.Sprintf("%s/file-1:2", folderName))
@@ -76,7 +76,7 @@ func TestList2(t *testing.T) {
 				require.NoError(t, err)
 
 				defer func() {
-					deleteAll(ctx, s3c, awsId{
+					_ = deleteAll(ctx, s3c, awsId{
 						path: folderName,
 					})
 				}()
@@ -137,7 +137,9 @@ func TestCallsListPushFetchHead(t *testing.T) {
 
 				newID, err := testClient.Push(ctx, "localhost", folder1v1, md, bytes.NewReader([]byte(data)))
 				require.NoError(t, err)
-				defer deleteAll(ctx, s3c, awsId{path: "folder-1", id: "id-1"})
+				defer func() {
+					_ = deleteAll(ctx, s3c, awsId{path: "folder-1", id: "id-1"})
+				}()
 				verID, err := blob.NewBlobId("folder-1", "id-1", "1")
 				require.NoError(t, err)
 				assert.Equal(t, verID, newID)

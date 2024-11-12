@@ -1,20 +1,16 @@
 package jetstream
 
 import (
-	"context"
-
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-type MsgHandler func(ctx context.Context, payload any) error
-
-type Nats struct {
+type natsConn struct {
 	conn *nats.Conn
 	js   jetstream.JetStream
 }
 
-func Connect(url string) (*Nats, error) {
+func connect(url string) (*natsConn, error) {
 	cn, err := nats.Connect(url)
 	if err != nil {
 		return nil, err
@@ -25,9 +21,21 @@ func Connect(url string) (*Nats, error) {
 		return nil, err
 	}
 
-	return &Nats{
+	return &natsConn{
 		conn: cn,
 		js:   js,
 	}, nil
+
+}
+
+func (c *natsConn) shutdown() error {
+	if c.conn == nil {
+		return nil
+	}
+	if c.conn.IsClosed() {
+		return nil
+	}
+	c.conn.Close()
+	return nil
 
 }

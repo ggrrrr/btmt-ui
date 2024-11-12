@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
-var testServiceName = semconv.ServiceNameKey.String("test-service")
+// var testServiceName = semconv.ServiceNameKey.String("test-service")
 
 type person struct {
 	Id   int
