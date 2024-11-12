@@ -9,7 +9,7 @@ export class Template {
       this.body = "";
       this.labels;
       this.editUrl = "";
-      this.created_at = "";
+      this.created_at = null;
       return;
     }
     console.log("", row);

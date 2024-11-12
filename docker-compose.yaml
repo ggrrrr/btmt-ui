@@ -119,7 +119,7 @@ services:
   mongo-express:
     hostname: mongo-express
     container_name: mongo-express
-    image: mongo-express:18-alpine3.18
+    image: mongo-express:1.0.2-20-alpine3.19
     ports:
       - "8081:8081"
     environment:
