@@ -16,15 +16,18 @@ func TestData(t *testing.T) {
 
 	testTmpl := Template{
 		// ContentType: "text/plain",
-		Body: `# Header from: {{ .UserInfo.User }}
-# Header key 1: {{ .Items.key1.Item1 }} {{ .Items.key1.Item }}
-# List {{range index .Lists "list1"}}
-	* {{.}}{{end}}
+		Body: `# Header from: {{ .UserInfo.Subject }}
+# Items.key1: {{ .Items.key1.Item1 }} [{{ .Items.key1.Item }}]
+# Lists.list1: {{range index .Lists "list1"}}
+  * {{.}}{{end}}
 ---
-# table {{ .Tables.table1.Name }}
-Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
-{{range .Tables.table1.Rows}}row   : {{ range .}} {{ . }}{{ end}} 
-{{end}}end
+# table: {{ .Tables.table1.Name }}
+{{range .Tables.table1.Headers}}| {{ . }} {{end}} |
+------------------------------------
+{{range .Tables.table1.Rows}}{{ range .}}| {{ . }} {{ end}} | 
+{{end}}
+------------------------------------
+end.
 
 {{ renderImg "imageName" }}
 `,
@@ -60,7 +63,7 @@ Header: {{range .Tables.table1.Headers}} {{ .}} {{end}}
 	tmpl, err := template.New("template_data").
 		Funcs(template.FuncMap{
 			"renderImg": func(bane string) string {
-				return fmt.Sprintf("render %s", bane)
+				return fmt.Sprintf("render://some.host/%s", bane)
 			},
 		}).
 		Parse(testTmpl.Body)
