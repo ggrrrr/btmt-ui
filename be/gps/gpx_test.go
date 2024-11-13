@@ -2,7 +2,6 @@ package gps
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"testing"
 
@@ -11,27 +10,6 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/help"
 )
-
-const earthR = 6371e3 // metres
-
-func calcDist(wp1 gpx.WptType, wp2 gpx.WptType) float64 {
-	if wp1.Lat == 0 || wp1.Lon == 0 ||
-		wp2.Lat == 0 || wp2.Lon == 0 {
-		return 0
-	}
-	f1 := wp1.Lat * math.Pi / 180
-	f2 := wp2.Lat * math.Pi / 180
-
-	deltaF := (wp2.Lat - wp1.Lat) * math.Pi / 180
-	deltaG := (wp2.Lon - wp1.Lon) * math.Pi / 180
-
-	// Math.sin(Δφ/2) * Math.sin(Δφ/2)
-	a := (math.Sin(deltaF/2) * math.Sin(deltaF/2)) +
-		(math.Cos(f1)*math.Cos(f2))*(math.Sin(deltaG/2)*math.Sin(deltaG/2))
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-
-	return earthR * c
-}
 
 func printTrk(trk *gpx.TrkType) {
 	fmt.Printf("\n %v %+v \n", trk.Name, trk.Desc)
@@ -47,21 +25,31 @@ func printSeg(seg *gpx.TrkSegType) {
 	fmt.Println("[")
 	var lastPoint *gpx.WptType
 	var delta float64 = 0
+	var i = 0
 	for v := range seg.TrkPt {
 		currentPt := seg.TrkPt[v]
 		if lastPoint != nil {
-			delta = calcDist(*lastPoint, *currentPt)
+			d := Distance(*lastPoint, *currentPt)
+			delta = delta + d
+			fmt.Printf("// p1: %v, %v p2: %v, %v == %2f ++ %2f\n", lastPoint.Lon, lastPoint.Lat, currentPt.Lon, currentPt.Lat, d, delta)
 		}
 		lastPoint = currentPt
-		printWp(seg.TrkPt[v], delta)
+		if delta > 100 {
+			printWp(seg.TrkPt[v])
+			delta = 0
+			i++
+		}
 	}
 	fmt.Println("]")
+	fmt.Printf("// points: %d\n", i)
+
 }
 
-func printWp(wp *gpx.WptType, dist float64) {
-	if dist > 10 {
-		fmt.Printf("\t[%v, %v],\n", wp.Lon, wp.Lat)
-	}
+func printWp(wp *gpx.WptType) {
+	// if dist > 10 {
+	// fmt.Printf("\t[%v, %v],//[%d] %2f\n", wp.Lon, wp.Lat, i, dist)
+	fmt.Printf("\t[%v, %v],\n", wp.Lon, wp.Lat)
+	// }
 }
 
 func Test_Load(t *testing.T) {

@@ -5,19 +5,30 @@
         list
       </v-col>
       <v-col no-gutters>
-        <ol-map @pointermove="hoverFeature" :loadTilesWhileAnimating="true" :loadTilesWhileInteracting="true"
-          ref="mapRef" style="height: 400px">
+        <ol-map :loadTilesWhileAnimating="true" :loadTilesWhileInteracting="true" style="height: 400px">
           <ol-view ref="view" :center="center" :rotation="rotation" :zoom="zoom" :projection="projection" />
           <ol-tile-layer>
             <ol-source-osm />
           </ol-tile-layer>
-          <ol-vector-layer class-name="feature-layer">
-            <ol-source-vector url="http://localhost:3000/gara-dolene-ravno-bore.json" :format="geoJson">
-              <ol-style>
-                <ol-style-stroke color="red" :width="vectorWidth"></ol-style-stroke>
-              </ol-style>
+
+          <ol-vector-layer>
+            <ol-source-vector @featuresloadend="handleFeaturesloadend">
+              <ol-feature ref="profileFeatureRef">
+                <ol-geom-line-string :coordinates="lineString.gpx"></ol-geom-line-string>
+                <ol-style>
+                  <ol-style-stroke :color="strokeColor" :width="strokeWidth"></ol-style-stroke>
+                </ol-style>
+              </ol-feature>
             </ol-source-vector>
           </ol-vector-layer>
+
+          <ol-interaction-select @select="featureSelected" :condition="selectCondition" :hitTolerance="10">
+            <ol-style>
+              <ol-style-stroke color="red" :width="3"></ol-style-stroke>
+            </ol-style>
+          </ol-interaction-select>
+
+          <ol-profile-control @over="over" @out="out" ref="profileControl"></ol-profile-control>
         </ol-map>
       </v-col>
     </v-row>
@@ -34,46 +45,127 @@
 <script setup>
 
 import { ref, inject } from 'vue';
+
+const strokeWidth = ref(4);
+const strokeColor = ref("red");
+const profileFeatureRef = ref(null);
+const selectConditions = inject("ol-selectconditions");
+const selectCondition = selectConditions.pointerMove;
+
 // import Map from 'ol/Map';
 
-//[ 25.26545469532615, 41.649423540053725 ]
-const vectorWidth = ref(4)
-const center = ref([25.26545469532615, 42.649423540053725]);
+//[ 25.26545469532615, 41.649423540053725 
+// 25.26545469532615, 42.649423540053725
+// 24.06133289448917, 42.09481257945299
+const center = ref([24.06133289448917, 42.09481257945299]);
 const projection = ref('EPSG:4326');//EPSG:7796. EPSG:4326/ EPSG:3857
-const zoom = ref(8);
+const zoom = ref(11.5);
 const rotation = ref(0);
 const format = inject('ol-format');
 const geoJson = new format.GeoJSON();
-const mapRef = ref(null)
+// const mapRef = ref(null)
 
-function layerFilter(layerCandidate) {
-  console.log('layerFilter', layerCandidate)
-  return layerCandidate.getClassName().includes("feature-layer");
+const lineString = ref({
+  gpx: [
+    [24.059168184176087, 42.09454318508506],
+    [24.055632445961237, 42.093426464125514],
+    [24.05260599218309, 42.093885289505124],
+    [24.04900881461799, 42.09303494542837],
+    [24.048217898234725, 42.09468643181026],
+    [24.050947967916727, 42.09534600377083],
+    [24.053191803395748, 42.09634370170534],
+    [24.05524319037795, 42.09691509604454],
+    [24.05668320134282, 42.09833859466016],
+    [24.05791115015745, 42.09959872998297],
+    [24.05872855335474, 42.0979982893914],
+    [24.05996379442513, 42.100343042984605],
+    [24.062622617930174, 42.10114032961428],
+    [24.063994148746133, 42.103107646107674],
+    [24.064398827031255, 42.105726823210716],
+    [24.06714029610157, 42.105555245652795],
+    [24.066693792119622, 42.10801977664232],
+    [24.068408478051424, 42.110003773123026],
+    [24.069238370284438, 42.11205029860139],
+    [24.07048978842795, 42.11195549927652],
+    [24.07229047268629, 42.10994149558246],
+    [24.075000677257776, 42.10954612120986],
+    [24.076770432293415, 42.10952558554709],
+    [24.07826190814376, 42.11201207712293],
+    [24.07992630265653, 42.114592948928475],
+    [24.081848105415702, 42.11619598791003],
+    [24.083371935412288, 42.11477550677955],
+    [24.085595570504665, 42.11438155733049],
+    [24.088780023157597, 42.114511309191585],
+    [24.090916151180863, 42.116660764440894],
+    [24.093480426818132, 42.11819339543581],
+    [24.093056302517653, 42.120008831843734],
+    [24.092043852433562, 42.12250169366598],
+    [24.093138864263892, 42.123374585062265],
+    [24.095571544021368, 42.12456850335002],
+    [24.09908439964056, 42.12483420968056],
+    [24.100693641230464, 42.1266935672611],
+    [24.098851634189487, 42.12905508466065],
+    [24.09676001407206, 42.131300680339336],
+    [24.09505035728216, 42.1336511336267],
+    [24.094359688460827, 42.135992869734764],
+    [24.09265791065991, 42.13831474073231],
+    [24.095926769077778, 42.139324927702546],
+    [24.097971199080348, 42.14151922613382],
+    [24.095810931175947, 42.142124231904745],
+    [24.09579550847411, 42.14446412399411],
+    [24.096342427656054, 42.14703468605876],
+    [24.098563631996512, 42.14898448437452],
+    [24.098108913749456, 42.15101022273302],
+    [24.098711740225554, 42.15327551588416],
+    [24.10113855265081, 42.15508089400828],
+    [24.103668881580234, 42.156729279085994],
+    [24.104957850649953, 42.15825746767223],
+    [24.10773896612227, 42.15902759693563],
+    [24.107580548152328, 42.161008240655065],
+    [24.10914519801736, 42.16333790682256],
+    [24.11161039955914, 42.1634326223284],
+    [24.11096499301493, 42.16193142347038],
+    [24.113968899473548, 42.16168424114585],
+    [24.115248899906874, 42.16112491674721],
+    [24.115813756361604, 42.160316817462444],
+    [24.11329365335405, 42.15898568741977],
+    [24.110988629981875, 42.15833919122815],
+    [24.11161132156849, 42.15840297751129],
+    [24.11396219395101, 42.15932716615498],
+    [24.116528816521168, 42.16092023067176],
+    [24.115197602659464, 42.16311897151172],
+    [24.118831492960453, 42.163232462480664],
+    [24.121933467686176, 42.162471637129784],
+    [24.124770490452647, 42.161523727700114],]
+})
+
+function over(event) {
+  console.log("over", event);
 }
 
-function hoverFeature(event) {
-  const map = mapRef.value?.map
-  if (!map) {
-    return;
-  }
-
-  console.log('hoverFeature.event.pixel', event.pixel)
-  // const mapRef = this.$refs['mapRef']
-  // console.log('mapRef', map)
-  const features = map.getFeaturesAtPixel(event.pixel, {
-    hitTolerance: 10,
-    layerFilter,
-  });
-
-  // console.log('hoverFeature.features', features)
-  if (features.length > 0) {
-    console.log('hoverFeature.features.0.ol_uid', features[0].ol_uid)
-    console.log('hoverFeature.features.0', features[0])
-    vectorWidth.value = 8
-  }
-  //
-  // highlightedFeatures.value = features[0] ? [features[0]] : [];
+function out(event) {
+  console.log('out', event);
 }
 
+function featureSelected(event) {
+  console.log('featureSelected', event.selected);
 
+  // const selected = event.selected[0] as Feature<Point>;
+  // if (selected) {
+  //   const p = selected
+  //     .getGeometry()
+  //     ?.getClosestPoint(event.mapBrowserEvent.coordinate);
+  //   if (p) {
+  //     drawPoint("over", p);
+  //   }
+  // }
+}
+
+function handleFeaturesloadend(event) {
+  console.log('handleFeaturesloadend', event);
+  // profileFeature.value = event.target.getFeatures()[0];
+  // if (profileFeature.value) {
+  //   profileControl.value?.control?.setGeometry(profileFeature.value);
+  // }
+}
 </script>
