@@ -4,7 +4,13 @@
 
 ### OpenLayers / maps render
 
+```sh
+npm install vue3-openlayers
+```
+
 * [vue3openlayers](https://vue3openlayers.netlify.app/)
+* [GeoJSON](https://datatracker.ietf.org/doc/html/rfc7946)
+* [Distance calc](https://www.movable-type.co.uk/scripts/latlong.html)
 
 ## Project setup
 

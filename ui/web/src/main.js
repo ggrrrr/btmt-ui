@@ -11,12 +11,14 @@ import { registerPlugins } from "@/plugins";
 // import App from "./App.vue";
 import App from "./App.vue";
 
+import OpenLayersMap from "vue3-openlayers";
+
 // console.log("asdasd", Vue.http.options.root);
 
 // Composables
 import { createApp } from "vue";
 
-const app = createApp(App);
+const app = createApp(App).use(OpenLayersMap);
 
 registerPlugins(app);
 
