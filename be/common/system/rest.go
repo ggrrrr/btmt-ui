@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -112,6 +114,27 @@ func (s *System) httpHandlerAuth(next http.Handler) http.Handler {
 	})
 }
 
+func (s *System) httpHandlerVersion(endpoint string) func(http.Handler) http.Handler {
+	f := func(h http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			if (r.Method == "GET") && strings.EqualFold(r.URL.Path, endpoint) {
+				ver := struct {
+					BuildVersion string    `json:"build_version"`
+					BuildTime    time.Time `json:"build_time"`
+				}{
+					BuildVersion: s.buildVersion,
+					BuildTime:    s.buildTime,
+				}
+				web.SendPayload(r.Context(), w, "ok", ver)
+				return
+			}
+			h.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+	return f
+}
+
 func (s *System) initMux() {
 	s.mux = chi.NewRouter()
 	s.mux.NotFound(web.MethodNotFoundHandler)
@@ -125,14 +148,15 @@ func (s *System) initMux() {
 	s.mux.Use(s.httpHandlerAuth)
 	s.mux.Use(middleware.RealIP)
 	s.mux.Use(middleware.Heartbeat("/liveness"))
+	s.mux.Use(s.httpHandlerVersion("/_version"))
+
+	// TODO create grpc gateway as a service
+	// s.gateway = runtime.NewServeMux()
 
 	// or use https://github.com/Ecostack/otelchi/blob/master/middleware.go
 	if s.cfg.Otel.Enabled {
 		s.mux.Use(otelchi.Middleware("rest"))
 	}
-
-	// TODO create grpc gateway as a service
-	// s.gateway = runtime.NewServeMux()
 
 }
 

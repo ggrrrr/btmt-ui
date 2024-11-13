@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/go-chi/chi/v5"
@@ -14,13 +15,15 @@ import (
 )
 
 type System struct {
-	cfg      config.AppConfig
-	mux      *chi.Mux
-	gateway  *runtime.ServeMux
-	waiter   waiter.Waiter
-	grpc     *grpc.Server
-	aws      *session.Session
-	verifier token.Verifier
+	cfg          config.AppConfig
+	mux          *chi.Mux
+	gateway      *runtime.ServeMux
+	waiter       waiter.Waiter
+	grpc         *grpc.Server
+	aws          *session.Session
+	verifier     token.Verifier
+	buildVersion string
+	buildTime    time.Time
 }
 
 type Service interface {

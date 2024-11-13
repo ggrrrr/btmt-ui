@@ -10,6 +10,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
+	"github.com/ggrrrr/btmt-ui/be/common/ver"
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 )
 
@@ -17,8 +18,14 @@ var _ (Service) = (*System)(nil)
 
 func NewSystem(cfg config.AppConfig) (*System, error) {
 	s := System{
-		cfg: cfg,
+		cfg:          cfg,
+		buildVersion: ver.BuildVersion(),
+		buildTime:    ver.BuildTime(),
 	}
+	logger.Info().
+		Str("build.version", s.buildVersion).
+		Time("build.time", s.buildTime).
+		Msg("system.init...")
 
 	if cfg.Otel.Enabled {
 		err := logger.ConfigureOtel(context.Background())
@@ -37,7 +44,6 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	s.waiter = waiter.New(waiter.CatchSignals())
 	s.waiter.Cleanup(logger.Shutdown)
 
-	logger.Info().Msg("system init.")
 	return &s, nil
 }
 
