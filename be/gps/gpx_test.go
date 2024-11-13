@@ -31,7 +31,7 @@ func printSeg(seg *gpx.TrkSegType) {
 		if lastPoint != nil {
 			d := Distance(*lastPoint, *currentPt)
 			delta = delta + d
-			fmt.Printf("// p1: %v, %v p2: %v, %v == %2f ++ %2f\n", lastPoint.Lon, lastPoint.Lat, currentPt.Lon, currentPt.Lat, d, delta)
+			// fmt.Printf("// p1: %v, %v p2: %v, %v == %2f ++ %2f\n", lastPoint.Lon, lastPoint.Lat, currentPt.Lon, currentPt.Lat, d, delta)
 		}
 		lastPoint = currentPt
 		if delta > 100 {
@@ -62,6 +62,5 @@ func Test_Load(t *testing.T) {
 	gpxReader, err := gpx.Read(file)
 	require.NoError(t, err)
 
-	fmt.Printf("t.Wpt[0] == %v", gpxReader.Trk[0].TrkSeg[0].TrkPt[0])
 	printTrk(gpxReader.Trk[0])
 }
