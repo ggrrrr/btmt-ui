@@ -22,8 +22,8 @@ type (
 	System struct {
 		cfg          config.AppConfig
 		mux          *chi.Mux
-		gateway      *runtime.ServeMux
 		waiter       waiter.Waiter
+		gateway      *runtime.ServeMux
 		grpc         *grpc.Server
 		aws          *session.Session
 		verifier     token.Verifier
@@ -32,9 +32,16 @@ type (
 	}
 
 	Service interface {
+		// current config
 		Config() config.AppConfig
+
+		// http / rest router
 		Mux() *chi.Mux
+
+		// group waiter for shutdown/startup
 		Waiter() waiter.Waiter
+
+		// GRPC server
 		RPC() *grpc.Server
 	}
 )

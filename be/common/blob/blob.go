@@ -12,8 +12,6 @@ type (
 	}
 
 	Fetcher interface {
-		// must apply NameRegExp for folder and Id
-		// List(ctx context.Context, tenant string, blobId string) ([]BlobInfo, error)
 		Fetch(ctx context.Context, tenant string, blobId BlobId) (BlobReader, error)
 		Head(ctx context.Context, tenant string, blobId BlobId) (BlobMD, error)
 		List(ctx context.Context, tenant string, blobId BlobId) ([]ListResult, error)
