@@ -44,8 +44,8 @@ var _ (Service) = (*System)(nil)
 func NewSystem(cfg config.AppConfig) (*System, error) {
 	s := System{
 		cfg:          cfg,
-		buildVersion: ver.BuildVersion(),
-		buildTime:    ver.BuildTime(),
+		buildVersion: ver.BuildVersion("./build_ver.txt"),
+		buildTime:    ver.BuildTime("./build_ts.txt"),
 	}
 	logger.Info().
 		Str("build.version", s.buildVersion).

@@ -85,13 +85,14 @@ services:
     depends_on:
       - localstack
     environment:
-      - JWT_CRTFILE=/app/jwt.crt
-      - JWT_KEYFILE=/app/jwt.key
+      - OTEL_COLLECTOR=otel:4317
+      # - JWT_CRTFILE=/app/jwt.crt
+      # - JWT_KEYFILE=/app/jwt.key
     volumes:
       # - ./be/.deploy/svc-auth/config.pg.yaml:/app/config.yaml
-      - ./be/.deploy/svc-auth/config.aws.yaml:/app/config.yaml
-      - ./be/jwt.crt:/app/jwt.crt
-      - ./be/jwt.key:/app/jwt.key
+      - ./config.yaml:/app/config.yaml
+      - ./jwt.crt:/app/jwt.crt
+      - ./jwt.key:/app/jwt.key
       - ~/.aws:/root/.aws/
 
   postgres:

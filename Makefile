@@ -3,12 +3,13 @@ GIT_HASH ?= $(shell git log --format="%h" -n 1)
 
 build_svc_%:
 	docker build --build-arg=MAIN_FILE=svc-$*/cmd/main.go \
+		--build-arg=GIT_HASH=${GIT_HASH} \
 		-f ./be/.deploy/Dockerfile \
-		--tag "${DOCKER_REPO}/be/$*:${GIT_HASH}" \
+		--tag ${DOCKER_REPO}/be/$*:${GIT_HASH} \
 		./be
 
 tag_svc_%:
-	docker tag "${DOCKER_REPO}/be/$*:${GIT_HASH}" "${DOCKER_REPO}/be/$*:latest"
+	docker tag ${DOCKER_REPO}/be/$*:${GIT_HASH} ${DOCKER_REPO}/be/$*:latest
 
 build_web:
 	docker build \
