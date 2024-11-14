@@ -25,7 +25,7 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 
 	// TODO Verify that the template can be rendered
 	// TODO Fetch images and other blobs to verify all is good
-	// test if we can parse the body with template
+	// test if we can parse the body template and data value
 	if tmpl.Id == "" {
 		tmpl.UpdatedAt = time.Now()
 		tmpl.CreatedAt = time.Now()

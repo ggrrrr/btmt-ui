@@ -21,6 +21,18 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 )
 
+type (
+	httpPanicResponse struct {
+		Code    int    `json:"code,omitempty"`
+		Message string `json:"message,omitempty"`
+		Error   string `json:"error,omitempty"`
+	}
+	httpVersionReponse struct {
+		BuildVersion string    `json:"build_version"`
+		BuildTime    time.Time `json:"build_time"`
+	}
+)
+
 func (s *System) httpHandlerRecoverer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -32,11 +44,7 @@ func (s *System) httpHandlerRecoverer(next http.Handler) http.Handler {
 
 				fmt.Println(string(debug.Stack()))
 
-				jsonBody, _ := json.Marshal(struct {
-					Code    int    `json:"code,omitempty"`
-					Message string `json:"message,omitempty"`
-					Error   string `json:"error,omitempty"`
-				}{
+				jsonBody, _ := json.Marshal(httpPanicResponse{
 					Code:    http.StatusInternalServerError,
 					Message: "internal server error",
 				})
@@ -59,7 +67,7 @@ func (s *System) httpHandlerCORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Authorization")
 
 		if r.Method == http.MethodOptions {
-			out := "ok"
+			out := "."
 			w.WriteHeader(200)
 			_, err := w.Write([]byte(out))
 			if err != nil {
@@ -118,10 +126,7 @@ func (s *System) httpHandlerVersion(endpoint string) func(http.Handler) http.Han
 	f := func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			if (r.Method == "GET") && strings.EqualFold(r.URL.Path, endpoint) {
-				ver := struct {
-					BuildVersion string    `json:"build_version"`
-					BuildTime    time.Time `json:"build_time"`
-				}{
+				ver := httpVersionReponse{
 					BuildVersion: s.buildVersion,
 					BuildTime:    s.buildTime,
 				}

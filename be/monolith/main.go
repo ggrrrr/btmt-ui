@@ -51,8 +51,6 @@ func run() error {
 	m.Waiter().Add(
 		m.WaitForWeb,
 		m.WaitForGRPC,
-		// m.WaitForRPC,
-		// m.WaitForStream,
 	)
 
 	return m.Waiter().Wait()

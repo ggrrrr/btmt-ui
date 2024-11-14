@@ -6,18 +6,18 @@ import (
 	"time"
 )
 
-//go:embed ver.txt
-var v string
+//go:embed build_ver.txt
+var buildVer string
 
-//go:embed ts.txt
-var ts string
+//go:embed build_ts.txt
+var buildTs string
 
 func BuildVersion() string {
-	return v
+	return buildVer
 }
 
 func BuildTime() time.Time {
-	ts2, err := time.Parse(time.RFC3339Nano, strings.TrimSpace(ts))
+	ts2, err := time.Parse(time.RFC3339Nano, strings.TrimSpace(buildTs))
 	if err != nil {
 		// fmt.Println("BuildTime error: ", err)
 		return time.Now().UTC()
