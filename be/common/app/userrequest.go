@@ -1,5 +1,9 @@
 package app
 
+import (
+	"strings"
+)
+
 type (
 	Device struct {
 		RemoteAddr string
@@ -22,3 +26,21 @@ type (
 		AuthData AuthData
 	}
 )
+
+func (a AuthData) IsZero() bool {
+	if a.AuthScheme == "" && a.AuthToken == "" {
+		return true
+	}
+	return false
+}
+
+func AuthDataFromValue(val string) AuthData {
+	valSlice := strings.Split(val, " ")
+	if len(valSlice) != 2 {
+		return AuthData{}
+	}
+	return AuthData{
+		AuthScheme: valSlice[0],
+		AuthToken:  valSlice[1],
+	}
+}

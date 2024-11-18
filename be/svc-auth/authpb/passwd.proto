@@ -118,8 +118,9 @@ message LoginToken{
 
 message LoginTokenPayload{
   string username = 1 [json_name = "username"];
-  LoginToken access_token = 2 [json_name = "access_token"];
-  LoginToken refresh_token = 3 [json_name = "refresh_token"];
+  string for_username = 2 [json_name = "for_username"];
+  LoginToken access_token = 3 [json_name = "access_token"];
+  LoginToken refresh_token = 4 [json_name = "refresh_token"];
 }
 
 message LoginOauth2Response {

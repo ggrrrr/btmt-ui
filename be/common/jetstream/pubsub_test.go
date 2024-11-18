@@ -10,11 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 var natsUrl = "localhost:4222"
 
 func TestPublish(t *testing.T) {
+	verifier := token.NewVerifierMock()
 	wg := sync.WaitGroup{}
 
 	var err error
@@ -45,14 +47,14 @@ func TestPublish(t *testing.T) {
 	ctx, span := logger.Span(rootCtx, "main.Method", nil)
 	logger.InfoCtx(ctx).Msg("main.Method")
 
-	testPublisher, err := NewPublisher(natsUrl, "test")
+	testPublisher, err := NewPublisher(natsUrl, "test", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
 	require.NoError(t, err)
 	defer func() {
 		_ = testPublisher.Shutdown()
 		fmt.Println("testPublisher.Shutdown")
 	}()
 
-	consumer, err := NewConsumer(rootCtx, natsUrl, "test", "group2")
+	consumer, err := NewConsumer(rootCtx, natsUrl, "test", "group2", verifier)
 	require.NoError(t, err)
 	defer func() {
 		_ = consumer.Shutdown()

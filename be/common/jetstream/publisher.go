@@ -8,17 +8,19 @@ import (
 	"go.opentelemetry.io/otel"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 type (
 	NatsPublisher struct {
-		conn    *natsConn
-		subject string
+		conn           *natsConn
+		subject        string
+		tokenGenerator token.ServiceTokenGenerator
 		// we need signer to add auth header to each message
 	}
 )
 
-func NewPublisher(url string, subject string) (*NatsPublisher, error) {
+func NewPublisher(url string, subject string, tokenGenerator token.ServiceTokenGenerator) (*NatsPublisher, error) {
 
 	conn, err := connect(url)
 	if err != nil {
@@ -26,8 +28,9 @@ func NewPublisher(url string, subject string) (*NatsPublisher, error) {
 	}
 
 	return &NatsPublisher{
-		conn:    conn,
-		subject: subject,
+		conn:           conn,
+		subject:        subject,
+		tokenGenerator: tokenGenerator,
 	}, nil
 }
 
@@ -52,6 +55,12 @@ func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
 }
 
 func (c *NatsPublisher) Publish(ctx context.Context, key string, payload []byte) error {
+
+	token, err := c.tokenGenerator.TokenForService(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to sign msg: %w", err)
+	}
+
 	subject := c.subject
 	if key != "" {
 		subject = fmt.Sprintf("%s.%s", subject, key)
@@ -67,6 +76,7 @@ func (c *NatsPublisher) Publish(ctx context.Context, key string, payload []byte)
 	otel.GetTextMapPropagator().Inject(ctx, &msg)
 
 	// TODO add auth header
+	msg.msg.Header.Set(authHeaderName, fmt.Sprintf("%s %s", authSchemeBearer, token))
 
 	return c.publish(ctx, msg.msg)
 }

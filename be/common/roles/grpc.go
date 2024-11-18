@@ -26,21 +26,11 @@ func extractGrpcAuthorization(md metadata.MD) app.AuthData {
 	out := app.AuthData{}
 	// We check first for http specific header 'authorization'
 	if len(md[strings.ToLower(HttpAuthorization)]) == 1 {
-		gwAuthorization := strings.Split(md[strings.ToLower(HttpAuthorization)][0], " ")
-		if len(gwAuthorization) == 2 {
-			out.AuthScheme = gwAuthorization[0]
-			out.AuthToken = gwAuthorization[1]
-			return out
-		}
+		return app.AuthDataFromValue(md[strings.ToLower(HttpAuthorization)][0])
 	}
-	// We check first for http specific forwarded header (part of grpc-gateway)
+	// We check for http forwarded header (part of grpc-gateway)
 	if len(md[GrpcAuthorization]) == 1 {
-		gwAuthorization := strings.Split(md[GrpcAuthorization][0], " ")
-		if len(gwAuthorization) == 2 {
-			out.AuthScheme = gwAuthorization[0]
-			out.AuthToken = gwAuthorization[1]
-			return out
-		}
+		return app.AuthDataFromValue(md[GrpcAuthorization][0])
 	}
 	return out
 }

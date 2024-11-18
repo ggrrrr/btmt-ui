@@ -7,9 +7,12 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
@@ -25,7 +28,7 @@ type (
 	}
 )
 
-func NewConsumer(ctx context.Context, url string, streamName string, group string) (*NatsConsumer, error) {
+func NewConsumer(ctx context.Context, url string, streamName string, group string, verifier token.Verifier) (*NatsConsumer, error) {
 	conn, err := connect(url)
 	if err != nil {
 		return nil, err
@@ -49,12 +52,15 @@ func NewConsumer(ctx context.Context, url string, streamName string, group strin
 		conn:     conn,
 		stream:   stream,
 		consumer: c,
+		verifier: verifier,
 	}, nil
 }
 
 func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 	consLoop, err := c.consumer.Consume(
 		func(msg jetstream.Msg) {
+			var err error
+
 			intMsg := &jsMsg{
 				msg: msg,
 			}
@@ -77,21 +83,26 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 				spanOpts = append(spanOpts, attr)
 			}
 
+			fmt.Printf("Headers: %+v \n", msg.Headers())
+
 			// TODO try to pass context from executor
 			ctx := otel.GetTextMapPropagator().Extract(context.Background(), intMsg)
-			// TODO parse auth header to include AuthInfo in the context
-
-			// authValue := intMsg.Get(authHeaderName)
-
-			// c.verifier.Verify(roles.Authorization{
-			// 	AuthScheme: "",
-			// 	AuthToken:  authValue,
-			// })
 
 			ctx, span := logger.Tracer().Start(ctx, msg.Subject(), spanOpts...)
-			defer span.End()
+			defer func() {
+				if err != nil {
+					span.SetStatus(codes.Error, err.Error())
+				}
+				span.End()
+			}()
 
-			err := msg.Ack()
+			authInfo, err := c.verifier.Verify(app.AuthDataFromValue(intMsg.Get(authHeaderName)))
+			if err != nil {
+				logger.ErrorCtx(ctx, err).Msg("verifier.Verify")
+			}
+			ctx = roles.CtxWithAuthInfo(ctx, authInfo)
+
+			err = msg.Ack()
 			if err != nil {
 				logger.ErrorCtx(ctx, err).Msg("msg.Ack failed")
 			}

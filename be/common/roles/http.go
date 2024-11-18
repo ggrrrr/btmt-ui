@@ -59,12 +59,17 @@ func authorizationFromCokies(cookies []*http.Cookie) (app.AuthData, bool) {
 func authorizationFromHeaders(md http.Header) (app.AuthData, bool) {
 	out := app.AuthData{}
 	if len(md[HttpAuthorization]) == 1 {
-		gwAuthorization := strings.Split(md[HttpAuthorization][0], " ")
-		if len(gwAuthorization) == 2 {
-			out.AuthScheme = gwAuthorization[0]
-			out.AuthToken = gwAuthorization[1]
+		// return
+		out = app.AuthDataFromValue(md[HttpAuthorization][0])
+		if !out.IsZero() {
 			return out, true
 		}
+		// gwAuthorization := strings.Split(md[HttpAuthorization][0], " ")
+		// if len(gwAuthorization) == 2 {
+		// 	out.AuthScheme = gwAuthorization[0]
+		// 	out.AuthToken = gwAuthorization[1]
+		// 	return out, true
+		// }
 	}
 	return out, false
 }

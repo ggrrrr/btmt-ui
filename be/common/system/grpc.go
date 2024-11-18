@@ -98,7 +98,7 @@ func (s *System) unaryInterceptor(
 	if md, ok = metadata.FromIncomingContext(ctx); ok {
 		userRequest = roles.FromGrpcMetadata(md, info.FullMethod)
 
-		if userRequest.AuthData.AuthScheme != "" {
+		if !userRequest.AuthData.IsZero() {
 			authInfo, err = s.verifier.Verify(userRequest.AuthData)
 			if err != nil {
 				infoLog.

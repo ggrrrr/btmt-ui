@@ -94,7 +94,7 @@ func (s *System) httpHandlerAuth(next http.Handler) http.Handler {
 
 		userRequest := roles.FromHttpRequest(r.Header, r.Cookies(), r)
 
-		if userRequest.AuthData.AuthScheme != "" {
+		if !userRequest.AuthData.IsZero() {
 			authInfo, err = s.verifier.Verify(userRequest.AuthData)
 			if err != nil {
 				infoLog.
