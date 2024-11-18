@@ -11,10 +11,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
+	ver "github.com/ggrrrr/btmt-ui/be/common/buildversion"
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
-	"github.com/ggrrrr/btmt-ui/be/common/ver"
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 )
 
