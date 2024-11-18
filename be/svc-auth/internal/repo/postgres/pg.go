@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
@@ -74,7 +74,7 @@ func create(db *sql.DB, sql string) error {
 }
 
 type device struct {
-	roles.Device
+	app.Device
 }
 
 func (v *device) Scan(src any) error {

@@ -94,8 +94,8 @@ func (s *System) httpHandlerAuth(next http.Handler) http.Handler {
 
 		userRequest := roles.FromHttpRequest(r.Header, r.Cookies(), r)
 
-		if userRequest.Authorization.AuthScheme != "" {
-			authInfo, err = s.verifier.Verify(userRequest.Authorization)
+		if userRequest.AuthData.AuthScheme != "" {
+			authInfo, err = s.verifier.Verify(userRequest.AuthData)
 			if err != nil {
 				infoLog.
 					Any("Method", r.Method).
@@ -111,7 +111,7 @@ func (s *System) httpHandlerAuth(next http.Handler) http.Handler {
 			Any("HttpUserAgent", r.Header.Get(roles.HttpUserAgent)).
 			Any("remoteAddr", r.RemoteAddr).
 			Any("device", userRequest.Device).
-			Str("AuthScheme", userRequest.Authorization.AuthScheme).
+			Str("AuthScheme", userRequest.AuthData.AuthScheme).
 			Str("FullMethod", userRequest.FullMethod)
 
 		authInfo.Device = userRequest.Device

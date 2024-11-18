@@ -5,12 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/postgres"
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/postgres"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
 func TestHistory(t *testing.T) {
@@ -33,7 +35,7 @@ func TestHistory(t *testing.T) {
 		ID:      uuid.New(),
 		Subject: "someshit",
 		Realm:   "localhost",
-		Device: roles.Device{
+		Device: app.Device{
 			RemoteAddr: "127.0.0.1",
 			DeviceInfo: "some device os",
 		},

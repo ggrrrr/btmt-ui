@@ -1,4 +1,4 @@
-package ver
+package buildversion
 
 import (
 	"os"
@@ -21,7 +21,7 @@ func BuildVersion(buildVerFile string) string {
 func BuildTime(buildTimeFile string) time.Time {
 
 	if buildTimeFile == "" {
-		return time.Now()
+		return time.Now().UTC()
 	}
 
 	verTS, err := os.ReadFile(buildTimeFile)

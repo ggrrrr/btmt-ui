@@ -14,6 +14,7 @@ type (
 	NatsPublisher struct {
 		conn    *natsConn
 		subject string
+		// we need signer to add auth header to each message
 	}
 )
 
@@ -64,6 +65,8 @@ func (c *NatsPublisher) Publish(ctx context.Context, key string, payload []byte)
 		},
 	}
 	otel.GetTextMapPropagator().Inject(ctx, &msg)
+
+	// TODO add auth header
 
 	return c.publish(ctx, msg.msg)
 }

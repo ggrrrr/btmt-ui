@@ -11,7 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
-	ver "github.com/ggrrrr/btmt-ui/be/common/buildversion"
+	"github.com/ggrrrr/btmt-ui/be/common/buildversion"
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -51,8 +51,8 @@ var _ (Service) = (*System)(nil)
 func NewSystem(cfg config.AppConfig) (*System, error) {
 	s := System{
 		cfg:          cfg,
-		buildVersion: ver.BuildVersion("./build_ver.txt"),
-		buildTime:    ver.BuildTime("./build_ts.txt"),
+		buildVersion: buildversion.BuildVersion("./build_ver.txt"),
+		buildTime:    buildversion.BuildTime("./build_ts.txt"),
 	}
 	logger.Info().
 		Str("build.version", s.buildVersion).

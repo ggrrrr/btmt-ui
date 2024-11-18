@@ -38,7 +38,7 @@ type (
 		ID        uuid.UUID
 		Subject   string
 		Method    string
-		Device    roles.Device
+		Device    app.Device
 		CreatedAt time.Time
 	}
 )
@@ -70,7 +70,7 @@ type AuthHistoryRepo interface {
 	DeleteHistory(ctx context.Context, id string) (err error)
 }
 
-func (from *AuthPasswd) ToAuthInfo(device roles.Device, domain string) roles.AuthInfo {
+func (from *AuthPasswd) ToAuthInfo(device app.Device, domain string) roles.AuthInfo {
 	out := roles.AuthInfo{
 		Subject:     from.Subject,
 		Realm:       domain,

@@ -10,6 +10,7 @@ import (
 	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 type (
@@ -19,6 +20,7 @@ type (
 		conn     *natsConn
 		stream   jetstream.Stream
 		consumer jetstream.Consumer
+		verifier token.Verifier
 		shutdown func()
 	}
 )
@@ -75,8 +77,16 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 				spanOpts = append(spanOpts, attr)
 			}
 
-			// TODO try to pass context from executer
+			// TODO try to pass context from executor
 			ctx := otel.GetTextMapPropagator().Extract(context.Background(), intMsg)
+			// TODO parse auth header to include AuthInfo in the context
+
+			// authValue := intMsg.Get(authHeaderName)
+
+			// c.verifier.Verify(roles.Authorization{
+			// 	AuthScheme: "",
+			// 	AuthToken:  authValue,
+			// })
 
 			ctx, span := logger.Tracer().Start(ctx, msg.Subject(), spanOpts...)
 			defer span.End()

@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
@@ -37,7 +38,7 @@ type (
 	}
 
 	Verifier interface {
-		Verify(inputToken roles.Authorization) (roles.AuthInfo, error)
+		Verify(inputToken app.AuthData) (roles.AuthInfo, error)
 	}
 )
 
@@ -64,13 +65,13 @@ func NewVerifier(crtFile string) (*verifier, error) {
 
 }
 
-func (c *verifier) Verify(inputToken roles.Authorization) (roles.AuthInfo, error) {
+func (c *verifier) Verify(inputToken app.AuthData) (roles.AuthInfo, error) {
 	if inputToken.AuthScheme != roles.AuthSchemeBearer {
 		return roles.AuthInfo{}, ErrJwtBadScheme
 
 	}
 
-	jwtTokenBytes, err := base64.StdEncoding.DecodeString(string(inputToken.AuthCredentials))
+	jwtTokenBytes, err := base64.StdEncoding.DecodeString(string(inputToken.AuthToken))
 	if err != nil {
 		return roles.AuthInfo{}, err
 	}

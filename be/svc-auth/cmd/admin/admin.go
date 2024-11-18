@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	commonApp "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
@@ -102,7 +103,7 @@ func prepCli() (context.Context, app.App, error) {
 	ctx := roles.CtxWithAuthInfo(context.Background(), roles.CreateSystemAdminUser(
 		roles.SystemRealm,
 		"root",
-		roles.Device{
+		commonApp.Device{
 			DeviceInfo: fmt.Sprintf("%v@%v", os.Getenv("USER"), hostname),
 			RemoteAddr: "localhost",
 		},

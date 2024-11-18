@@ -3,17 +3,18 @@ package ddd
 import (
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
 func TestAuth(t *testing.T) {
 	polices := roles.NewAppPolices()
 
-	device := roles.Device{
+	device := app.Device{
 		DeviceInfo: "some test device",
 		RemoteAddr: "localtest",
 	}

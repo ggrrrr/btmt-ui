@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
@@ -80,7 +81,7 @@ func (s *System) unaryInterceptor(
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	var peerInfo *peer.Peer
-	var userRequest roles.UserRequest
+	var userRequest app.RequestIn
 	var authInfo roles.AuthInfo
 	var ok bool
 	var md metadata.MD
@@ -97,8 +98,8 @@ func (s *System) unaryInterceptor(
 	if md, ok = metadata.FromIncomingContext(ctx); ok {
 		userRequest = roles.FromGrpcMetadata(md, info.FullMethod)
 
-		if userRequest.Authorization.AuthScheme != "" {
-			authInfo, err = s.verifier.Verify(userRequest.Authorization)
+		if userRequest.AuthData.AuthScheme != "" {
+			authInfo, err = s.verifier.Verify(userRequest.AuthData)
 			if err != nil {
 				infoLog.
 					Any("request", userRequest).
@@ -112,7 +113,7 @@ func (s *System) unaryInterceptor(
 	infoLog.
 		Any("peerInfo", peerInfo).
 		Any("device", userRequest.Device).
-		Str("AuthScheme", userRequest.Authorization.AuthScheme).
+		Str("AuthScheme", userRequest.AuthData.AuthScheme).
 		Str("FullMethod", userRequest.FullMethod)
 
 	authInfo.Device = userRequest.Device

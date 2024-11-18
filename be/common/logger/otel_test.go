@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -80,7 +81,7 @@ func TestOtel(t *testing.T) {
 	authInfo := roles.AuthInfo{
 		Subject: "subject",
 		Realm:   "btmt.io",
-		Device: roles.Device{
+		Device: app.Device{
 			RemoteAddr: "localhost",
 			DeviceInfo: "curl",
 		},

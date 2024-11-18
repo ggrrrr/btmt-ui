@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/help"
@@ -36,9 +37,9 @@ func TestSignTTL(t *testing.T) {
 	assert.NoError(t, err)
 	time.Sleep(1 * time.Second)
 	_, err = testVer.Verify(
-		roles.Authorization{
-			AuthScheme:      "",
-			AuthCredentials: roles.AuthCredentials(jwt),
+		app.AuthData{
+			AuthScheme: "",
+			AuthToken:  jwt,
 		})
 	logger.Info().Any("err", err).Msg("v")
 	assert.Error(t, err)
@@ -73,9 +74,9 @@ func TestSignVerify(t *testing.T) {
 	}
 
 	_, err = testVer.Verify(
-		roles.Authorization{
-			AuthScheme:      "asdasd",
-			AuthCredentials: roles.AuthCredentials("asdasdasd"),
+		app.AuthData{
+			AuthScheme: "asdasd",
+			AuthToken:  "asdasdasd",
 		},
 	)
 	assert.ErrorIs(t, err, ErrJwtBadScheme)
@@ -83,9 +84,9 @@ func TestSignVerify(t *testing.T) {
 	jwt, expiresAt, err := testSigner.Sign(ctx, ttl, apiClaims)
 	assert.NoError(t, err)
 	authInfo, err := testVer.Verify(
-		roles.Authorization{
-			AuthScheme:      roles.AuthSchemeBearer,
-			AuthCredentials: roles.AuthCredentials(jwt),
+		app.AuthData{
+			AuthScheme: roles.AuthSchemeBearer,
+			AuthToken:  jwt,
 		},
 	)
 	assert.NoError(t, err)

@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"google.golang.org/grpc/metadata"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 const (
@@ -11,27 +13,23 @@ const (
 	GrpcUserAgent     string = "grpcgateway-user-agent"
 )
 
-func FromGrpcMetadata(md metadata.MD, fullMethod string) UserRequest {
-	out := UserRequest{
+func FromGrpcMetadata(md metadata.MD, fullMethod string) app.RequestIn {
+	out := app.RequestIn{
 		FullMethod: fullMethod,
 	}
-	out.Authorization = extractGrpcAuthorization(md)
+	out.AuthData = extractGrpcAuthorization(md)
 	out.Device = extractGrpcDevice(md)
 	return out
 }
 
-func lower(from string) string {
-	return strings.ToLower(from)
-}
-
-func extractGrpcAuthorization(md metadata.MD) Authorization {
-	out := Authorization{}
+func extractGrpcAuthorization(md metadata.MD) app.AuthData {
+	out := app.AuthData{}
 	// We check first for http specific header 'authorization'
-	if len(md[lower(HttpAuthorization)]) == 1 {
-		gwAuthorization := strings.Split(md[lower(HttpAuthorization)][0], " ")
+	if len(md[strings.ToLower(HttpAuthorization)]) == 1 {
+		gwAuthorization := strings.Split(md[strings.ToLower(HttpAuthorization)][0], " ")
 		if len(gwAuthorization) == 2 {
 			out.AuthScheme = gwAuthorization[0]
-			out.AuthCredentials = AuthCredentials(gwAuthorization[1])
+			out.AuthToken = gwAuthorization[1]
 			return out
 		}
 	}
@@ -40,24 +38,24 @@ func extractGrpcAuthorization(md metadata.MD) Authorization {
 		gwAuthorization := strings.Split(md[GrpcAuthorization][0], " ")
 		if len(gwAuthorization) == 2 {
 			out.AuthScheme = gwAuthorization[0]
-			out.AuthCredentials = AuthCredentials(gwAuthorization[1])
+			out.AuthToken = gwAuthorization[1]
 			return out
 		}
 	}
 	return out
 }
 
-func extractGrpcDevice(md metadata.MD) Device {
-	out := Device{}
-	if len(md[lower(HttpUserAgent)]) > 0 {
-		out.DeviceInfo = strings.Join(md[lower(HttpUserAgent)], ",")
+func extractGrpcDevice(md metadata.MD) app.Device {
+	out := app.Device{}
+	if len(md[strings.ToLower(HttpUserAgent)]) > 0 {
+		out.DeviceInfo = strings.Join(md[strings.ToLower(HttpUserAgent)], ",")
 	}
 	// if we have grpc gateway set header this
 	if len(md[GrpcUserAgent]) > 0 {
 		out.DeviceInfo = strings.Join(md[GrpcUserAgent], ",")
 	}
-	if len(md[lower(HttpForwardedFor)]) > 0 {
-		out.RemoteAddr = strings.Join(md[lower(HttpForwardedFor)], ",")
+	if len(md[strings.ToLower(HttpForwardedFor)]) > 0 {
+		out.RemoteAddr = strings.Join(md[strings.ToLower(HttpForwardedFor)], ",")
 	}
 	return out
 }

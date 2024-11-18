@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
@@ -20,7 +21,7 @@ func NewVerifierMock() *verifier_mock {
 	return &verifier_mock{}
 }
 
-func (*verifier_mock) Verify(auth roles.Authorization) (roles.AuthInfo, error) {
+func (*verifier_mock) Verify(auth app.AuthData) (roles.AuthInfo, error) {
 	logger.Warn().Any("token", auth).Msg("NewVerifierMock.Verify")
 	if auth.AuthScheme != "mock" {
 		logger.Error(fmt.Errorf("AuthScheme is not mock")).Any("token", auth).Str("AuthScheme", auth.AuthScheme).Msg("NewVerifierMock.Verify")
@@ -28,7 +29,7 @@ func (*verifier_mock) Verify(auth roles.Authorization) (roles.AuthInfo, error) {
 	}
 
 	return roles.AuthInfo{
-		Subject:     strings.Split(string(auth.AuthCredentials), " ")[0],
+		Subject:     strings.Split(string(auth.AuthToken), " ")[0],
 		Roles:       []string{"admin"},
 		SystemRoles: []string{"admin"},
 		Realm:       roles.SystemRealm,

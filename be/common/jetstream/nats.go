@@ -5,6 +5,8 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
+const authHeaderName string = "authorization"
+
 type natsConn struct {
 	conn *nats.Conn
 	js   jetstream.JetStream

@@ -13,6 +13,12 @@ type (
 	}
 )
 
+const (
+	RoleAdmin        string = "admin"
+	RoleTokenRefresh string = "token.refresh"
+	SystemRealm      string = "localhost"
+)
+
 var _ (AppPolices) = (*canDo)(nil)
 
 func NewAppPolices() *canDo {
@@ -31,7 +37,7 @@ func (*canDo) CanDo(tenant string, fullMethodName string, authInfo AuthInfo) err
 		return nil
 	}
 	if tenant == authInfo.Realm {
-		if HasRole(fullMethodName, authInfo.Roles) {
+		if hasRole(fullMethodName, authInfo.Roles) {
 			return nil
 		}
 	}
@@ -39,9 +45,18 @@ func (*canDo) CanDo(tenant string, fullMethodName string, authInfo AuthInfo) err
 }
 
 func isAdmin(authInfo AuthInfo) bool {
-	return HasRole(RoleAdmin, authInfo.Roles)
+	return hasRole(RoleAdmin, authInfo.Roles)
 }
 
 func isSystemAdmin(authInfo AuthInfo) bool {
-	return HasRole(RoleAdmin, authInfo.SystemRoles)
+	return hasRole(RoleAdmin, authInfo.SystemRoles)
+}
+
+func hasRole(role string, roles []string) bool {
+	for r := range roles {
+		if roles[r] == role {
+			return true
+		}
+	}
+	return false
 }

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/mileusna/useragent"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 const (
@@ -19,8 +21,8 @@ const (
 	HttpUserAgent     string = "User-Agent"
 )
 
-func FromHttpRequest(md http.Header, cookies []*http.Cookie, r *http.Request) UserRequest {
-	out := UserRequest{
+func FromHttpRequest(md http.Header, cookies []*http.Cookie, r *http.Request) app.RequestIn {
+	out := app.RequestIn{
 		FullMethod: r.RequestURI,
 	}
 
@@ -29,7 +31,7 @@ func FromHttpRequest(md http.Header, cookies []*http.Cookie, r *http.Request) Us
 		auth, _ = authorizationFromHeaders(md)
 	}
 
-	out.Authorization = auth
+	out.AuthData = auth
 	out.Device = extractHttpDevice(md)
 	remoteAddr := strings.LastIndex(r.RemoteAddr, ":")
 
@@ -42,33 +44,33 @@ func FromHttpRequest(md http.Header, cookies []*http.Cookie, r *http.Request) Us
 	return out
 }
 
-func authorizationFromCokies(cookies []*http.Cookie) (Authorization, bool) {
+func authorizationFromCokies(cookies []*http.Cookie) (app.AuthData, bool) {
 	for _, v := range cookies {
 		if v.Name == CookieName {
-			return Authorization{
-				AuthScheme:      CookieSchema,
-				AuthCredentials: AuthCredentials(v.Value),
+			return app.AuthData{
+				AuthScheme: CookieSchema,
+				AuthToken:  v.Value,
 			}, true
 		}
 	}
-	return Authorization{}, false
+	return app.AuthData{}, false
 }
 
-func authorizationFromHeaders(md http.Header) (Authorization, bool) {
-	out := Authorization{}
+func authorizationFromHeaders(md http.Header) (app.AuthData, bool) {
+	out := app.AuthData{}
 	if len(md[HttpAuthorization]) == 1 {
 		gwAuthorization := strings.Split(md[HttpAuthorization][0], " ")
 		if len(gwAuthorization) == 2 {
 			out.AuthScheme = gwAuthorization[0]
-			out.AuthCredentials = AuthCredentials(gwAuthorization[1])
+			out.AuthToken = gwAuthorization[1]
 			return out, true
 		}
 	}
 	return out, false
 }
 
-func extractHttpDevice(md http.Header) Device {
-	out := Device{}
+func extractHttpDevice(md http.Header) app.Device {
+	out := app.Device{}
 	if len(md[HttpUserAgent]) > 0 {
 		out.DeviceInfo = strings.Join(md[HttpUserAgent], ",")
 	}

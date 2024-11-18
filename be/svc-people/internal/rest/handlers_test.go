@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	commonApp "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
@@ -40,7 +41,7 @@ func Test_Save(t *testing.T) {
 	w := httptest.NewRecorder()
 	reqStr := `{"data":{"pin":"asdads","email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
-	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", roles.Device{})))
+	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", commonApp.Device{})))
 	testServer.Save(w, httpReq)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 
@@ -72,7 +73,7 @@ func Test_List(t *testing.T) {
 	w := httptest.NewRecorder()
 	reqStr := `{}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
-	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", roles.Device{})))
+	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", commonApp.Device{})))
 	testServer.List(w, httpReq)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 

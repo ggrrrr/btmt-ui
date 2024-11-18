@@ -43,7 +43,7 @@ type testCase struct {
 
 func TestLogin(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", app.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
 	// store, err := dynamodb.New(cfg())
@@ -152,7 +152,7 @@ func TestLogin(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", app.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 	ctxNoEmail := roles.CtxWithAuthInfo(ctx, roles.AuthInfo{})
 
@@ -236,7 +236,7 @@ func TestValidate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", roles.Device{})
+	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", app.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
 
 	store, err := mem.New()
