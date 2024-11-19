@@ -46,12 +46,12 @@ func (c *NatsConsumer) consumerSpan(ctx context.Context, msg jetstream.Msg) (con
 	return logger.Tracer().Start(ctx, msg.Subject(), spanOpts...)
 }
 
-func (c *NatsConsumer) producerSpan(ctx context.Context, msg *nats.Msg) (context.Context, oteltrace.Span) {
+func (c *NatsPublisher) producerSpan(ctx context.Context, msg *nats.Msg) (context.Context, oteltrace.Span) {
 	spanOpts := []oteltrace.SpanStartOption{
 		oteltrace.WithSpanKind(oteltrace.SpanKindProducer),
 	}
 
-	attributes := make([]attribute.KeyValue, 0, 0)
+	attributes := make([]attribute.KeyValue, 0)
 
 	// attributes = append(attributes,
 	// attribute.String("", msg.Subject),

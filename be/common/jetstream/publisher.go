@@ -7,9 +7,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	oteltrace "go.opentelemetry.io/otel/trace"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
@@ -44,11 +42,7 @@ func (c *NatsPublisher) Shutdown() error {
 func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
 	var err error
 
-	spanOpts := []oteltrace.SpanStartOption{
-		oteltrace.WithSpanKind(oteltrace.SpanKindProducer),
-	}
-
-	ctx, span := logger.Tracer().Start(ctx, msg.Subject, spanOpts...)
+	ctx, span := c.producerSpan(ctx, msg)
 	defer func() {
 		if err != nil {
 			span.RecordError(err)
