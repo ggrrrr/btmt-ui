@@ -44,7 +44,10 @@ func TestPublish(t *testing.T) {
 
 	stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test.*"})
 	require.NoError(t, err)
-	defer conn.PruneStream(rootCtx, stream.CachedInfo().Config.Name)
+	defer func() {
+		err = conn.PruneStream(rootCtx, stream.CachedInfo().Config.Name)
+		assert.NoError(t, err)
+	}()
 	fmt.Printf(" %+v \n", stream)
 
 	ctx, span := logger.Span(rootCtx, "main.Method", nil)
@@ -77,7 +80,7 @@ func TestPublish(t *testing.T) {
 	err = consumer2.ConsumerLoop(consunerHandler2.handle)
 	require.NoError(t, err)
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	err = testPublisher.Publish(ctx, "2", []byte("test payload 2222"))
 	require.NoError(t, err)
@@ -88,7 +91,7 @@ func TestPublish(t *testing.T) {
 	wg.Add(1)
 
 	span.End(nil)
-	time.Sleep(10 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	wg.Wait()
 
