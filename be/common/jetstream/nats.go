@@ -7,8 +7,6 @@ import (
 
 const authHeaderName string = "authorization"
 
-// const authSchemeBearer string = "Bearer"
-
 type natsConn struct {
 	conn *nats.Conn
 	js   jetstream.JetStream

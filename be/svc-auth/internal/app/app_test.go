@@ -17,6 +17,8 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
 )
 
+var mockUser string = "mockuser"
+
 func TestCheckPassword(t *testing.T) {
 	var ok bool
 	t1 := "newpass"
@@ -42,6 +44,7 @@ type testCase struct {
 }
 
 func TestLogin(t *testing.T) {
+
 	ctx := context.Background()
 	admin := roles.CreateSystemAdminUser(roles.SystemRealm, "test", app.Device{})
 	ctx = roles.CtxWithAuthInfo(ctx, admin)
@@ -84,8 +87,8 @@ func TestLogin(t *testing.T) {
 				testAuthToken(t,
 					ddd.LoginToken{
 						Subject:      authItem.Subject,
-						AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(10 * time.Minute)},
-						RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
+						AccessToken:  ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(10 * time.Minute)},
+						RefreshToken: ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(2 * time.Hour)},
 					},
 					loginToken,
 				)
@@ -107,7 +110,7 @@ func TestLogin(t *testing.T) {
 				testAuthToken(t,
 					ddd.LoginToken{
 						Subject:     authItem.Subject,
-						AccessToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(10 * time.Minute)},
+						AccessToken: ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(10 * time.Minute)},
 					},
 					newLoginToken,
 				)
@@ -263,8 +266,8 @@ func TestUpdate(t *testing.T) {
 	testAuthToken(t,
 		ddd.LoginToken{
 			Subject:      authItem.Subject,
-			AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(1 * time.Minute)},
-			RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
+			AccessToken:  ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(1 * time.Minute)},
+			RefreshToken: ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(2 * time.Hour)},
 		},
 		jwt,
 	)
@@ -280,8 +283,8 @@ func TestUpdate(t *testing.T) {
 	testAuthToken(t,
 		ddd.LoginToken{
 			Subject:      authItem.Subject,
-			AccessToken:  ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(1 * time.Minute)},
-			RefreshToken: ddd.AuthToken{Value: "ok", ExpiresAt: time.Now().Add(2 * time.Hour)},
+			AccessToken:  ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(1 * time.Minute)},
+			RefreshToken: ddd.AuthToken{Value: mockUser, ExpiresAt: time.Now().Add(2 * time.Hour)},
 		},
 		jwt,
 	)

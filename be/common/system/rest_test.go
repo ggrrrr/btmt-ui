@@ -35,7 +35,7 @@ func (a *testApp) testHandler(w http.ResponseWriter, r *http.Request) {
 	authInfo := roles.AuthInfoFromCtx(r.Context())
 	assert.Equal(a.t, "//Go-http-client", authInfo.Device.DeviceInfo)
 	assert.Equal(a.t, "[::1]", authInfo.Device.RemoteAddr)
-	assert.Equal(a.t, "tosho", authInfo.Subject)
+	assert.Equal(a.t, "mockuser", authInfo.Subject)
 	logger.DebugCtx(r.Context()).Msg("testHandler")
 	a.wg.Done()
 }
@@ -71,7 +71,7 @@ func TestRest(t *testing.T) {
 	app.wg.Add(1)
 	req, err := http.NewRequest("GET", "http://localhost:9091/test", nil)
 	require.NoError(t, err)
-	req.Header.Add("Authorization", "mock tosho")
+	req.Header.Add("Authorization", "Bearer mockuser")
 
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
