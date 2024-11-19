@@ -111,15 +111,21 @@ message LoginOauth2Request {
 }
 
 message LoginToken{
+  // Token value
   string value = 1 [json_name = "value"];
+  // Expire time
   google.protobuf.Timestamp expires_at = 2 [json_name = "expires_at"];
 }
 
 
 message LoginTokenPayload{
+  // Login username
   string username = 1 [json_name = "username"];
-  string for_username = 2 [json_name = "for_username"];
+  // Sudo username TODO
+  string admin_username = 2 [json_name = "admin_username"];
+  // Token for app calls, short living
   LoginToken access_token = 3 [json_name = "access_token"];
+  // Token only for to refresh to access_tokenn
   LoginToken refresh_token = 4 [json_name = "refresh_token"];
 }
 

@@ -59,12 +59,13 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 
 	refreshRole := roles.AuthInfo{
 		Subject: authPasswd.Subject,
-		Realm:   roles.SystemRealm,
-		Roles:   []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
-		ID:      authInfo.ID,
+		// TODO sudo like...
+		// AdminSubject: "",
+		Realm: roles.SystemRealm,
+		Roles: []string{authpb.AuthSvc_TokenRefresh_FullMethodName},
+		ID:    authInfo.ID,
 	}
 
-	// asd := authpb.AuthSvc_To/
 	refreshToken, refreshExpiresAt, err := ap.signer.Sign(ctx, ap.refreshTokenTTL, refreshRole)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("ap.signer.Sign")
@@ -78,8 +79,9 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 	}
 
 	return ddd.LoginToken{
-		ID:      authInfo.ID,
-		Subject: email,
+		ID:           authInfo.ID,
+		Subject:      email,
+		AdminSubject: "",
 		AccessToken: ddd.AuthToken{
 			Value:     accessToken,
 			ExpiresAt: expiresAt,

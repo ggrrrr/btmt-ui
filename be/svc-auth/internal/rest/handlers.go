@@ -74,7 +74,7 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	res, err := s.app.LoginPasswd(ctx, req.Username, req.Password)
+	loginPasswd, err := s.app.LoginPasswd(ctx, req.Username, req.Password)
 	if err != nil {
 		logger.ErrorCtx(r.Context(), err).Msg("LoginPasswd")
 		web.SendError(ctx, w, err)
@@ -83,18 +83,19 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 
 	logger.InfoCtx(ctx).
 		Str("Username", req.Username).
-		Str("exp", res.AccessToken.ExpiresAt.String()).
+		Str("exp", loginPasswd.AccessToken.ExpiresAt.String()).
 		Msg("LoginPasswd")
 
 	out := authpb.LoginTokenPayload{
-		Username: req.Username,
+		Username:      req.Username,
+		AdminUsername: loginPasswd.AdminSubject,
 		AccessToken: &authpb.LoginToken{
-			Value:     res.AccessToken.Value,
-			ExpiresAt: timestamppb.New(res.AccessToken.ExpiresAt),
+			Value:     loginPasswd.AccessToken.Value,
+			ExpiresAt: timestamppb.New(loginPasswd.AccessToken.ExpiresAt),
 		},
 		RefreshToken: &authpb.LoginToken{
-			Value:     res.RefreshToken.Value,
-			ExpiresAt: timestamppb.New(res.RefreshToken.ExpiresAt),
+			Value:     loginPasswd.RefreshToken.Value,
+			ExpiresAt: timestamppb.New(loginPasswd.RefreshToken.ExpiresAt),
 		},
 	}
 

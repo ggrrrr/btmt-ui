@@ -3,23 +3,22 @@ package roles
 import (
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
-
-type testCase struct {
-	test     string
-	testFunc func(tt *testing.T)
-}
-
-var err error
 
 var testTenant string = "test-host"
 
 func Test_CanDo(t *testing.T) {
+	var err error
+
 	testCanDo := NewAppPolices()
 
-	tests := []testCase{
+	tests := []struct {
+		test     string
+		testFunc func(tt *testing.T)
+	}{
 		{
 			test: "ok custom role ok",
 			testFunc: func(tt *testing.T) {

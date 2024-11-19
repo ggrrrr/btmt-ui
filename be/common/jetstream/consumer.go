@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -20,15 +19,17 @@ type (
 	DataHandler func(ctx context.Context, subject string, data []byte)
 
 	NatsConsumer struct {
-		conn     *natsConn
-		stream   jetstream.Stream
-		consumer jetstream.Consumer
-		verifier token.Verifier
-		shutdown func()
+		consumerId uuid.UUID
+		conn       *natsConn
+		stream     jetstream.Stream
+		consumer   jetstream.Consumer
+		verifier   token.Verifier
+		shutdown   func()
 	}
 )
 
 func NewConsumer(ctx context.Context, url string, streamName string, group string, verifier token.Verifier) (*NatsConsumer, error) {
+	consumerId := uuid.New()
 	conn, err := connect(url)
 	if err != nil {
 		return nil, err
@@ -49,14 +50,20 @@ func NewConsumer(ctx context.Context, url string, streamName string, group strin
 	}
 
 	return &NatsConsumer{
-		conn:     conn,
-		stream:   stream,
-		consumer: c,
-		verifier: verifier,
+		consumerId: consumerId,
+		conn:       conn,
+		stream:     stream,
+		consumer:   c,
+		verifier:   verifier,
 	}, nil
 }
 
 func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
+	logger.Info().
+		Str("consumer.id", c.consumerId.String()).
+		Msg("ConsumerLoop.started")
+
+	// c.consumer.Qon
 	consLoop, err := c.consumer.Consume(
 		func(msg jetstream.Msg) {
 			var err error
@@ -65,42 +72,31 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 				msg: msg,
 			}
 
-			// TODO how to decorate the root span ?
-			spanOpts := []oteltrace.SpanStartOption{
-				// oteltrace.WithAttributes(logger.AttributeString("asd")),
-				// oteltrace.WithSpanKind(oteltrace.SpanKindServer),
-			}
-
-			// We dont care if metadata fail
-			md, _ := msg.Metadata()
-			if md != nil {
-				attr := oteltrace.WithAttributes(
-					attribute.String("nats.js.domain", md.Domain),
-					attribute.String("nats.js.stream", md.Stream),
-					attribute.String("nats.js.sequence.stream", fmt.Sprintf("%d", md.Sequence.Stream)),
-					attribute.String("nats.js.sequence.consumer", fmt.Sprintf("%d", md.Sequence.Consumer)),
-				)
-				spanOpts = append(spanOpts, attr)
-			}
-
-			fmt.Printf("Headers: %+v \n", msg.Headers())
-
 			// TODO try to pass context from executor
 			ctx := otel.GetTextMapPropagator().Extract(context.Background(), intMsg)
-
-			ctx, span := logger.Tracer().Start(ctx, msg.Subject(), spanOpts...)
+			ctx, span := c.consumerSpan(ctx, msg)
 			defer func() {
 				if err != nil {
+					span.RecordError(err)
 					span.SetStatus(codes.Error, err.Error())
 				}
 				span.End()
 			}()
 
-			authInfo, err := c.verifier.Verify(app.AuthDataFromValue(intMsg.Get(authHeaderName)))
+			authInfo, err := c.verifier.Verify(app.AuthData{
+				// We don`t set Auth Schema in our publisher since this is internal svc only channel
+				AuthScheme: roles.AuthSchemeBearer,
+				AuthToken:  intMsg.Get(authHeaderName),
+			})
 			if err != nil {
 				logger.ErrorCtx(ctx, err).Msg("verifier.Verify")
+				return
 			}
 			ctx = roles.CtxWithAuthInfo(ctx, authInfo)
+			logger.DebugCtx(ctx).
+				Str("consumer.id", c.consumerId.String()).
+				Any("headers", msg.Headers()).
+				Msg("Consume.Handler")
 
 			err = msg.Ack()
 			if err != nil {
@@ -122,7 +118,7 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 func (c *NatsConsumer) Shutdown() error {
 	if c.shutdown != nil {
 		c.shutdown()
-		fmt.Printf("ConsumerLoop.Shutdown.\n")
+		fmt.Printf("Consumer[%s].Shutdown.\n", c.consumerId.String())
 	}
 
 	if c.conn == nil {

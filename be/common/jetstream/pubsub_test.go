@@ -6,10 +6,13 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
@@ -39,9 +42,9 @@ func TestPublish(t *testing.T) {
 		fmt.Println("conn.conn.Close")
 	}()
 
-	stream, err := conn.CreateStream(rootCtx, "test", "test stream", []string{"test.*"})
+	stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test.*"})
 	require.NoError(t, err)
-	// defer conn.PruneStream(rootCtx, stream.CachedInfo().Config.Name)
+	defer conn.PruneStream(rootCtx, stream.CachedInfo().Config.Name)
 	fmt.Printf(" %+v \n", stream)
 
 	ctx, span := logger.Span(rootCtx, "main.Method", nil)
@@ -54,29 +57,54 @@ func TestPublish(t *testing.T) {
 		fmt.Println("testPublisher.Shutdown")
 	}()
 
-	consumer, err := NewConsumer(rootCtx, natsUrl, "test", "group2", verifier)
+	consumer1, err := NewConsumer(rootCtx, natsUrl, "test", "group2", verifier)
 	require.NoError(t, err)
 	defer func() {
-		_ = consumer.Shutdown()
+		_ = consumer1.Shutdown()
 		fmt.Println("consumer.Shutdown")
 	}()
+	consunerHandler1 := handlerSvc{t: t, wg: &wg, name: "consumer -- 1"}
+	err = consumer1.ConsumerLoop(consunerHandler1.handle)
+	require.NoError(t, err)
 
-	err = testPublisher.Publish(ctx, "2", []byte("test payload 1asd"))
+	consumer2, err := NewConsumer(rootCtx, natsUrl, "test", "group2", verifier)
+	require.NoError(t, err)
+	defer func() {
+		_ = consumer2.Shutdown()
+		fmt.Println("consumer.Shutdown")
+	}()
+	consunerHandler2 := handlerSvc{t: t, wg: &wg, name: "consumer -- 2"}
+	err = consumer2.ConsumerLoop(consunerHandler2.handle)
+	require.NoError(t, err)
+
+	time.Sleep(10 * time.Second)
+
+	err = testPublisher.Publish(ctx, "2", []byte("test payload 2222"))
 	require.NoError(t, err)
 	wg.Add(1)
 
-	err = consumer.ConsumerLoop(
-		func(ctx context.Context, subject string, data []byte) {
-			defer wg.Done()
-			_, span := logger.Span(ctx, "ConsumerLoop.handler", nil)
-			logger.InfoCtx(ctx).Any("data", string(data)).Msg("ConsumerLoop")
-			span.End(nil)
-		},
-	)
+	err = testPublisher.Publish(ctx, "3", []byte("test payload 33333"))
 	require.NoError(t, err)
+	wg.Add(1)
 
 	span.End(nil)
+	time.Sleep(10 * time.Second)
 
 	wg.Wait()
 
+}
+
+type handlerSvc struct {
+	t    *testing.T
+	wg   *sync.WaitGroup
+	name string
+}
+
+func (h handlerSvc) handle(ctx context.Context, subject string, data []byte) {
+	defer h.wg.Done()
+	ctx, span := logger.Span(ctx, "ConsumerLoop.handler", nil)
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	assert.Equalf(h.t, "mockuser", authInfo.Subject, "authInfo is not set %#v", authInfo)
+	logger.InfoCtx(ctx).Str("group", h.name).Any("data", string(data)).Msg("ConsumerLoop")
+	span.End(nil)
 }

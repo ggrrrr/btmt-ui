@@ -19,7 +19,9 @@ func connect(url string) (*natsConn, error) {
 		return nil, err
 	}
 
-	js, err := jetstream.New(cn, jetstream.WithPublishAsyncMaxPending(256))
+	js, err := jetstream.New(cn,
+		jetstream.WithPublishAsyncMaxPending(256),
+	)
 	if err != nil {
 		return nil, err
 	}

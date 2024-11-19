@@ -17,7 +17,7 @@ type (
 		// User name or system name
 		Subject string
 		// For `sudo` like behavior
-		ForSubject string
+		AdminSubject string
 		// Domain name
 		Realm string
 		// List of domain roles

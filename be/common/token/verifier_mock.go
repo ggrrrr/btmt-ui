@@ -1,7 +1,6 @@
 package token
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
@@ -23,8 +22,8 @@ func NewVerifierMock() *verifier_mock {
 
 func (*verifier_mock) Verify(auth app.AuthData) (roles.AuthInfo, error) {
 	logger.Warn().Any("token", auth).Msg("NewVerifierMock.Verify")
-	if auth.AuthScheme != "mock" {
-		logger.Error(fmt.Errorf("AuthScheme is not mock")).Any("token", auth).Str("AuthScheme", auth.AuthScheme).Msg("NewVerifierMock.Verify")
+	if auth.AuthScheme != roles.AuthSchemeBearer {
+		logger.Error(ErrJwtBadScheme).Any("token", auth).Str("AuthScheme", auth.AuthScheme).Msg("NewVerifierMock.Verify")
 		return roles.AuthInfo{}, ErrJwtBadScheme
 	}
 

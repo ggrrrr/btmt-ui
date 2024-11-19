@@ -6,6 +6,8 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -16,12 +18,10 @@ type (
 		conn           *natsConn
 		subject        string
 		tokenGenerator token.ServiceTokenGenerator
-		// we need signer to add auth header to each message
 	}
 )
 
 func NewPublisher(url string, subject string, tokenGenerator token.ServiceTokenGenerator) (*NatsPublisher, error) {
-
 	conn, err := connect(url)
 	if err != nil {
 		return nil, err
@@ -43,14 +43,26 @@ func (c *NatsPublisher) Shutdown() error {
 
 func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.publish", nil, logger.TraceKVString("subject", msg.Subject))
+
+	spanOpts := []oteltrace.SpanStartOption{
+		oteltrace.WithSpanKind(oteltrace.SpanKindProducer),
+	}
+
+	ctx, span := logger.Tracer().Start(ctx, msg.Subject, spanOpts...)
 	defer func() {
-		span.End(err)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
 	}()
-	_, err = c.conn.js.PublishMsg(ctx, msg)
+
+	ack, err := c.conn.js.PublishMsg(ctx, msg)
 	if err != nil {
 		return err
 	}
+
+	addSpanAttributes(span, ack)
 	return nil
 }
 
@@ -76,7 +88,7 @@ func (c *NatsPublisher) Publish(ctx context.Context, key string, payload []byte)
 	otel.GetTextMapPropagator().Inject(ctx, &msg)
 
 	// TODO add auth header
-	msg.msg.Header.Set(authHeaderName, fmt.Sprintf("%s %s", authSchemeBearer, token))
+	msg.msg.Header.Set(authHeaderName, token)
 
 	return c.publish(ctx, msg.msg)
 }

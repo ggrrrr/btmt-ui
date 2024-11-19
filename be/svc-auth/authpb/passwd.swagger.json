@@ -308,16 +308,20 @@
       "type": "object",
       "properties": {
         "username": {
-          "type": "string"
+          "type": "string",
+          "title": "Login username"
         },
-        "for_username": {
-          "type": "string"
+        "admin_username": {
+          "type": "string",
+          "title": "Sudo username TODO"
         },
         "access_token": {
-          "$ref": "#/definitions/authpbLoginToken"
+          "$ref": "#/definitions/authpbLoginToken",
+          "title": "Token for app calls, short living"
         },
         "refresh_token": {
-          "$ref": "#/definitions/authpbLoginToken"
+          "$ref": "#/definitions/authpbLoginToken",
+          "title": "Token only for to refresh to access_tokenn"
         }
       }
     },

@@ -19,6 +19,7 @@ type (
 	LoginToken struct {
 		ID           uuid.UUID
 		Subject      string
+		AdminSubject string
 		AccessToken  AuthToken
 		RefreshToken AuthToken
 	}
@@ -35,11 +36,12 @@ type (
 	}
 
 	AuthHistory struct {
-		ID        uuid.UUID
-		Subject   string
-		Method    string
-		Device    app.Device
-		CreatedAt time.Time
+		ID           uuid.UUID
+		Subject      string
+		AdminSubject string
+		Method       string
+		Device       app.Device
+		CreatedAt    time.Time
 	}
 )
 
