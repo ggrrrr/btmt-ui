@@ -64,12 +64,6 @@ func authorizationFromHeaders(md http.Header) (app.AuthData, bool) {
 		if !out.IsZero() {
 			return out, true
 		}
-		// gwAuthorization := strings.Split(md[HttpAuthorization][0], " ")
-		// if len(gwAuthorization) == 2 {
-		// 	out.AuthScheme = gwAuthorization[0]
-		// 	out.AuthToken = gwAuthorization[1]
-		// 	return out, true
-		// }
 	}
 	return out, false
 }
