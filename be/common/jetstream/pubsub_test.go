@@ -82,13 +82,12 @@ func TestPublish(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
+	wg.Add(2)
 	err = testPublisher.Publish(ctx, "2", []byte("test payload 2222"))
 	require.NoError(t, err)
-	wg.Add(1)
 
 	err = testPublisher.Publish(ctx, "3", []byte("test payload 33333"))
 	require.NoError(t, err)
-	wg.Add(1)
 
 	span.End(nil)
 	time.Sleep(1 * time.Second)
