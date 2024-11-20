@@ -7,16 +7,12 @@ import (
 )
 
 type (
-	natMsg struct {
-		msg *nats.Msg
-	}
-
 	jsMsg struct {
 		msg jetstream.Msg
 	}
 )
 
-var _ (propagation.TextMapCarrier) = (*natMsg)(nil)
+var _ (propagation.TextMapCarrier) = (*PublishMsg)(nil)
 
 var _ (propagation.TextMapCarrier) = (*jsMsg)(nil)
 
@@ -56,7 +52,7 @@ func (j jsMsg) Set(key string, value string) {
 }
 
 // Get implements propagation.TextMapCarrier.
-func (n natMsg) Get(key string) string {
+func (n PublishMsg) Get(key string) string {
 	if n.msg.Header == nil {
 		return ""
 	}
@@ -64,7 +60,7 @@ func (n natMsg) Get(key string) string {
 }
 
 // Keys implements propagation.TextMapCarrier.
-func (n *natMsg) Keys() []string {
+func (n *PublishMsg) Keys() []string {
 	if n.msg.Header == nil {
 		return []string{}
 	}
@@ -76,7 +72,7 @@ func (n *natMsg) Keys() []string {
 }
 
 // Set implements propagation.TextMapCarrier.
-func (n *natMsg) Set(key string, value string) {
+func (n *PublishMsg) Set(key string, value string) {
 	if n.msg.Header == nil {
 		n.msg.Header = nats.Header{}
 	}

@@ -16,6 +16,12 @@ import (
 )
 
 type (
+	ConsumedMsg struct {
+		Subject     string
+		ContentType string
+		Payload     []byte
+	}
+
 	DataHandler func(ctx context.Context, subject string, data []byte)
 
 	NatsConsumer struct {
@@ -93,10 +99,6 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 				return
 			}
 			ctx = roles.CtxWithAuthInfo(ctx, authInfo)
-			logger.DebugCtx(ctx).
-				Str("consumer.id", c.consumerId.String()).
-				Any("headers", msg.Headers()).
-				Msg("Consume.Handler")
 
 			err = msg.Ack()
 			if err != nil {

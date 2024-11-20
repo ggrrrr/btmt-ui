@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 
@@ -12,6 +13,13 @@ import (
 )
 
 type (
+	PublishMsg struct {
+		UniqId      string
+		SubjectKey  string
+		ContentType string
+		Payload     []byte
+		msg         nats.Msg
+	}
 	NatsPublisher struct {
 		conn           *natsConn
 		subject        string
@@ -39,7 +47,7 @@ func (c *NatsPublisher) Shutdown() error {
 	return c.conn.shutdown()
 }
 
-func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
+func (c *NatsPublisher) publish(ctx context.Context, uniqId string, msg *nats.Msg) error {
 	var err error
 
 	ctx, span := c.producerSpan(ctx, msg)
@@ -51,7 +59,7 @@ func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
 		span.End()
 	}()
 
-	ack, err := c.conn.js.PublishMsg(ctx, msg)
+	ack, err := c.conn.js.PublishMsg(ctx, msg, jetstream.WithMsgID(uniqId))
 	if err != nil {
 		return err
 	}
@@ -60,29 +68,29 @@ func (c *NatsPublisher) publish(ctx context.Context, msg *nats.Msg) error {
 	return nil
 }
 
-func (c *NatsPublisher) Publish(ctx context.Context, key string, payload []byte) error {
+func (c *NatsPublisher) Publish(ctx context.Context, msg *PublishMsg) error {
+
+	subject := c.subject
+	if msg.SubjectKey != "" {
+		subject = fmt.Sprintf("%s.%s", subject, msg.SubjectKey)
+	}
+
+	msg.msg = nats.Msg{
+		Subject: subject,
+		Data:    msg.Payload,
+		Header:  nats.Header{},
+	}
+
+	msg.Set("Content-Type", msg.ContentType)
 
 	token, err := c.tokenGenerator.TokenForService(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to sign msg: %w", err)
 	}
 
-	subject := c.subject
-	if key != "" {
-		subject = fmt.Sprintf("%s.%s", subject, key)
-	}
+	otel.GetTextMapPropagator().Inject(ctx, msg)
 
-	msg := natMsg{
-		msg: &nats.Msg{
-			Subject: subject,
-			Data:    payload,
-			Header:  nats.Header{},
-		},
-	}
-	otel.GetTextMapPropagator().Inject(ctx, &msg)
-
-	// TODO add auth header
 	msg.msg.Header.Set(authHeaderName, token)
 
-	return c.publish(ctx, msg.msg)
+	return c.publish(ctx, msg.UniqId, &msg.msg)
 }

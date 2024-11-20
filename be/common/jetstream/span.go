@@ -31,8 +31,18 @@ func (c *NatsConsumer) consumerSpan(ctx context.Context, msg jetstream.Msg) (con
 	// We dont care if metadata fail
 	attributes[0] = attribute.String("nats.js.consumer.id", c.consumerId.String())
 
+	logLine := logger.DebugCtx(ctx).
+		Str("consumer.id", c.consumerId.String()).
+		Any("headers", msg.Headers())
+		// Msg("Consume.Handler")
+
+	defer func() {
+		logLine.Msg("Consume.Handler")
+	}()
+
 	md, _ := msg.Metadata()
 	if md != nil {
+		logLine.Any("Metadata", md)
 		attributes = append(attributes,
 			attribute.String("nats.js.domain", md.Domain),
 			attribute.String("nats.js.stream", md.Stream),
