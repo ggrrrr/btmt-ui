@@ -39,7 +39,7 @@ architecture-beta
     group infra(mdi:kubernetes)[Infra]
     
     service api(mdi:api)[API REST] in k8s
-    service db(mdi:database)[Database] in infra
+    service db(database)[Database] in infra
     service js_retry(mdi:queue)[stream retry] in pubsub
     service js_reply(mdi:queue)[stream origin] in pubsub
     service js_audit(mdi:queue)[stream audit] in pubsub
