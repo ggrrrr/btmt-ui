@@ -1,5 +1,3 @@
-
-
 # Retry Service Diagram
 
 ## API Flow chart
@@ -35,8 +33,6 @@ flowchart TB
 ## Service chart
 
 ```mermaid
-
-
 architecture-beta
     group k8s(mdi:kubernetes)[Cluster]
     group pubsub(mdi:apache-kafka)[nats jetstream]
@@ -45,12 +41,12 @@ architecture-beta
     service api(mdi:api)[API REST] in k8s
     service db(mdi:database)[Database] in infra
     service js_retry(mdi:queue)[stream retry] in pubsub
-    service js_reply(mdi:queue)[stream reply] in pubsub
+    service js_reply(mdi:queue)[stream origin] in pubsub
     service js_audit(mdi:queue)[stream audit] in pubsub
 
 
-    api:L <--> R:db
-    api:R <-- L:js_retry
+    api:L --> R:db
+    api:T <-- L:js_retry
     api:R --> L:js_reply
     api:R --> L:js_audit
 
