@@ -7,6 +7,14 @@ import (
 )
 
 type (
+	PublishMsg struct {
+		UniqId      string
+		SubjectKey  string
+		ContentType string
+		Payload     []byte
+		msg         nats.Msg
+	}
+
 	jsMsg struct {
 		msg jetstream.Msg
 	}

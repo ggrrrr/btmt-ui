@@ -13,13 +13,6 @@ import (
 )
 
 type (
-	PublishMsg struct {
-		UniqId      string
-		SubjectKey  string
-		ContentType string
-		Payload     []byte
-		msg         nats.Msg
-	}
 	NatsPublisher struct {
 		conn           *natsConn
 		subject        string

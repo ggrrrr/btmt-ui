@@ -96,6 +96,8 @@ func (blobId BlobId) String() string {
 	return fmt.Sprintf("%s/%s:%s", blobId.path, blobId.id, blobId.version)
 }
 
+// Set ID and Version of a blob
+// if Version is empty sets only ID (filename)
 func (blobId BlobId) SetIdVersionFromString(idVersion string) (BlobId, error) {
 	if idVersion == "" {
 		return BlobId{}, app.BadRequestError("id is empty", nil)
@@ -149,6 +151,34 @@ func NewBlobId(path, id, ver string) (BlobId, error) {
 		version: ver,
 	}, nil
 
+}
+
+func ParseBlobDir(fromString string) (BlobId, error) {
+	if fromString == "" {
+		return BlobId{}, app.BadRequestError("id is empty", nil)
+	}
+
+	result := NotAllowedCharRegEx.MatchString(fromString)
+	if result {
+		return BlobId{}, app.BadRequestError("string with not allowed characters", nil)
+	}
+
+	path := ""
+
+	folders := strings.Split(fromString, "/")
+	fLen := len(folders)
+	if fLen == 0 {
+		return BlobId{}, app.BadRequestError("empty path", nil)
+	}
+
+	path = strings.Join(folders[:fLen], "/")
+	if fLen == 1 {
+		path = folders[fLen-1]
+	}
+
+	return BlobId{
+		path: path,
+	}, nil
 }
 
 func ParseBlobId(fromString string) (BlobId, error) {

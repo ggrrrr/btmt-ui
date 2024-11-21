@@ -86,6 +86,24 @@ func TestBasicTypes(t *testing.T) {
 		t.Run(tc.name, tc.f)
 	}
 }
+func TestBlobDir(t *testing.T) {
+	var err error
+	var blobIdEmpty BlobId
+	var blobId BlobId
+
+	blobId, err = ParseBlobDir("")
+	require.Error(t, err)
+	require.Equal(t, blobId, blobIdEmpty)
+
+	blobId, err = ParseBlobDir("fodler1")
+	require.NoError(t, err)
+	require.Equal(t, blobId, BlobId{path: "fodler1"})
+
+	blobId, err = ParseBlobDir("fodler1/folder2")
+	require.NoError(t, err)
+	require.Equal(t, blobId, BlobId{path: "fodler1/folder2"})
+
+}
 
 func TestBlobIdSetIdVersion(t *testing.T) {
 

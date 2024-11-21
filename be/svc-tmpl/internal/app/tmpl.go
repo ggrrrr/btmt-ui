@@ -2,9 +2,12 @@ package app
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
+	appError "github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
@@ -34,6 +37,34 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 		tmpl.UpdatedAt = time.Now()
 		err = a.repo.Update(ctx, tmpl)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	err = a.saveTmpl(ctx, authInfo, tmpl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
+	tmplBlobId, err := a.tmplFolder.SetIdVersionFromString(tmpl.Id)
+	if err != nil {
+		return appError.SystemError("cant create template blob name", err)
+	}
+
+	buffer := strings.NewReader(tmpl.Body)
+
+	_, err = a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
+		Type:          "template",
+		ContentType:   tmpl.ContentType,
+		Name:          tmpl.Name,
+		ContentLength: int64(len(tmpl.Body)),
+	}, buffer)
+
 	return err
 }
 

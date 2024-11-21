@@ -25,18 +25,21 @@ type (
 		appPolices   roles.AppPolices
 		blobStore    blob.Store
 		imagesFolder blob.BlobId
+		tmplFolder   blob.BlobId
 		repo         tmplRepo
 	}
 )
 
 func New(opts ...OptionsFunc) (*App, error) {
-	imagesFolder, err := blob.ParseBlobId("images")
+	imagesFolder, err := blob.ParseBlobDir("templates/images")
+	tmplFolder, err := blob.ParseBlobDir("templates/tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	a := &App{
 		imagesFolder: imagesFolder,
+		tmplFolder:   tmplFolder,
 	}
 	for _, optFunc := range opts {
 		err := optFunc(a)
