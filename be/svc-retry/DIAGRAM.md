@@ -10,13 +10,13 @@ include-in-header:
 
 ## API Flow chart
 
-<!-- Initialize with any icon {{< fa thumbs-up >}} -->
+<!-- Initialize with any icon {{< fa:humbs-up >}} -->
 
 ```mermaid
 flowchart TB
     subgraph retry_routine [retry consumer]
         direction TB
-        retry_start(("fa:fa-twitter start asd")) --> sub_retry@{ shape: das, label: "pull from\nretry stream" }
+        retry_start((fa:fa-twitter)) --> sub_retry@{ shape: das, label: "pull from\nretry stream" }
         sub_retry --> insert_event[[insert record]]
         insert_event --> retry_start
     end
