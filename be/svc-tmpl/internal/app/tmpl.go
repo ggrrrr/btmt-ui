@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
-func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
+func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) (TmplError, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "SaveTmpl", tmpl)
 	defer func() {
@@ -23,7 +24,17 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	render, err := a.validate(ctx, authInfo, tmpl)
+	if err != nil {
+		return nil, err
+	}
+	if len(render.errors) > 0 {
+		fmt.Printf("\n\n\n %#v \n", render.errors)
+		err = fmt.Errorf("validator error(s)")
+		return render.errors, err
 	}
 
 	// TODO Verify that the template can be rendered
@@ -39,15 +50,15 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) error {
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = a.saveTmpl(ctx, authInfo, tmpl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
@@ -58,12 +69,18 @@ func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.T
 
 	buffer := strings.NewReader(tmpl.Body)
 
-	_, err = a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
+	blobId, err := a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
 		Type:          "template",
 		ContentType:   tmpl.ContentType,
 		Name:          tmpl.Name,
 		ContentLength: int64(len(tmpl.Body)),
 	}, buffer)
+	if err != nil {
+		return err
+	}
+
+	tmpl.BlobId = blobId.IdVersion()
+	err = a.repo.UpdateBlobId(ctx, tmpl)
 
 	return err
 }

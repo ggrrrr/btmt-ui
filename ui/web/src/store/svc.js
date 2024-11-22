@@ -57,7 +57,6 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
             console.log(`json.ok.error[${url}] 401/403`, data);
             errorStore.authError(message);
             resetLogin();
-
             out.result = null;
             out.ok = false;
             out.err = error;
@@ -66,6 +65,10 @@ export const apiFetch = function (url, errorStore, resetLogin, opts = {}) {
           if (response.status === 400) {
             console.log(`json.ok.error[${url}] 400`, data);
             out.result = null;
+
+            if (data["payload"]) {
+              out.result = data["payload"];
+            }
             out.ok = false;
             out.err = error;
             errorStore.inputErr(message, error);

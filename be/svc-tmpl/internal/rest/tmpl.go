@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -31,8 +32,13 @@ func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.app.SaveTmpl(ctx, &template)
+	tmplErrors, err := s.app.SaveTmpl(ctx, &template)
 	if err != nil {
+		fmt.Printf("\n\n\t\t%#v \n\n", tmplErrors)
+		if tmplErrors != nil {
+			web.SendErrorBadRequestWithBody(ctx, w, "validation error", err, tmplErrors)
+			return
+		}
 		web.SendError(ctx, w, err)
 		return
 	}

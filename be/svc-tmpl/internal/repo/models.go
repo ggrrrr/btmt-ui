@@ -14,6 +14,7 @@ type (
 		ContentType string             `bson:"content_type"`
 		Name        string             `bson:"name"`
 		Body        string             `bson:"body"`
+		BlobId      string             `bson:"blob_id"`
 		CreatedAt   primitive.DateTime `bson:"created_at"`
 		UpdatedAt   primitive.DateTime `bson:"updated_at"`
 	}
@@ -26,6 +27,7 @@ func (from internalTmpl) toTemplate() ddd.Template {
 		Name:        from.Name,
 		Labels:      from.Labels,
 		Body:        from.Body,
+		BlobId:      from.BlobId,
 		CreatedAt:   from.CreatedAt.Time(),
 		UpdatedAt:   from.UpdatedAt.Time(),
 	}

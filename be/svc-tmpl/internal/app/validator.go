@@ -1,9 +1,15 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"html/template"
+	htmltemplate "html/template"
+
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
 type (
@@ -11,21 +17,39 @@ type (
 		ctx     context.Context
 		app     *App
 		realm   string
-		errors  map[string]error
+		errors  TmplError
 		resized bool
 		images  []string
 	}
+
+	TmplError map[string]string
 )
 
-func (t tmplValidator) Errros() []error {
-	if len(t.errors) == 0 {
-		return []error{}
+func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *ddd.Template) (*tmplValidator, error) {
+	var err error
+	ctx, span := logger.Span(ctx, "validate", template)
+	defer func() {
+		span.End(err)
+	}()
+
+	tmplValidator := validator(ctx, authInfo.Realm, a)
+
+	tmpl, err := htmltemplate.New("template_data").
+		Funcs(htmltemplate.FuncMap{
+			"renderImg": tmplValidator.RenderImg,
+		}).
+		Parse(template.Body)
+	if err != nil {
+		return nil, err
 	}
-	out := []error{}
-	for k := range t.errors {
-		out = append(out, t.errors[k])
+
+	buf := bytes.NewBuffer([]byte{})
+	err = tmpl.Execute(buf, ddd.TemplateData{})
+	if err != nil {
+		return nil, err
 	}
-	return out
+	return tmplValidator, nil
+
 }
 
 func validator(ctx context.Context, realm string, app *App) *tmplValidator {
@@ -33,7 +57,7 @@ func validator(ctx context.Context, realm string, app *App) *tmplValidator {
 		ctx:     ctx,
 		app:     app,
 		realm:   realm,
-		errors:  map[string]error{},
+		errors:  map[string]string{},
 		images:  []string{},
 		resized: false,
 	}
@@ -41,15 +65,14 @@ func validator(ctx context.Context, realm string, app *App) *tmplValidator {
 
 func (v *tmplValidator) RenderImg(imageName string) template.HTML {
 	imageId, err := v.app.imagesFolder.SetIdVersionFromString(imageName)
-	fmt.Printf("\n\t\t %#v \n", imageId)
 	if err != nil {
-		v.errors[imageName] = fmt.Errorf("incorrect image[%s] name %w", imageName, err)
+		v.errors[imageName] = fmt.Sprintf("image name:[%s] %v", imageName, err)
 		return template.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
 	}
 
 	_, err = v.app.blobStore.Head(v.ctx, v.realm, imageId)
 	if err != nil {
-		v.errors[imageName] = fmt.Errorf("imageName[%s] not found %w", imageName, err)
+		v.errors[imageName] = fmt.Sprintf("fetch image:[%s]  %v", imageName, err)
 		return template.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
 	}
 

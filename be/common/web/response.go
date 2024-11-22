@@ -9,10 +9,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 type AppResponse struct {
@@ -70,6 +71,11 @@ func SendSystemError(ctx context.Context, w http.ResponseWriter, msg string, err
 // HTTP CODE 400
 func SendErrorBadRequest(ctx context.Context, w http.ResponseWriter, msg string, err error) {
 	send(ctx, w, http.StatusBadRequest, msg, err, nil)
+}
+
+// HTTP CODE 400
+func SendErrorBadRequestWithBody(ctx context.Context, w http.ResponseWriter, msg string, err error, body any) {
+	send(ctx, w, http.StatusBadRequest, msg, err, body)
 }
 
 // return system error on ReadAll

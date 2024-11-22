@@ -84,4 +84,14 @@ func TestSave(t *testing.T) {
 	updateTmpl.UpdatedAt = actualTmpl.UpdatedAt
 	assert.Equal(t, updateTmpl, actualTmpl)
 
+	updateTmpl.BlobId = "blob_id_11"
+	err = testRepo.UpdateBlobId(ctx, updateTmpl)
+	require.NoError(t, err)
+
+	actualTmpl, err = testRepo.GetById(ctx, updateTmpl.Id)
+	require.NoError(t, err)
+	actualTmpl.CreatedAt = updateTmpl.CreatedAt
+	actualTmpl.UpdatedAt = updateTmpl.UpdatedAt
+	assert.Equal(t, updateTmpl, actualTmpl)
+
 }
