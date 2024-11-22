@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 	htmltemplate "html/template"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -63,17 +62,17 @@ func validator(ctx context.Context, realm string, app *App) *tmplValidator {
 	}
 }
 
-func (v *tmplValidator) RenderImg(imageName string) template.HTML {
+func (v *tmplValidator) RenderImg(imageName string) htmltemplate.HTML {
 	imageId, err := v.app.imagesFolder.SetIdVersionFromString(imageName)
 	if err != nil {
 		v.errors[imageName] = fmt.Sprintf("image name:[%s] %v", imageName, err)
-		return template.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
+		return htmltemplate.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
 	}
 
 	_, err = v.app.blobStore.Head(v.ctx, v.realm, imageId)
 	if err != nil {
 		v.errors[imageName] = fmt.Sprintf("fetch image:[%s]  %v", imageName, err)
-		return template.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
+		return htmltemplate.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
 	}
 
 	suffixUrl := ""
@@ -82,5 +81,5 @@ func (v *tmplValidator) RenderImg(imageName string) template.HTML {
 		suffixUrl = "/resized"
 	}
 
-	return template.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, suffixUrl))
+	return htmltemplate.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, suffixUrl))
 }

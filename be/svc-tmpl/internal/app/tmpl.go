@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	appError "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
@@ -64,7 +63,7 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) (TmplError, erro
 func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
 	tmplBlobId, err := a.tmplFolder.SetIdVersionFromString(tmpl.Id)
 	if err != nil {
-		return appError.SystemError("cant create template blob name", err)
+		return app.SystemError("cant create template blob name", err)
 	}
 
 	buffer := strings.NewReader(tmpl.Body)
