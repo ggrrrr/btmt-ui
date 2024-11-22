@@ -33,6 +33,10 @@ type (
 
 func New(opts ...OptionsFunc) (*App, error) {
 	imagesFolder, err := blob.ParseBlobDir("templates/images")
+	if err != nil {
+		return nil, err
+	}
+
 	tmplFolder, err := blob.ParseBlobDir("templates/tmpl")
 	if err != nil {
 		return nil, err
