@@ -1,5 +1,7 @@
 # Install
 
+## Some golang [guidelines](https://github.com/uber-go/guide/blob/master/style.md)
+
 ## NATS
 
 ```sh

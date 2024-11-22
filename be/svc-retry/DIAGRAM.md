@@ -1,12 +1,22 @@
+---
+title: FA icon & Mermaid in Quarto Revealjs
+format: revealjs
+include-in-header: 
+  text: |
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+---
+
 # Retry Service Diagram
 
 ## API Flow chart
+
+<!-- Initialize with any icon {{< fa thumbs-up >}} -->
 
 ```mermaid
 flowchart TB
     subgraph retry_routine [retry consumer]
         direction TB
-        retry_start((start)) --> sub_retry@{ shape: das, label: "pull from\nretry stream" }
+        retry_start(("fa:fa-twitter start asd")) --> sub_retry@{ shape: das, label: "pull from\nretry stream" }
         sub_retry --> insert_event[[insert record]]
         insert_event --> retry_start
     end
