@@ -2,7 +2,6 @@
 
 ```mermaid
 
-
 architecture-beta
     group external(mdi:cloud)[external]
     group k8s(mdi:kubernetes)[Cluster]

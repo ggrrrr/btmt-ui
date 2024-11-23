@@ -13,26 +13,45 @@ include-in-header:
 <!-- Initialize with any icon {{< fa:humbs-up >}} -->
 
 ```mermaid
+
+%%{
+    init: {
+        'theme':'base',
+        'themeVariables': {
+            'primaryColor': '#BB2528',
+            'primaryTextColor': '#fff',
+            'primaryBorderColor': '#7C0000',
+            'lineColor': '#F8B229',
+            'secondaryColor': '#006100',
+            'tertiaryColor': '#fff'
+        }
+    }
+}%%
+
 flowchart TB
+    proc_loop(((start)))
+    proc_loop ==> retry_routine
+    proc_loop ==> queue_processor
+
     subgraph retry_routine [retry consumer]
         direction TB
-        retry_start((fa:fa-twitter)) --> sub_retry@{ shape: das, label: "pull from\nretry stream" }
+        retry_start((start)) --> sub_retry@{ shape: das, label: "pull from\nretry stream" }
         sub_retry --> insert_event[[insert record]]
         insert_event --> retry_start
     end
 
-    subgraph Queue processor
-        direction TB 
-        main_loop([start]) --> fetcher@{ shape: docs, label: "pending events\nfilter by process_after" }
-        fetcher --> event_pro
+    subgraph queue_processor [Queue processor]
+        direction TB
+        main_loop([start]) --> fetcher@{ shape: docs, label: "select events process_after > now" }
+        fetcher ==> event_pro
         fetcher --> main_loop
     end
     subgraph event_pro [Single Event Processor]
         direction TB
-        start_event_processor([start]) --> update_counter[[update counter]]
+        start_event_processor([start]) --> update_counter[/update event counter/]
         update_counter --> if_counter{counter < 0}
         if_counter --> |N| push_reply@{ shape: das, label: "origin stream" }
-        if_counter --> |Y| push_audit@{ shape: das, label: "audit stream" }
+        if_counter --> |Y| asd[/update_event/] --> push_audit@{ shape: das, label: "audit stream" }
         push_reply --> update_event
         push_audit --> update_event
         update_event[[update record]] --> end_event_processor(((end)))
@@ -43,6 +62,7 @@ flowchart TB
 ## Service chart
 
 ```mermaid
+
 architecture-beta
     group k8s(mdi:kubernetes)[Cluster]
     group pubsub(mdi:apache-kafka)[nats jetstream]
