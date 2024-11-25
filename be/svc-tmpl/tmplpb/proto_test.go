@@ -70,7 +70,7 @@ func TestDataProto(t *testing.T) {
 	err = proto.Unmarshal(testDataBytes1, &actual1)
 	require.NoError(t, err)
 
-	fmt.Printf("---FROM PROTO[actual1]\n%#v\n---FROM PROTO--\n", actual1)
+	fmt.Printf("---FROM PROTO[actual1]\n%#v\n---FROM PROTO--\n", &actual1)
 	fmt.Printf("\t---FROM PROTO[Data]\n%#v\n---FROM PROTO--\n\n", actual1.Data)
 
 	anyValue2, err := actual1.Data.UnmarshalNew()
