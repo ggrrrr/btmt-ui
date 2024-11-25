@@ -22,13 +22,13 @@
 import BtnLoadData from '@/components/BtnLoadData.vue';
 
 import { ref } from 'vue';
-import { fetchAPI } from "@/store/auth";
-
-import { useConfig } from "@/store/app";
-const config = useConfig;
-
 import { useRoute } from 'vue-router'
+
+import { fetchAPI } from "@/store/auth";
+import { useConfig } from "@/store/app";
 import { Template } from '../svc/tmpl';
+
+const config = useConfig;
 const route = useRoute();
 if (route.params.id === undefined) {
     console.log("bad call")
@@ -49,9 +49,7 @@ const refs = ref({
 
 async function getRequest(id) {
     const request = {
-        // mode: "no-cors",
         method: "GET",
-        // body: JSON.stringify(reqest)
     };
 
     const url = config.BASE_URL + "/tmpl/manage/" + id;
@@ -72,7 +70,6 @@ async function renderRequest() {
         body: refs.value.tmpl.body,
     }
     const request = {
-        // mode: "no-cors",
         method: "POST",
         body: JSON.stringify(reqest)
     };
@@ -81,9 +78,7 @@ async function renderRequest() {
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
-            console.log("result    :", result)
-            // refs.value.totalItems = 0;
-            // refs.value.data = []
+            console.log("result:", result)
             if (result.result.render !== null) {
                 console.log("result: ", result.result.payload)
                 refs.value.render = result.result.payload
@@ -99,9 +94,12 @@ async function renderRequest() {
 }
 
 async function saveRequest() {
+    const tmpl = refs.value.tmpl
+    tmpl.created_at = null;
+    tmpl.updated_at = null;
     const request = {
         method: "POST",
-        body: JSON.stringify(refs.value.tmpl)
+        body: JSON.stringify(tmpl)
     };
     console.log("save request:", request)
 

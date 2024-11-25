@@ -8,7 +8,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 type RenderRequest struct {
@@ -24,14 +24,14 @@ func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 	}()
 	logger.InfoCtx(r.Context()).Msg("rest.SaveTmpl")
 
-	var template ddd.Template
+	var template *tmplpb.Template
 	err = web.DecodeJsonRequest(r, &template)
 	if err != nil {
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	tmplErrors, err := s.app.SaveTmpl(ctx, &template)
+	tmplErrors, err := s.app.SaveTmpl(ctx, template)
 	if err != nil {
 		fmt.Printf("\n\n\t\t%#v \n\n", tmplErrors)
 		if tmplErrors != nil {
@@ -59,9 +59,9 @@ func (s *server) ListTmpl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var response = struct {
-		List []ddd.Template `json:"list"`
+		List []*tmplpb.Template `json:"list"`
 	}{
-		List: make([]ddd.Template, 0, len(list)),
+		List: make([]*tmplpb.Template, 0, len(list)),
 	}
 
 	response.List = append(response.List, list...)
@@ -93,37 +93,21 @@ func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 		span.End(err)
 	}()
 
-	request := RenderRequest{}
+	request := &tmplpb.RenderRequest{}
 
-	err = web.DecodeJsonRequest(r, &request)
+	err = web.DecodeJsonRequest(r, request)
 	if err != nil {
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	data := ddd.TemplateData{
-		Lists:  map[string][]string{},
-		Tables: map[string]ddd.TemplateTable{},
-		Person: map[string]string{},
-		Items:  request.Items,
-	}
-
-	result, err := s.app.RenderHtml(
-		ctx,
-		ddd.Template{
-			Body: request.TemplateBody,
-		},
-		data,
-	)
-
+	result, err := s.app.RenderHtml(ctx, request)
 	if err != nil {
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	out := struct {
-		Payload string `json:"payload"`
-	}{
+	out := &tmplpb.RenderResponse{
 		Payload: result,
 	}
 

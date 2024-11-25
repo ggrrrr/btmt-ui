@@ -3,14 +3,14 @@ package repo
 import (
 	"context"
 	"fmt"
-	"time"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 type (
@@ -27,14 +27,14 @@ func New(collection string, db mgo.Repo) *Repo {
 	}
 }
 
-func (r *Repo) Save(ctx context.Context, template *ddd.Template) (err error) {
+func (r *Repo) Save(ctx context.Context, template *tmplpb.Template) (err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.TraceKVString("template.name", template.Name))
 	defer func() {
 		span.End(err)
 	}()
 
-	template.CreatedAt = time.Now()
-	template.UpdatedAt = template.CreatedAt
+	template.CreatedAt = timestamppb.Now()
+	template.UpdatedAt = timestamppb.Now()
 
 	newTmpl, err := fromTemplate(template)
 	if err != nil {
@@ -49,7 +49,7 @@ func (r *Repo) Save(ctx context.Context, template *ddd.Template) (err error) {
 	return nil
 }
 
-func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd.Template, err error) {
+func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []*tmplpb.Template, err error) {
 	_, span := logger.Span(ctx, "repo.List", nil)
 	defer func() {
 		span.End(err)
@@ -65,7 +65,7 @@ func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 		return nil, fmt.Errorf("collection.cursor %w", err)
 	}
 
-	var out = make([]ddd.Template, 0)
+	var out = make([]*tmplpb.Template, 0)
 	for cur.Next(ctx) {
 		if cur.Err() != nil {
 			return nil, fmt.Errorf("cursor.Next %w", err)
@@ -83,7 +83,7 @@ func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 	return out, nil
 }
 
-func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error) {
+func (r *Repo) GetById(ctx context.Context, fromId string) (*tmplpb.Template, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.TraceKVString("id", fromId), logger.TraceKVString("collection", r.collection))
 	defer func() {
@@ -116,16 +116,16 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error
 
 	out := internal.toTemplate()
 
-	return &out, err
+	return out, err
 }
 
-func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
+func (r *Repo) Update(ctx context.Context, template *tmplpb.Template) (err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", template)
 	defer func() {
 		span.End(err)
 	}()
 
-	template.UpdatedAt = time.Now()
+	template.UpdatedAt = timestamppb.Now()
 
 	id, err := mgo.ConvertFromId(template.Id)
 	if err != nil {
@@ -146,7 +146,7 @@ func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
 		setReq["labels"] = template.Labels
 	}
 
-	setReq["updated_at"] = mgo.FromTimeOrNow(template.UpdatedAt)
+	setReq["updated_at"] = mgo.FromTimeOrNow(template.UpdatedAt.AsTime())
 
 	updateReq := bson.M{
 		"$set": setReq,

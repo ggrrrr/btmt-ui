@@ -9,6 +9,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 type (
@@ -24,7 +25,7 @@ type (
 	TmplError map[string]string
 )
 
-func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *ddd.Template) (*tmplValidator, error) {
+func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *tmplpb.Template) (*tmplValidator, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "validate", template)
 	defer func() {

@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+//buf:lint:ignore PACKAGE_VERSION_SUFFIX
+package tmplpb;
+
+import "google/protobuf/struct.proto";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+service TmplSvc {
+  rpc Save(SaveRequest) returns (SaveResponse) {
+    option (google.api.http) = {
+      post: "/v1/templates/manage/save";
+      body: "*";
+    };
+  };
+  rpc GetById(GetByIdRequest) returns (GetByIdResponse) {
+    option (google.api.http) = {
+      post: "/v1/templates/manage/get";
+      body: "*";
+    };
+  };
+  rpc Search(SearchRequest) returns (SearchResponse) {
+    option (google.api.http) = {
+      post: "/v1/templates/manage/search";
+      body: "*";
+    };
+  };
+  rpc Render(RenderRequest) returns (RenderResponse) {
+    option (google.api.http) = {
+      post: "/v1/templates/manage/render";
+      body: "*";
+    };
+  };
+}
+
+message RenderRequest {
+  string body = 1 [json_name = "body"];
+  TemplateData data = 2 [json_name = "data"];
+}
+
+message RenderResponse {
+  string payload = 1 [json_name = "filters"];
+}
+
+message ListText {
+  repeated string list = 1;
+}
+
+message TemplateData {
+  map<string,string> items = 1 [json_name = "items"];
+  map<string,ListText> lists = 2 [json_name = "lists"];
+  google.protobuf.Any  data = 3 [json_name = "data"];
+  google.protobuf.Struct  data1 = 4 [json_name = "data1"];
+}
+
+message SearchRequest {
+  map<string,ListText> filters = 1 [json_name = "filters"];
+}
+
+message SearchResponse {
+  repeated Template payload = 1 [json_name = "payload"]; 
+}
+
+message GetByIdRequest {
+  string id = 1 [json_name = "id"]; 
+}
+
+message GetByIdResponse {
+  Template payload = 1 [json_name = "payload"]; 
+}
+
+
+message SaveRequest {
+    Template payload = 1 [json_name = "payload"]; 
+}
+
+message SaveResponse {
+    Template payload = 1 [json_name = "payload"]; 
+}
+
+message Template{
+    string id = 1 [json_name = "id"];
+    string content_type = 2 [json_name = "content_type"];
+    string name = 3 [json_name = "name"];
+    repeated string labels = 4 [json_name = "labels"];
+    repeated string images = 5 [json_name = "images"];
+    map<string,string>  files = 6 [json_name = "files"];
+    string body = 7 [json_name = "body"];
+    google.protobuf.Timestamp created_at = 9 [json_name = "created_at"];
+    google.protobuf.Timestamp updated_at = 10 [json_name = "updated_at"];
+}

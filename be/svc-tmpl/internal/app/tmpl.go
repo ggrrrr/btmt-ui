@@ -9,10 +9,10 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
-func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) (TmplError, error) {
+func (a *App) SaveTmpl(ctx context.Context, tmpl *tmplpb.Template) (TmplError, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "SaveTmpl", tmpl)
 	defer func() {
@@ -35,8 +35,6 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) (TmplError, erro
 		return render.errors, app.BadRequestError("validate", err)
 	}
 
-	// TODO check if the Body is different from the original.
-
 	if tmpl.Id == "" {
 		return nil, a.saveTmpl(ctx, authInfo, tmpl)
 	}
@@ -46,7 +44,70 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) (TmplError, erro
 	return nil, nil
 }
 
-func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
+func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
+	defer func() {
+		span.End(err)
+	}()
+
+	err = a.repo.Save(ctx, tmpl)
+	if err != nil {
+		return err
+	}
+
+	err = a.uploadTmplBody(ctx, authInfo, tmpl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error) {
+	var err error
+	ctx, span := logger.Span(ctx, "ListTmpl", nil)
+	defer func() {
+		span.End(err)
+	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.InfoCtx(ctx).Msg("ListTmpl")
+
+	result, err := a.repo.List(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (a *App) GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error) {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "GetTmpl", nil, logger.TraceKVString("id", id))
+	defer func() {
+		span.End(err)
+	}()
+
+	authInfo := roles.AuthInfoFromCtx(ctx)
+	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := a.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "updateTmpl", tmpl)
 	defer func() {
@@ -79,27 +140,7 @@ func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd
 	return nil
 }
 
-func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
-	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
-	defer func() {
-		span.End(err)
-	}()
-
-	err = a.repo.Save(ctx, tmpl)
-	if err != nil {
-		return err
-	}
-
-	err = a.uploadTmplBody(ctx, authInfo, tmpl)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
+func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
 	tmplBlobId, err := a.tmplFolder.SetIdVersionFromString(tmpl.Id)
 	if err != nil {
 		return app.SystemError("cant create template blob name", err)
@@ -118,47 +159,4 @@ func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl 
 	}
 
 	return nil
-}
-
-func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Template, error) {
-	var err error
-	ctx, span := logger.Span(ctx, "ListTmpl", nil)
-	defer func() {
-		span.End(err)
-	}()
-
-	authInfo := roles.AuthInfoFromCtx(ctx)
-	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	logger.InfoCtx(ctx).Msg("ListTmpl")
-
-	result, err := a.repo.List(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (a *App) GetTmpl(ctx context.Context, id string) (*ddd.Template, error) {
-	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetTmpl", nil, logger.TraceKVString("id", id))
-	defer func() {
-		span.End(err)
-	}()
-
-	authInfo := roles.AuthInfoFromCtx(ctx)
-	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := a.repo.GetById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }

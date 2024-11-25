@@ -10,6 +10,7 @@ export class Template {
       this.labels;
       this.editUrl = "";
       this.created_at = null;
+      this.updated_at = null;
       return;
     }
     console.log("", row);
@@ -20,5 +21,6 @@ export class Template {
     this.labels = row.labels;
     this.editUrl = `/templates/manage/edit/${row.id}`;
     this.created_at = parseTimestamp(row.created_at);
+    this.updated_at = parseTimestamp(row.updated_at);
   }
 }

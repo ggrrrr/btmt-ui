@@ -8,7 +8,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 const (
@@ -20,10 +20,10 @@ type (
 	OptionsFunc func(a *App) error
 
 	tmplRepo interface {
-		Save(ctx context.Context, template *ddd.Template) error
-		Update(ctx context.Context, template *ddd.Template) error
-		List(ctx context.Context, filter app.FilterFactory) (result []ddd.Template, err error)
-		GetById(ctx context.Context, fromId string) (*ddd.Template, error)
+		Save(ctx context.Context, template *tmplpb.Template) error
+		Update(ctx context.Context, template *tmplpb.Template) error
+		List(ctx context.Context, filter app.FilterFactory) (result []*tmplpb.Template, err error)
+		GetById(ctx context.Context, fromId string) (*tmplpb.Template, error)
 	}
 
 	App struct {

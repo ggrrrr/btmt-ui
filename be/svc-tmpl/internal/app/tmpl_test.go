@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
@@ -15,8 +16,8 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/blob/awss3"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/repo"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 func Test_Save(t *testing.T) {
@@ -53,7 +54,7 @@ func Test_Save(t *testing.T) {
 			name: "save new",
 			testFunc: func(t *testing.T) {
 				var err error
-				newTmpl := &ddd.Template{
+				newTmpl := &tmplpb.Template{
 					Id:          "",
 					ContentType: "text/html",
 					Name:        "test tmpl",
@@ -61,8 +62,8 @@ func Test_Save(t *testing.T) {
 					Images:      []string{"image-1"},
 					Files:       map[string]string{},
 					Body:        "new template body",
-					CreatedAt:   time.Time{},
-					UpdatedAt:   time.Time{},
+					// CreatedAt:   ,
+					// UpdatedAt:   time.Time{},
 				}
 
 				tmplErr, err := testApp.SaveTmpl(ctx, newTmpl)
@@ -73,7 +74,7 @@ func Test_Save(t *testing.T) {
 				savedTmpl, err := testApp.GetTmpl(ctx, newTmpl.Id)
 				require.NoError(t, err)
 
-				ddd.MatchTemplate(t, *newTmpl, *savedTmpl)
+				tmplpb.MatchTemplate(t, newTmpl, savedTmpl)
 
 				blobId1, err := testApp.tmplFolder.SetIdVersionFromString(savedTmpl.Id)
 				require.NoError(t, err)
@@ -110,7 +111,7 @@ func Test_Save(t *testing.T) {
 
 				savedTmpl1Actual, err := testApp.GetTmpl(ctx, savedTmpl1.Id)
 				require.NoError(t, err)
-				ddd.MatchTemplate(t, *savedTmpl1, *savedTmpl1Actual)
+				tmplpb.MatchTemplate(t, savedTmpl1, savedTmpl1Actual)
 
 				blobList, err = blobClient.List(ctx, realm, blobId)
 				require.NoError(t, err)
@@ -118,13 +119,13 @@ func Test_Save(t *testing.T) {
 				require.Equal(t, len(blobList[0].Versions), 0)
 
 				savedTmpl1.Body = "update body from test"
-				savedTmpl1.UpdatedAt = time.Now()
+				savedTmpl1.UpdatedAt = timestamppb.New(time.Now())
 				_, err = testApp.SaveTmpl(ctx, savedTmpl1)
 				require.NoError(t, err)
 
 				savedTmpl1Actual, err = testApp.GetTmpl(ctx, savedTmpl1.Id)
 				require.NoError(t, err)
-				ddd.MatchTemplate(t, *savedTmpl1, *savedTmpl1Actual)
+				tmplpb.MatchTemplate(t, savedTmpl1, savedTmpl1Actual)
 
 				fmt.Printf("size:  %#v \n\n\n", savedTmpl1Actual)
 

@@ -3,13 +3,13 @@ package repo
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 func TestSave(t *testing.T) {
@@ -29,15 +29,15 @@ func TestSave(t *testing.T) {
 	// err = testDb.DB().CreateCollection(ctx, testRepo.collection)
 	// require.NoError(t, err)
 
-	firstTmpl := &ddd.Template{
+	firstTmpl := &tmplpb.Template{
 		Labels:      []string{"label1"},
 		Name:        "test template",
 		ContentType: "ctx/html",
 		Body: `<p> {{ .UserInfo.Device.DeviceInfo }}</p>
 <p> {{ .UserInfo.Subject }}</p>
 {{ renderImg "IMG4944.JPG:1" }}`,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: timestamppb.Now(),
+		UpdatedAt: timestamppb.Now(),
 	}
 	err = testRepo.Save(ctx, firstTmpl)
 	require.NoError(t, err)
@@ -47,14 +47,14 @@ func TestSave(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, actualTmpl)
 
-	ddd.MatchTemplate(t, *firstTmpl, *actualTmpl)
+	tmplpb.MatchTemplate(t, firstTmpl, actualTmpl)
 
 	listResult, err := testRepo.List(ctx, nil)
 	require.NoError(t, err)
 
-	ddd.MatchTemplate(t, *firstTmpl, listResult[0])
+	tmplpb.MatchTemplate(t, firstTmpl, listResult[0])
 
-	updateTmpl := &ddd.Template{
+	updateTmpl := &tmplpb.Template{
 		Id:          firstTmpl.Id,
 		Labels:      []string{"label1", "label2"},
 		Name:        "updated template",
@@ -64,7 +64,7 @@ func TestSave(t *testing.T) {
 <p> {{ .UserInfo.Subject }}</p>
 {{ renderImg "IMG4944.JPG:1" }}`,
 		CreatedAt: firstTmpl.CreatedAt,
-		UpdatedAt: time.Now(),
+		UpdatedAt: timestamppb.Now(),
 	}
 
 	err = testRepo.Update(ctx, updateTmpl)
@@ -73,12 +73,11 @@ func TestSave(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotNil(t, actualTmpl)
-	assert.WithinDuration(t, updateTmpl.UpdatedAt, actualTmpl.UpdatedAt, 100*time.Millisecond)
-	ddd.MatchTemplate(t, *updateTmpl, *actualTmpl)
+	tmplpb.MatchTemplate(t, updateTmpl, actualTmpl)
 
 	actualTmpl, err = testRepo.GetById(ctx, updateTmpl.Id)
 	require.NoError(t, err)
 
-	ddd.MatchTemplate(t, *updateTmpl, *actualTmpl)
+	tmplpb.MatchTemplate(t, updateTmpl, actualTmpl)
 
 }

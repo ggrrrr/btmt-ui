@@ -2,9 +2,10 @@ package repo
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
 )
 
 type (
@@ -21,8 +22,8 @@ type (
 	}
 )
 
-func (from internalTmpl) toTemplate() ddd.Template {
-	return ddd.Template{
+func (from internalTmpl) toTemplate() *tmplpb.Template {
+	return &tmplpb.Template{
 		Id:          from.Id.Hex(),
 		ContentType: from.ContentType,
 		Name:        from.Name,
@@ -30,12 +31,12 @@ func (from internalTmpl) toTemplate() ddd.Template {
 		Images:      from.Images,
 		Files:       from.Files,
 		Body:        from.Body,
-		CreatedAt:   from.CreatedAt.Time(),
-		UpdatedAt:   from.UpdatedAt.Time(),
+		CreatedAt:   timestamppb.New(from.CreatedAt.Time()),
+		UpdatedAt:   timestamppb.New(from.UpdatedAt.Time()),
 	}
 }
 
-func fromTemplate(from *ddd.Template) (internalTmpl, error) {
+func fromTemplate(from *tmplpb.Template) (internalTmpl, error) {
 
 	id, err := mgo.ConvertFromId(from.Id)
 	if err != nil {
@@ -50,7 +51,7 @@ func fromTemplate(from *ddd.Template) (internalTmpl, error) {
 		Body:        from.Body,
 		Images:      from.Images,
 		Files:       from.Files,
-		CreatedAt:   mgo.FromTimeOrNow(from.CreatedAt),
-		UpdatedAt:   mgo.FromTimeOrNow(from.UpdatedAt),
+		CreatedAt:   mgo.FromTimeOrNow(from.CreatedAt.AsTime()),
+		UpdatedAt:   mgo.FromTimeOrNow(from.UpdatedAt.AsTime()),
 	}, nil
 }
