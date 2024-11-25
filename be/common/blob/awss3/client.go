@@ -97,7 +97,7 @@ func (client *Client) Fetch(ctx context.Context, tenant string, blobId blob.Blob
 
 	logger.InfoCtx(ctx).
 		Str("id", id.String()).
-		Msg("blob.Fetch")
+		Msg("awss3.Fetch")
 
 	versions, err := list(ctx, c, id)
 	if err != nil {
@@ -140,7 +140,7 @@ func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobI
 
 	logger.InfoCtx(ctx).
 		Str("id", id.String()).
-		Msg("blob.Head")
+		Msg("awss3.Head")
 
 	versions, err := list(ctx, c, id)
 	if err != nil {
@@ -184,7 +184,7 @@ func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobI
 
 	logger.InfoCtx(ctx).
 		Str("id", id.String()).
-		Msg("blob.Head")
+		Msg("awss3.ListDir")
 
 	blobs, err := list(ctx, c, id)
 	if err != nil {
@@ -263,7 +263,7 @@ func (client *Client) Push(ctx context.Context, tenant string, blobId blob.BlobI
 
 	logger.InfoCtx(ctx).
 		Str("id", id.String()).
-		Msg("blob.Push")
+		Msg("awss3.Push")
 
 	objects, err := list(ctx, c, id)
 	if err != nil {

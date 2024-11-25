@@ -10,6 +10,7 @@ type (
 		DeviceInfo string
 	}
 
+	// Authentication Credentials
 	AuthData struct {
 		// Basic, Bearer, ...,
 		AuthScheme string

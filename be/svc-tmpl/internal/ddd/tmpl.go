@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
 type TemplateTable struct {
@@ -14,10 +13,10 @@ type TemplateTable struct {
 }
 
 type TemplateData struct {
-	UserInfo roles.AuthInfo
-	Items    map[string]any
-	Lists    map[string][]string
-	Tables   map[string]TemplateTable
+	Person map[string]string
+	Items  map[string]any
+	Lists  map[string][]string
+	Tables map[string]TemplateTable
 }
 
 type Template struct {
@@ -25,8 +24,8 @@ type Template struct {
 	ContentType string            `json:"content_type,omitempty"`
 	Name        string            `json:"name,omitempty"`
 	Labels      []string          `json:"labels,omitempty"`
-	Attachments map[string]string `json:"attachments,omitempty"`
-	Images      map[string]string `json:"images,omitempty"`
+	Images      []string          `json:"images,omitempty"`
+	Files       map[string]string `json:"files,omitempty"`
 	Body        string            `json:"body,omitempty"`
 	BlobId      string            `json:"blob_id,omitempty"`
 	CreatedAt   time.Time         `json:"created_at,omitempty"`
@@ -41,8 +40,8 @@ func (t Template) Extract() logger.TraceData {
 		"tmpl.Name":        logger.TraceValueString(t.Name),
 		"tmpl.ContentType": logger.TraceValueString(t.ContentType),
 	}
-	if t.Id == "" {
-		out["tmpl.id"] = logger.TraceValueString(t.Id)
+	if t.Id != "" {
+		out["tmpl.Id"] = logger.TraceValueString(t.Id)
 	}
 	return out
 }

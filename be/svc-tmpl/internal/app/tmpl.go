@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
@@ -28,39 +27,79 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *ddd.Template) (TmplError, erro
 
 	render, err := a.validate(ctx, authInfo, tmpl)
 	if err != nil {
-		return nil, err
+		return nil, app.BadRequestError("validate", err)
 	}
 	if len(render.errors) > 0 {
 		fmt.Printf("\n\n\n %#v \n", render.errors)
 		err = fmt.Errorf("validator error(s)")
-		return render.errors, err
+		return render.errors, app.BadRequestError("validate", err)
 	}
 
-	// TODO Verify that the template can be rendered
-	// TODO Fetch images and other blobs to verify all is good
-	// test if we can parse the body template and data value
+	// TODO check if the Body is different from the original.
+
 	if tmpl.Id == "" {
-		tmpl.UpdatedAt = time.Now()
-		tmpl.CreatedAt = time.Now()
-		err = a.repo.Save(ctx, tmpl)
-	} else {
-		tmpl.UpdatedAt = time.Now()
-		err = a.repo.Update(ctx, tmpl)
+		return nil, a.saveTmpl(ctx, authInfo, tmpl)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	err = a.saveTmpl(ctx, authInfo, tmpl)
-	if err != nil {
-		return nil, err
-	}
+	err = a.updateTmpl(ctx, authInfo, tmpl)
 
 	return nil, nil
 }
 
+func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "updateTmpl", tmpl)
+	defer func() {
+		span.End(err)
+	}()
+
+	updateBlob := false
+
+	oldTmpl, err := a.repo.GetById(ctx, tmpl.Id)
+	if err != nil {
+		return err
+	}
+
+	if oldTmpl.Body != tmpl.Body {
+		updateBlob = true
+	}
+
+	err = a.repo.Update(ctx, tmpl)
+	if err != nil {
+		return err
+	}
+
+	if updateBlob {
+		err = a.uploadTmplBody(ctx, authInfo, tmpl)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
+	defer func() {
+		span.End(err)
+	}()
+
+	err = a.repo.Save(ctx, tmpl)
+	if err != nil {
+		return err
+	}
+
+	err = a.uploadTmplBody(ctx, authInfo, tmpl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.Template) error {
 	tmplBlobId, err := a.tmplFolder.SetIdVersionFromString(tmpl.Id)
 	if err != nil {
 		return app.SystemError("cant create template blob name", err)
@@ -69,19 +108,23 @@ func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *ddd.T
 	buffer := strings.NewReader(tmpl.Body)
 
 	blobId, err := a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
-		Type:          "template",
+		Type:          blob.BlobTypeTemplate,
 		ContentType:   tmpl.ContentType,
 		Name:          tmpl.Name,
 		ContentLength: int64(len(tmpl.Body)),
 	}, buffer)
 	if err != nil {
-		return err
+		return app.SystemError("cant push template to blob store", err)
 	}
 
 	tmpl.BlobId = blobId.IdVersion()
-	err = a.repo.UpdateBlobId(ctx, tmpl)
 
-	return err
+	err = a.repo.UpdateBlobId(ctx, tmpl)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]ddd.Template, error) {

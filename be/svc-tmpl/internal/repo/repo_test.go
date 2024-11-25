@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -46,20 +45,14 @@ func TestSave(t *testing.T) {
 
 	actualTmpl, err := testRepo.GetById(ctx, firstTmpl.Id)
 	require.NoError(t, err)
-	fmt.Printf("  %+v \n", actualTmpl)
 	require.NotNil(t, actualTmpl)
-	assert.WithinDuration(t, firstTmpl.CreatedAt, actualTmpl.CreatedAt, 100*time.Millisecond)
-	assert.WithinDuration(t, firstTmpl.UpdatedAt, actualTmpl.UpdatedAt, 100*time.Millisecond)
-	firstTmpl.CreatedAt = actualTmpl.CreatedAt
-	firstTmpl.UpdatedAt = actualTmpl.UpdatedAt
-	assert.Equal(t, firstTmpl, actualTmpl)
+
+	ddd.MatchTemplate(t, *firstTmpl, *actualTmpl)
 
 	listResult, err := testRepo.List(ctx, nil)
 	require.NoError(t, err)
 
-	assert.WithinDuration(t, firstTmpl.CreatedAt, listResult[0].CreatedAt, 100*time.Millisecond)
-	firstTmpl.CreatedAt = actualTmpl.CreatedAt
-	assert.Equal(t, firstTmpl, actualTmpl)
+	ddd.MatchTemplate(t, *firstTmpl, listResult[0])
 
 	updateTmpl := &ddd.Template{
 		Id:          firstTmpl.Id,
@@ -70,6 +63,7 @@ func TestSave(t *testing.T) {
 <p> {{ .UserInfo.Device.DeviceInfo }}</p>
 <p> {{ .UserInfo.Subject }}</p>
 {{ renderImg "IMG4944.JPG:1" }}`,
+		CreatedAt: firstTmpl.CreatedAt,
 		UpdatedAt: time.Now(),
 	}
 
@@ -80,9 +74,7 @@ func TestSave(t *testing.T) {
 
 	require.NotNil(t, actualTmpl)
 	assert.WithinDuration(t, updateTmpl.UpdatedAt, actualTmpl.UpdatedAt, 100*time.Millisecond)
-	updateTmpl.CreatedAt = actualTmpl.CreatedAt
-	updateTmpl.UpdatedAt = actualTmpl.UpdatedAt
-	assert.Equal(t, updateTmpl, actualTmpl)
+	ddd.MatchTemplate(t, *updateTmpl, *actualTmpl)
 
 	updateTmpl.BlobId = "blob_id_11"
 	err = testRepo.UpdateBlobId(ctx, updateTmpl)
@@ -90,8 +82,7 @@ func TestSave(t *testing.T) {
 
 	actualTmpl, err = testRepo.GetById(ctx, updateTmpl.Id)
 	require.NoError(t, err)
-	actualTmpl.CreatedAt = updateTmpl.CreatedAt
-	actualTmpl.UpdatedAt = updateTmpl.UpdatedAt
-	assert.Equal(t, updateTmpl, actualTmpl)
+
+	ddd.MatchTemplate(t, *updateTmpl, *actualTmpl)
 
 }

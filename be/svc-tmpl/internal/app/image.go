@@ -191,7 +191,7 @@ func (a *App) PutImage(ctx context.Context, tempFile blob.TempFile) error {
 	}
 
 	blobInfo := blob.BlobMD{
-		Type:        tempFile.ContentType,
+		Type:        blob.BlobTypeImage,
 		ContentType: tempFile.ContentType,
 		Name:        tempFile.FileName,
 	}

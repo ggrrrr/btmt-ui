@@ -8,15 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
 func TestData(t *testing.T) {
 
 	testTmpl := Template{
 		// ContentType: "text/plain",
-		Body: `# Header from: {{ .UserInfo.Subject }}
+		Body: `# Header from: {{ .Person.Name }}
 # Items.key1: {{ .Items.key1.Item1 }} [{{ .Items.key1.Item }}]
 # Lists.list1: {{range index .Lists "list1"}}
   * {{.}}{{end}}
@@ -40,8 +38,8 @@ end.
 	item2 := struct{ Item2 string }{Item2: "value 2"}
 
 	testData := TemplateData{
-		UserInfo: roles.AuthInfo{
-			Subject: "test user",
+		Person: map[string]string{
+			"Name": "test user",
 		},
 		Items: map[string]any{
 			"key1": item1,

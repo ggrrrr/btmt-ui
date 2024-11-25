@@ -84,7 +84,7 @@ async function renderRequest() {
             console.log("result    :", result)
             // refs.value.totalItems = 0;
             // refs.value.data = []
-            if (result.result.list !== null) {
+            if (result.result.render !== null) {
                 console.log("result: ", result.result.payload)
                 refs.value.render = result.result.payload
             } else {

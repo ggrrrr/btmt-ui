@@ -13,6 +13,8 @@ type (
 		Labels      []string           `bson:"labels"`
 		ContentType string             `bson:"content_type"`
 		Name        string             `bson:"name"`
+		Images      []string           `bson:"images"`
+		Files       map[string]string  `bson:"files"`
 		Body        string             `bson:"body"`
 		BlobId      string             `bson:"blob_id"`
 		CreatedAt   primitive.DateTime `bson:"created_at"`
@@ -26,6 +28,8 @@ func (from internalTmpl) toTemplate() ddd.Template {
 		ContentType: from.ContentType,
 		Name:        from.Name,
 		Labels:      from.Labels,
+		Images:      from.Images,
+		Files:       from.Files,
 		Body:        from.Body,
 		BlobId:      from.BlobId,
 		CreatedAt:   from.CreatedAt.Time(),
@@ -46,6 +50,9 @@ func fromTemplate(from *ddd.Template) (internalTmpl, error) {
 		Labels:      from.Labels,
 		Name:        from.Name,
 		Body:        from.Body,
+		Images:      from.Images,
+		Files:       from.Files,
+		BlobId:      from.BlobId,
 		CreatedAt:   mgo.FromTimeOrNow(from.CreatedAt),
 		UpdatedAt:   mgo.FromTimeOrNow(from.UpdatedAt),
 	}, nil

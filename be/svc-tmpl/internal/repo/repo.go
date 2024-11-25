@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -31,6 +32,9 @@ func (r *Repo) Save(ctx context.Context, template *ddd.Template) (err error) {
 	defer func() {
 		span.End(err)
 	}()
+
+	template.CreatedAt = time.Now()
+	template.UpdatedAt = template.CreatedAt
 
 	newTmpl, err := fromTemplate(template)
 	if err != nil {
@@ -100,7 +104,6 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error
 		Send()
 
 	if res.Err() != nil {
-		fmt.Printf("err %+v \n", err)
 		err = res.Err()
 		return nil, err
 	}
@@ -121,6 +124,8 @@ func (r *Repo) UpdateBlobId(ctx context.Context, template *ddd.Template) (err er
 	defer func() {
 		span.End(err)
 	}()
+
+	template.UpdatedAt = time.Now()
 
 	id, err := mgo.ConvertFromId(template.Id)
 	if err != nil {
@@ -155,6 +160,8 @@ func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
 	defer func() {
 		span.End(err)
 	}()
+
+	template.UpdatedAt = time.Now()
 
 	id, err := mgo.ConvertFromId(template.Id)
 	if err != nil {

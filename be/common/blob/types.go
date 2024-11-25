@@ -11,6 +11,8 @@ import (
 )
 
 type (
+	BlobType string
+
 	// Id of each blob object consist of path, name and version
 	// version can be empty
 	BlobId struct {
@@ -24,7 +26,7 @@ type (
 
 	BlobMD struct {
 		// Template, Attachment,
-		Type string
+		Type BlobType
 		// text/html, text/plan, image/png
 		ContentType string
 		ImageInfo   MDImageInfo
@@ -55,6 +57,13 @@ type (
 		Blob
 		Versions []Blob
 	}
+)
+
+var (
+	BlobTypeImage      BlobType = "image"
+	BlobTypeTemplate   BlobType = "template"
+	BlobTypeAttachment BlobType = "Attachment"
+	BlobTypeGPX        BlobType = "gpx"
 )
 
 // https://yourbasic.org/golang/regexp-cheat-sheet/

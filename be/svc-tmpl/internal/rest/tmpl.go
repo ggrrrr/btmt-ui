@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
@@ -102,11 +101,11 @@ func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authInfo := roles.AuthInfoFromCtx(ctx)
-
 	data := ddd.TemplateData{
-		UserInfo: authInfo,
-		Items:    request.Items,
+		Lists:  map[string][]string{},
+		Tables: map[string]ddd.TemplateTable{},
+		Person: map[string]string{},
+		Items:  request.Items,
 	}
 
 	result, err := s.app.RenderHtml(
@@ -119,6 +118,7 @@ func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		web.SendError(ctx, w, err)
+		return
 	}
 
 	out := struct {

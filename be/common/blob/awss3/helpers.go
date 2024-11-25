@@ -57,7 +57,7 @@ func fromAwsHeadToBlobInfo(result *s3.HeadObjectOutput) blob.BlobMD {
 		ContentType:   *result.ContentType,
 		ContentLength: *result.ContentLength,
 		CreatedAt:     timeInLocal(result.LastModified),
-		Type:          result.Metadata["type"],
+		Type:          blob.BlobType(result.Metadata["type"]),
 		Name:          result.Metadata["name"],
 		Owner:         result.Metadata["owner"],
 	}
@@ -78,7 +78,7 @@ func fromAwsGetToBlobInfo(result *s3.GetObjectOutput) blob.BlobMD {
 		ContentType:   *result.ContentType,
 		ContentLength: *result.ContentLength,
 		CreatedAt:     timeInLocal(result.LastModified),
-		Type:          result.Metadata["type"],
+		Type:          blob.BlobType(result.Metadata["type"]),
 		Name:          result.Metadata["name"],
 		Owner:         result.Metadata["owner"],
 	}
@@ -96,7 +96,7 @@ func fromAwsGetToBlobInfo(result *s3.GetObjectOutput) blob.BlobMD {
 
 func fromBlobInfoToAwsObject(c s3Client, id awsId, info blob.BlobMD) *s3.PutObjectInput {
 	md := map[string]string{
-		"type":  info.Type,
+		"type":  string(info.Type),
 		"name":  info.Name,
 		"owner": info.Owner,
 	}

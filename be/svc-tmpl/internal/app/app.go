@@ -11,6 +11,11 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
+const (
+	tmplBlobFolder string = "templates/images"
+	tmplTmplFolder string = "templates/tmpl"
+)
+
 type (
 	OptionsFunc func(a *App) error
 
@@ -32,12 +37,12 @@ type (
 )
 
 func New(opts ...OptionsFunc) (*App, error) {
-	imagesFolder, err := blob.ParseBlobDir("templates/images")
+	imagesFolder, err := blob.ParseBlobDir(tmplBlobFolder)
 	if err != nil {
 		return nil, err
 	}
 
-	tmplFolder, err := blob.ParseBlobDir("templates/tmpl")
+	tmplFolder, err := blob.ParseBlobDir(tmplTmplFolder)
 	if err != nil {
 		return nil, err
 	}
