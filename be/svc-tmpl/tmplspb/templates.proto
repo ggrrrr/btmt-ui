@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+//buf:lint:ignore PACKAGE_VERSION_SUFFIX
+package tmplpb;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+// import "protoc-gen-openapiv2/options/annotations.proto";
+
+
+message Template{
+    string id = 1 [json_name = "id"];
+    string content_type = 2 [json_name = "content_type"];
+    string name = 3 [json_name = "name"];
+    repeated string labels = 4 [json_name = "labels"];
+    repeated string images = 5 [json_name = "images"];
+    map<string,string>  files = 6 [json_name = "files"];
+    string body = 7 [json_name = "body"];
+    google.protobuf.Timestamp created_at = 9 [json_name = "created_at"];
+    google.protobuf.Timestamp updated_at = 10 [json_name = "updated_at"];
+}

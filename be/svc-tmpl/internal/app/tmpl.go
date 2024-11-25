@@ -107,7 +107,7 @@ func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl 
 
 	buffer := strings.NewReader(tmpl.Body)
 
-	blobId, err := a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
+	_, err = a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
 		Type:          blob.BlobTypeTemplate,
 		ContentType:   tmpl.ContentType,
 		Name:          tmpl.Name,
@@ -115,13 +115,6 @@ func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl 
 	}, buffer)
 	if err != nil {
 		return app.SystemError("cant push template to blob store", err)
-	}
-
-	tmpl.BlobId = blobId.IdVersion()
-
-	err = a.repo.UpdateBlobId(ctx, tmpl)
-	if err != nil {
-		return err
 	}
 
 	return nil

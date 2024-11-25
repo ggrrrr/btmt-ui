@@ -76,10 +76,6 @@ func TestSave(t *testing.T) {
 	assert.WithinDuration(t, updateTmpl.UpdatedAt, actualTmpl.UpdatedAt, 100*time.Millisecond)
 	ddd.MatchTemplate(t, *updateTmpl, *actualTmpl)
 
-	updateTmpl.BlobId = "blob_id_11"
-	err = testRepo.UpdateBlobId(ctx, updateTmpl)
-	require.NoError(t, err)
-
 	actualTmpl, err = testRepo.GetById(ctx, updateTmpl.Id)
 	require.NoError(t, err)
 

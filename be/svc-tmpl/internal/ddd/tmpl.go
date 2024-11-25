@@ -27,7 +27,6 @@ type Template struct {
 	Images      []string          `json:"images,omitempty"`
 	Files       map[string]string `json:"files,omitempty"`
 	Body        string            `json:"body,omitempty"`
-	BlobId      string            `json:"blob_id,omitempty"`
 	CreatedAt   time.Time         `json:"created_at,omitempty"`
 	UpdatedAt   time.Time         `json:"updated_at,omitempty"`
 }

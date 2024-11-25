@@ -119,42 +119,6 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*ddd.Template, error
 	return &out, err
 }
 
-func (r *Repo) UpdateBlobId(ctx context.Context, template *ddd.Template) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdateBlobId", template)
-	defer func() {
-		span.End(err)
-	}()
-
-	template.UpdatedAt = time.Now()
-
-	id, err := mgo.ConvertFromId(template.Id)
-	if err != nil {
-		return
-	}
-	setReq := bson.M{}
-	if len(template.BlobId) > 0 {
-		setReq["blob_id"] = template.BlobId
-	}
-	updateReq := bson.M{
-		"$set": setReq,
-	}
-
-	logger.DebugCtx(ctx).
-		Any("updateReq", updateReq).
-		Str("id", template.Id).
-		Msg("UpdateBlobId")
-	resp, err := r.db.UpdateByID(ctx, r.collection, id, updateReq)
-	if err != nil {
-		return
-	}
-
-	logger.InfoCtx(ctx).
-		Any("matchedCount", resp.MatchedCount).
-		Msg("UpdateBlobId")
-
-	return err
-}
-
 func (r *Repo) Update(ctx context.Context, template *ddd.Template) (err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", template)
 	defer func() {
