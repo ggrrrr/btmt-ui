@@ -1,3 +1,10 @@
+/*
+
+This folder is to enable setting app version during build
+Check Dockerfile and be/common/system/system.go
+
+**/
+
 package buildversion
 
 import (

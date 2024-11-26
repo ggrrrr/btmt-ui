@@ -26,6 +26,7 @@ RUN apk add --no-cache curl
 WORKDIR /app
 COPY --from=builder /app/app /app/app
 
+# this is used by common/system/system.go during startup
 RUN echo ${GIT_HASH} > /app/build_ver.txt
 RUN date -u +"%Y-%m-%dT%H:%M:%SZ" > /app/build_ts.txt
 
