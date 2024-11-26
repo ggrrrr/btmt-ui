@@ -1,11 +1,8 @@
 syntax = "proto3";
 
-//buf:lint:ignore PACKAGE_VERSION_SUFFIX
-package tmplpb;
+package tmplpb.v1;
 
 import "google/protobuf/struct.proto";
-
-import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
@@ -52,8 +49,7 @@ message ListText {
 message TemplateData {
   map<string,string> items = 1 [json_name = "items"];
   map<string,ListText> lists = 2 [json_name = "lists"];
-  google.protobuf.Any  data = 3 [json_name = "data"];
-  google.protobuf.Struct  data1 = 4 [json_name = "data1"];
+  google.protobuf.Struct  data = 3 [json_name = "data"];
 }
 
 message SearchRequest {

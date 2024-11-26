@@ -7,7 +7,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
+	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 type server struct {

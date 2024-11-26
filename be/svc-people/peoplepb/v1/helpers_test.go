@@ -1,4 +1,4 @@
-package peoplepb
+package peoplepbv1
 
 import (
 	"bytes"
@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
 func Test_FromPerson(t *testing.T) {

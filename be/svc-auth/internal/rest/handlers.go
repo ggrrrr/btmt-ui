@@ -8,7 +8,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
+	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 )
 
 func noJson400(w http.ResponseWriter, r *http.Request) {

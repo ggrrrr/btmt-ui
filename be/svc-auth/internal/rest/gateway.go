@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
+	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 )
 
 func RegisterGateway(ctx context.Context, mux *runtime.ServeMux, grpcAddr string) error {

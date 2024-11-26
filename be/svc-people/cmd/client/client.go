@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 var (

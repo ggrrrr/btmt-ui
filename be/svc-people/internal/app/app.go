@@ -9,7 +9,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/pin"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
+	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 type (

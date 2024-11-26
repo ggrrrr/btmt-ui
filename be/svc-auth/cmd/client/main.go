@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
+	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 )
 
 var (

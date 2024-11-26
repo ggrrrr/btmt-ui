@@ -1,10 +1,11 @@
-package peoplepb
+package peoplepbv1
 
 import (
 	"fmt"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
 func (f *ListRequest) ToFilter() map[string][]string {

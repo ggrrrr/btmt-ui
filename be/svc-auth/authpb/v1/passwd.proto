@@ -1,12 +1,11 @@
 syntax = "proto3";
 
-//buf:lint:ignore PACKAGE_VERSION_SUFFIX
-// Some doc
-package authpb;
+// Authentication service for users of the systems
+// Users in this case are pople who needs interact with the system.
+package authpb.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
-// import "protoc-gen-openapiv2/options/annotations.proto";
 
 service AuthSvc {
   rpc UserCreate(UserCreateRequest) returns (UserCreateResponse) {

@@ -1,7 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "buf:lint:ignore PACKAGE_VERSION_SUFFIX",
+    "title": "peoplepb/v1/people.proto",
+    "description": "Manages people in the system(s)\nPeople can be clients, user, admins any person which interacts with the system.",
     "version": "version not set"
   },
   "tags": [
@@ -23,7 +24,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/peoplepbGetResponse"
+              "$ref": "#/definitions/v1GetResponse"
             }
           },
           "default": {
@@ -39,7 +40,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/peoplepbGetRequest"
+              "$ref": "#/definitions/v1GetRequest"
             }
           }
         ],
@@ -55,7 +56,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/peoplepbListResponse"
+              "$ref": "#/definitions/v1ListResponse"
             }
           },
           "default": {
@@ -71,7 +72,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/peoplepbListRequest"
+              "$ref": "#/definitions/v1ListRequest"
             }
           }
         ],
@@ -87,7 +88,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/peoplepbPinParseResponse"
+              "$ref": "#/definitions/v1PinParseResponse"
             }
           },
           "default": {
@@ -103,7 +104,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/peoplepbPinParseRequest"
+              "$ref": "#/definitions/v1PinParseRequest"
             }
           }
         ],
@@ -119,7 +120,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/peoplepbSaveResponse"
+              "$ref": "#/definitions/v1SaveResponse"
             }
           },
           "default": {
@@ -135,7 +136,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/peoplepbSaveRequest"
+              "$ref": "#/definitions/v1SaveRequest"
             }
           }
         ],
@@ -151,7 +152,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/peoplepbUpdateResponse"
+              "$ref": "#/definitions/v1UpdateResponse"
             }
           },
           "default": {
@@ -167,7 +168,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/peoplepbUpdateRequest"
+              "$ref": "#/definitions/v1UpdateRequest"
             }
           }
         ],
@@ -178,7 +179,35 @@
     }
   },
   "definitions": {
-    "peoplepbDob": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Dob": {
       "type": "object",
       "properties": {
         "year": {
@@ -195,7 +224,7 @@
         }
       }
     },
-    "peoplepbGetRequest": {
+    "v1GetRequest": {
       "type": "object",
       "properties": {
         "id": {
@@ -203,38 +232,38 @@
         }
       }
     },
-    "peoplepbGetResponse": {
+    "v1GetResponse": {
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/peoplepbPerson"
+          "$ref": "#/definitions/v1Person"
         }
       }
     },
-    "peoplepbListRequest": {
+    "v1ListRequest": {
       "type": "object",
       "properties": {
         "filters": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/peoplepbListText"
+            "$ref": "#/definitions/v1ListText"
           }
         }
       }
     },
-    "peoplepbListResponse": {
+    "v1ListResponse": {
       "type": "object",
       "properties": {
         "payload": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/peoplepbPerson"
+            "$ref": "#/definitions/v1Person"
           }
         }
       }
     },
-    "peoplepbListText": {
+    "v1ListText": {
       "type": "object",
       "properties": {
         "list": {
@@ -245,7 +274,7 @@
         }
       }
     },
-    "peoplepbPerson": {
+    "v1Person": {
       "type": "object",
       "properties": {
         "id": {
@@ -267,7 +296,7 @@
           "type": "string"
         },
         "dob": {
-          "$ref": "#/definitions/peoplepbDob"
+          "$ref": "#/definitions/v1Dob"
         },
         "gender": {
           "type": "string"
@@ -305,18 +334,18 @@
         }
       }
     },
-    "peoplepbPinParsePayload": {
+    "v1PinParsePayload": {
       "type": "object",
       "properties": {
         "dob": {
-          "$ref": "#/definitions/peoplepbDob"
+          "$ref": "#/definitions/v1Dob"
         },
         "gender": {
           "type": "string"
         }
       }
     },
-    "peoplepbPinParseRequest": {
+    "v1PinParseRequest": {
       "type": "object",
       "properties": {
         "pin": {
@@ -324,15 +353,15 @@
         }
       }
     },
-    "peoplepbPinParseResponse": {
+    "v1PinParseResponse": {
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/peoplepbPinParsePayload"
+          "$ref": "#/definitions/v1PinParsePayload"
         }
       }
     },
-    "peoplepbSavePayload": {
+    "v1SavePayload": {
       "type": "object",
       "properties": {
         "id": {
@@ -340,60 +369,32 @@
         }
       }
     },
-    "peoplepbSaveRequest": {
+    "v1SaveRequest": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/peoplepbPerson"
+          "$ref": "#/definitions/v1Person"
         }
       }
     },
-    "peoplepbSaveResponse": {
+    "v1SaveResponse": {
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/peoplepbSavePayload"
+          "$ref": "#/definitions/v1SavePayload"
         }
       }
     },
-    "peoplepbUpdateRequest": {
+    "v1UpdateRequest": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/peoplepbPerson"
+          "$ref": "#/definitions/v1Person"
         }
       }
     },
-    "peoplepbUpdateResponse": {
+    "v1UpdateResponse": {
       "type": "object"
-    },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "@type": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": {}
-    },
-    "rpcStatus": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      }
     }
   }
 }

@@ -2,11 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: tmplpb/templates.proto
+// source: tmplpb/v1/templates.proto
 
-//buf:lint:ignore PACKAGE_VERSION_SUFFIX
-
-package tmplpb
+package tmplpbv1
 
 import (
 	context "context"
@@ -21,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	TmplSvc_Save_FullMethodName    = "/tmplpb.TmplSvc/Save"
-	TmplSvc_GetById_FullMethodName = "/tmplpb.TmplSvc/GetById"
-	TmplSvc_Search_FullMethodName  = "/tmplpb.TmplSvc/Search"
-	TmplSvc_Render_FullMethodName  = "/tmplpb.TmplSvc/Render"
+	TmplSvc_Save_FullMethodName    = "/tmplpb.v1.TmplSvc/Save"
+	TmplSvc_GetById_FullMethodName = "/tmplpb.v1.TmplSvc/GetById"
+	TmplSvc_Search_FullMethodName  = "/tmplpb.v1.TmplSvc/Search"
+	TmplSvc_Render_FullMethodName  = "/tmplpb.v1.TmplSvc/Render"
 )
 
 // TmplSvcClient is the client API for TmplSvc service.
@@ -197,7 +195,7 @@ func _TmplSvc_Render_Handler(srv interface{}, ctx context.Context, dec func(inte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var TmplSvc_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "tmplpb.TmplSvc",
+	ServiceName: "tmplpb.v1.TmplSvc",
 	HandlerType: (*TmplSvcServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -218,5 +216,5 @@ var TmplSvc_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "tmplpb/templates.proto",
+	Metadata: "tmplpb/v1/templates.proto",
 }

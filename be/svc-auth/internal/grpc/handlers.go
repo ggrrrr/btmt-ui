@@ -7,7 +7,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
+	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 )
 
 var _ authpb.AuthSvcServer = (*server)(nil)

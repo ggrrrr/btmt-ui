@@ -4,9 +4,8 @@ breaking:
     - FILE
 lint:
   use:
-    - DEFAULT
+    - STANDARD
   allow_comment_ignores: true
   service_suffix: Svc
 deps:
   - buf.build/googleapis/googleapis
-  # - buf.build/grpc-ecosystem/grpc-gateway

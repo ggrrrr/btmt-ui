@@ -1,10 +1,11 @@
-package tmplpb
+package tmplpbv1
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -22,12 +23,9 @@ func MatchTemplate(t *testing.T, expected *Template, actual *Template) bool {
 	actual.CreatedAt = expected.CreatedAt
 	actual.UpdatedAt = expected.UpdatedAt
 
-	if proto.Equal(expected, actual) {
-		return true
-	}
-
-	return assert.Equal(t, expected, actual)
-
+	ok := proto.Equal(expected, actual)
+	require.Truef(t, ok, "expected: %#v, actual: %#v ")
+	return ok
 }
 
 var _ (logger.TraceDataExtractor) = (*Template)(nil)

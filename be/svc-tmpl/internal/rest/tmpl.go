@@ -8,7 +8,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb"
+	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
 type RenderRequest struct {

@@ -1,7 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "buf:lint:ignore PACKAGE_VERSION_SUFFIX\nSome doc",
+    "title": "authpb/v1/passwd.proto",
+    "description": "Authentication service for users of the systems\nUsers in this case are pople who needs interact with the system.",
     "version": "version not set"
   },
   "tags": [
@@ -23,7 +24,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbLoginPasswdResponse"
+              "$ref": "#/definitions/v1LoginPasswdResponse"
             }
           },
           "default": {
@@ -39,7 +40,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/authpbLoginPasswdRequest"
+              "$ref": "#/definitions/v1LoginPasswdRequest"
             }
           }
         ],
@@ -55,7 +56,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbTokenRefreshResponse"
+              "$ref": "#/definitions/v1TokenRefreshResponse"
             }
           },
           "default": {
@@ -71,7 +72,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/authpbTokenRefreshRequest"
+              "$ref": "#/definitions/v1TokenRefreshRequest"
             }
           }
         ],
@@ -87,7 +88,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbTokenValidateResponse"
+              "$ref": "#/definitions/v1TokenValidateResponse"
             }
           },
           "default": {
@@ -103,7 +104,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/authpbTokenValidateRequest"
+              "$ref": "#/definitions/v1TokenValidateRequest"
             }
           }
         ],
@@ -119,7 +120,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbUserChangePasswdResponse"
+              "$ref": "#/definitions/v1UserChangePasswdResponse"
             }
           },
           "default": {
@@ -161,7 +162,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbUserCreateResponse"
+              "$ref": "#/definitions/v1UserCreateResponse"
             }
           },
           "default": {
@@ -177,7 +178,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/authpbUserCreateRequest"
+              "$ref": "#/definitions/v1UserCreateRequest"
             }
           }
         ],
@@ -193,7 +194,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbUserListResponse"
+              "$ref": "#/definitions/v1UserListResponse"
             }
           },
           "default": {
@@ -215,7 +216,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/authpbUserUpdateResponse"
+              "$ref": "#/definitions/v1UserUpdateResponse"
             }
           },
           "default": {
@@ -262,154 +263,6 @@
     }
   },
   "definitions": {
-    "authpbListText": {
-      "type": "object",
-      "properties": {
-        "list": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "authpbLoginPasswdRequest": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "authpbLoginPasswdResponse": {
-      "type": "object",
-      "properties": {
-        "payload": {
-          "$ref": "#/definitions/authpbLoginTokenPayload"
-        }
-      }
-    },
-    "authpbLoginToken": {
-      "type": "object",
-      "properties": {
-        "value": {
-          "type": "string"
-        },
-        "expires_at": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
-    "authpbLoginTokenPayload": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string",
-          "title": "Login username"
-        },
-        "admin_username": {
-          "type": "string",
-          "title": "Sudo username TODO"
-        },
-        "access_token": {
-          "$ref": "#/definitions/authpbLoginToken",
-          "title": "Token for app calls, short living"
-        },
-        "refresh_token": {
-          "$ref": "#/definitions/authpbLoginToken",
-          "title": "Token only for to refresh to access_tokenn"
-        }
-      }
-    },
-    "authpbTokenRefreshRequest": {
-      "type": "object"
-    },
-    "authpbTokenRefreshResponse": {
-      "type": "object",
-      "properties": {
-        "payload": {
-          "$ref": "#/definitions/authpbLoginTokenPayload"
-        }
-      }
-    },
-    "authpbTokenValidateRequest": {
-      "type": "object"
-    },
-    "authpbTokenValidateResponse": {
-      "type": "object"
-    },
-    "authpbUserChangePasswdResponse": {
-      "type": "object"
-    },
-    "authpbUserCreateRequest": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "system_roles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "authpbUserCreateResponse": {
-      "type": "object"
-    },
-    "authpbUserListPayload": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "tenant_roles": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/authpbListText"
-          }
-        },
-        "system_roles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "created_at": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
-    "authpbUserListResponse": {
-      "type": "object",
-      "properties": {
-        "payload": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/authpbUserListPayload"
-          }
-        }
-      }
-    },
-    "authpbUserUpdateResponse": {
-      "type": "object"
-    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -437,6 +290,156 @@
           }
         }
       }
+    },
+    "v1ListText": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1LoginPasswdRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "v1LoginPasswdResponse": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "$ref": "#/definitions/v1LoginTokenPayload"
+        }
+      }
+    },
+    "v1LoginToken": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "title": "Token value"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Expire time"
+        }
+      }
+    },
+    "v1LoginTokenPayload": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Login username"
+        },
+        "admin_username": {
+          "type": "string",
+          "title": "Sudo username TODO"
+        },
+        "access_token": {
+          "$ref": "#/definitions/v1LoginToken",
+          "title": "Token for app calls, short living"
+        },
+        "refresh_token": {
+          "$ref": "#/definitions/v1LoginToken",
+          "title": "Token only for to refresh to access_tokenn"
+        }
+      }
+    },
+    "v1TokenRefreshRequest": {
+      "type": "object"
+    },
+    "v1TokenRefreshResponse": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "$ref": "#/definitions/v1LoginTokenPayload"
+        }
+      }
+    },
+    "v1TokenValidateRequest": {
+      "type": "object"
+    },
+    "v1TokenValidateResponse": {
+      "type": "object"
+    },
+    "v1UserChangePasswdResponse": {
+      "type": "object"
+    },
+    "v1UserCreateRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "system_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UserCreateResponse": {
+      "type": "object"
+    },
+    "v1UserListPayload": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "tenant_roles": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1ListText"
+          }
+        },
+        "system_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1UserListResponse": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1UserListPayload"
+          }
+        }
+      }
+    },
+    "v1UserUpdateResponse": {
+      "type": "object"
     }
   }
 }

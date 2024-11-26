@@ -1,7 +1,8 @@
 syntax = "proto3";
 
-//buf:lint:ignore PACKAGE_VERSION_SUFFIX
-package peoplepb;
+// Manages people in the system(s)
+// People can be clients, user, admins any person which interacts with the system.
+package peoplepb.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";

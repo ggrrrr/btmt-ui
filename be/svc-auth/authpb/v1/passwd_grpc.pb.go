@@ -2,12 +2,12 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: authpb/passwd.proto
+// source: authpb/v1/passwd.proto
 
-//buf:lint:ignore PACKAGE_VERSION_SUFFIX
-// Some doc
+// Authentication service for users of the systems
+// Users in this case are pople who needs interact with the system.
 
-package authpb
+package authpbv1
 
 import (
 	context "context"
@@ -22,13 +22,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	AuthSvc_UserCreate_FullMethodName       = "/authpb.AuthSvc/UserCreate"
-	AuthSvc_UserList_FullMethodName         = "/authpb.AuthSvc/UserList"
-	AuthSvc_UserUpdate_FullMethodName       = "/authpb.AuthSvc/UserUpdate"
-	AuthSvc_UserChangePasswd_FullMethodName = "/authpb.AuthSvc/UserChangePasswd"
-	AuthSvc_LoginPasswd_FullMethodName      = "/authpb.AuthSvc/LoginPasswd"
-	AuthSvc_TokenValidate_FullMethodName    = "/authpb.AuthSvc/TokenValidate"
-	AuthSvc_TokenRefresh_FullMethodName     = "/authpb.AuthSvc/TokenRefresh"
+	AuthSvc_UserCreate_FullMethodName       = "/authpb.v1.AuthSvc/UserCreate"
+	AuthSvc_UserList_FullMethodName         = "/authpb.v1.AuthSvc/UserList"
+	AuthSvc_UserUpdate_FullMethodName       = "/authpb.v1.AuthSvc/UserUpdate"
+	AuthSvc_UserChangePasswd_FullMethodName = "/authpb.v1.AuthSvc/UserChangePasswd"
+	AuthSvc_LoginPasswd_FullMethodName      = "/authpb.v1.AuthSvc/LoginPasswd"
+	AuthSvc_TokenValidate_FullMethodName    = "/authpb.v1.AuthSvc/TokenValidate"
+	AuthSvc_TokenRefresh_FullMethodName     = "/authpb.v1.AuthSvc/TokenRefresh"
 )
 
 // AuthSvcClient is the client API for AuthSvc service.
@@ -297,7 +297,7 @@ func _AuthSvc_TokenRefresh_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuthSvc_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "authpb.AuthSvc",
+	ServiceName: "authpb.v1.AuthSvc",
 	HandlerType: (*AuthSvcServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -330,5 +330,5 @@ var AuthSvc_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "authpb/passwd.proto",
+	Metadata: "authpb/v1/passwd.proto",
 }

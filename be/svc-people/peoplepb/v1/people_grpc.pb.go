@@ -2,11 +2,12 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: peoplepb/people.proto
+// source: peoplepb/v1/people.proto
 
-//buf:lint:ignore PACKAGE_VERSION_SUFFIX
+// Manages people in the system(s)
+// People can be clients, user, admins any person which interacts with the system.
 
-package peoplepb
+package peoplepbv1
 
 import (
 	context "context"
@@ -21,11 +22,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PeopleSvc_Update_FullMethodName   = "/peoplepb.PeopleSvc/Update"
-	PeopleSvc_Save_FullMethodName     = "/peoplepb.PeopleSvc/Save"
-	PeopleSvc_Get_FullMethodName      = "/peoplepb.PeopleSvc/Get"
-	PeopleSvc_List_FullMethodName     = "/peoplepb.PeopleSvc/List"
-	PeopleSvc_PinParse_FullMethodName = "/peoplepb.PeopleSvc/PinParse"
+	PeopleSvc_Update_FullMethodName   = "/peoplepb.v1.PeopleSvc/Update"
+	PeopleSvc_Save_FullMethodName     = "/peoplepb.v1.PeopleSvc/Save"
+	PeopleSvc_Get_FullMethodName      = "/peoplepb.v1.PeopleSvc/Get"
+	PeopleSvc_List_FullMethodName     = "/peoplepb.v1.PeopleSvc/List"
+	PeopleSvc_PinParse_FullMethodName = "/peoplepb.v1.PeopleSvc/PinParse"
 )
 
 // PeopleSvcClient is the client API for PeopleSvc service.
@@ -230,7 +231,7 @@ func _PeopleSvc_PinParse_Handler(srv interface{}, ctx context.Context, dec func(
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var PeopleSvc_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "peoplepb.PeopleSvc",
+	ServiceName: "peoplepb.v1.PeopleSvc",
 	HandlerType: (*PeopleSvcServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -255,5 +256,5 @@ var PeopleSvc_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "peoplepb/people.proto",
+	Metadata: "peoplepb/v1/people.proto",
 }

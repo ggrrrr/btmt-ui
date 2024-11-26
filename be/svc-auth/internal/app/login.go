@@ -6,7 +6,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/authpb"
+	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 

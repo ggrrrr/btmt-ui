@@ -18,7 +18,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
+	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 type (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb"
+	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 func (s *server) List(w http.ResponseWriter, r *http.Request) {
