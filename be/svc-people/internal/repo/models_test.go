@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 func Test_objectId(t *testing.T) {
@@ -39,30 +40,28 @@ func Test_FromPerson(t *testing.T) {
 
 	id1 := primitive.NewObjectID()
 
-	p1 := &ddd.Person{
+	p1 := &peoplepbv1.Person{
 		Id:        id1.Hex(),
 		IdNumbers: map[string]string{"pin": "pin1"},
 		Emails:    map[string]string{"default": "asd@asd"},
 		Name:      "asd",
 		FullName:  "ewrcxf asd",
-		DOB: &ddd.Dob{
+		Dob: &peoplepbv1.Dob{
 			Year:  2001,
 			Month: 3,
 			Day:   13,
 		},
-		Gender:      "m",
-		Phones:      map[string]string{"asd": "asdasd"},
-		Labels:      []string{"red"},
-		Attr:        map[string]string{"some": "1"},
-		CreatedTime: time.Now(),
+		Gender:    "m",
+		Phones:    map[string]string{"asd": "asdasd"},
+		Labels:    []string{"red"},
+		Attr:      map[string]string{"some": "1"},
+		CreatedAt: timestamppb.Now(),
 	}
 
 	out1, err := fromPerson(p1)
 	assert.Equal(t, out1.Emails, []string{"default:asd@asd"})
 	require.NoError(t, err)
-	p11 := out1.toPerson()
-	age := (time.Now().Year() - p1.DOB.Year)
-	p1.Age = &age
-	TestPerson(t, p11, p1, 10)
+	p11 := out1.toProto()
+	TestPerson(t, p11, p1, time.Duration(300*time.Millisecond))
 	// assert.Equal(t, p1.DateOfBirth, p11.DateOfBirth)
 }

@@ -27,7 +27,7 @@ func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
 	return Root(ctx, s)
 }
 
-func InitApp(ctx context.Context, cfg config.AppConfig) (app.App, []waiter.CleanupFunc, error) {
+func InitApp(ctx context.Context, cfg config.AppConfig) (*app.App, []waiter.CleanupFunc, error) {
 	closeFns := []waiter.CleanupFunc{}
 	db, err := mgo.New(ctx, cfg.Mgo)
 	if err != nil {

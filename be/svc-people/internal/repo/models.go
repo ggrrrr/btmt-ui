@@ -3,13 +3,13 @@ package repo
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 const (
@@ -23,28 +23,31 @@ const (
 	FieldPhones     string = "phones"
 	FieldLabels     string = "labels"
 	FieldAttr       string = "attr"
+	FieldCreatedAt  string = "created_at"
+	FieldUpdatedAt  string = "updated_at"
 )
 
 type (
 	dob struct {
-		Year  int `bson:"year"`
-		Month int `bson:"month"`
-		Day   int `bson:"day"`
+		Year  uint32 `bson:"year"`
+		Month uint32 `bson:"month"`
+		Day   uint32 `bson:"day"`
 	}
 	person struct {
-		Id          primitive.ObjectID `bson:"_id"`
-		IdNumbers   []string           `bson:"id_numbers"`
-		PIN         string             `bson:"pin"`
-		LoginEmail  string             `bson:"login_email"`
-		Emails      []string           `bson:"emails"`
-		Name        string             `bson:"name"`
-		FullName    string             `bson:"full_name"`
-		DOB         *dob               `bson:"dob"`
-		Gender      string             `bson:"gender"`
-		Phones      []string           `bson:"phones"`
-		Labels      []string           `bson:"labels"`
-		Attr        []string           `bson:"attr"`
-		CreatedTime primitive.DateTime `bson:"created_ts"`
+		Id         primitive.ObjectID `bson:"_id"`
+		IdNumbers  []string           `bson:"id_numbers"`
+		PIN        string             `bson:"pin"`
+		LoginEmail string             `bson:"login_email"`
+		Emails     []string           `bson:"emails"`
+		Name       string             `bson:"name"`
+		FullName   string             `bson:"full_name"`
+		DOB        *dob               `bson:"dob"`
+		Gender     string             `bson:"gender"`
+		Phones     []string           `bson:"phones"`
+		Labels     []string           `bson:"labels"`
+		Attr       []string           `bson:"attr"`
+		CreatedAt  primitive.DateTime `bson:"created_at"`
+		UpdatedAt  primitive.DateTime `bson:"updated_at"`
 	}
 )
 
@@ -74,7 +77,7 @@ func toMap(in []string) map[string]string {
 	return out
 }
 
-func fromDob(fromDob *ddd.Dob) *dob {
+func fromDob(fromDob *peoplepbv1.Dob) *dob {
 	if fromDob == nil {
 		return nil
 	}
@@ -85,68 +88,71 @@ func fromDob(fromDob *ddd.Dob) *dob {
 	}
 }
 
-func toDob(fromDob *dob) *ddd.Dob {
+func toDob(fromDob *dob) *peoplepbv1.Dob {
 	if fromDob == nil {
 		return nil
 	}
-	return &ddd.Dob{
+	return &peoplepbv1.Dob{
 		Year:  fromDob.Year,
 		Month: fromDob.Month,
 		Day:   fromDob.Day,
 	}
 }
 
-func fromPerson(p *ddd.Person) (*person, error) {
+func fromPerson(p *peoplepbv1.Person) (*person, error) {
 	id, err := mgo.ConvertFromId(p.Id)
 	if err != nil {
 		return nil, app.BadRequestError("invalid person.id", err)
 	}
 
 	out := person{
-		Id:          id,
-		IdNumbers:   toSlice(p.IdNumbers),
-		LoginEmail:  p.LoginEmail,
-		Emails:      toSlice(p.Emails),
-		Name:        p.Name,
-		FullName:    p.FullName,
-		DOB:         fromDob(p.DOB),
-		Gender:      p.Gender,
-		Phones:      toSlice(p.Phones),
-		Labels:      p.Labels,
-		Attr:        toSlice(p.Attr),
-		CreatedTime: mgo.FromTimeOrNow(p.CreatedTime),
+		Id:         id,
+		IdNumbers:  toSlice(p.IdNumbers),
+		LoginEmail: p.LoginEmail,
+		Emails:     toSlice(p.Emails),
+		Name:       p.Name,
+		FullName:   p.FullName,
+		DOB:        fromDob(p.Dob),
+		Gender:     p.Gender,
+		Phones:     toSlice(p.Phones),
+		Labels:     p.Labels,
+		Attr:       toSlice(p.Attr),
+	}
+
+	if !p.CreatedAt.AsTime().IsZero() {
+		out.CreatedAt = mgo.FromTimeOrNow(p.CreatedAt.AsTime())
+	}
+
+	if !p.UpdatedAt.AsTime().IsZero() {
+		out.UpdatedAt = mgo.FromTimeOrNow(p.UpdatedAt.AsTime())
 	}
 
 	return &out, nil
 }
 
-func (p *person) toPerson() *ddd.Person {
-	var ts time.Time
-	if p.CreatedTime > 0 {
-		ts = p.CreatedTime.Time()
+func (p *person) toProto() *peoplepbv1.Person {
+	out := &peoplepbv1.Person{
+		Id:         p.Id.Hex(),
+		IdNumbers:  toMap(p.IdNumbers),
+		LoginEmail: p.LoginEmail,
+		Emails:     toMap(p.Emails),
+		Name:       p.Name,
+		FullName:   p.FullName,
+		Gender:     p.Gender,
+		Dob:        toDob(p.DOB),
+		Phones:     toMap(p.Phones),
+		Labels:     p.Labels,
+		Attr:       toMap(p.Attr),
 	}
 
-	out := ddd.Person{
-		Id:          p.Id.Hex(),
-		IdNumbers:   toMap(p.IdNumbers),
-		LoginEmail:  p.LoginEmail,
-		Emails:      toMap(p.Emails),
-		Name:        p.Name,
-		FullName:    p.FullName,
-		Gender:      p.Gender,
-		DOB:         toDob(p.DOB),
-		Phones:      toMap(p.Phones),
-		Labels:      p.Labels,
-		Attr:        toMap(p.Attr),
-		CreatedTime: ts,
+	if !p.CreatedAt.Time().IsZero() {
+		out.CreatedAt = timestamppb.New(p.CreatedAt.Time())
 	}
-	if p.DOB != nil {
-		if p.DOB.Year > 0 {
-			age := time.Now().Year() - p.DOB.Year
-			out.Age = &age
-		}
+	if !p.UpdatedAt.Time().IsZero() {
+		out.UpdatedAt = timestamppb.New(p.UpdatedAt.Time())
 	}
-	return &out
+
+	return out
 }
 
 // if at least one of the DOB fields set then return true

@@ -4,9 +4,9 @@ syntax = "proto3";
 // People can be clients, user, admins any person which interacts with the system.
 package peoplepb.v1;
 
-import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
-// import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/api/annotations.proto";
 
 service PeopleSvc {
   rpc Update(UpdateRequest) returns (UpdateResponse) {
@@ -93,24 +93,28 @@ message GetResponse{
   Person payload = 1;
 }
 
-message Dob {
+message DOB {
   uint32 year  = 1;
   uint32 month  = 2;
   uint32 day  = 3;
 }
 
+message IdNumberReponse {
+  google.protobuf.Struct  payload = 1; 
+}
+
 message Person{
-  string id = 1;
+  string id = 1 [json_name = "id"];;
   map<string,string> id_numbers = 2 [json_name = "id_numbers"];
   string login_email = 3 [json_name = "login_email"];
-  string name = 4;
+  string name = 4 [json_name = "name"];
   string full_name = 5 [json_name = "full_name"];
-  Dob dob = 6;
-  string gender = 7;
-  map<string,string> emails = 8;
-  map<string,string> phones = 9;
-  repeated string labels = 10;
-  map<string,string> attr = 11;
+  DOB dob = 6 [json_name = "dob"];
+  string gender = 7 [json_name = "gender"];
+  map<string,string> emails = 8 [json_name = "emails"];
+  map<string,string> phones = 9 [json_name = "phones"];
+  repeated string labels = 10 [json_name = "labels"];
+  map<string,string> attr = 11 [json_name = "attr"];
   google.protobuf.Timestamp created_at = 12 [json_name = "created_at"];
-  string age = 13;
+  google.protobuf.Timestamp updated_at = 13 [json_name = "updated_at"];
 }

@@ -32,10 +32,9 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	}
 	people := []*peoplepb.Person{}
 	for _, p := range out {
-		person := peoplepb.FromPerson(&p)
-		logger.DebugCtx(r.Context()).Any("person from", p).Msg("ListResult")
-		logger.DebugCtx(r.Context()).Any("person to", person).Msg("ListResult")
-		people = append(people, person)
+		// logger.DebugCtx(r.Context()).Any("person from", p).Msg("ListResult")
+		// logger.DebugCtx(r.Context()).Any("person to", p).Msg("ListResult")
+		people = append(people, p)
 	}
 	web.SendPayload(ctx, w, "ok", people)
 }
@@ -84,15 +83,14 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	p := req.ToPerson()
 	logger.InfoCtx(ctx).Any("person", &req).Msg("Save")
-	err = s.app.Save(r.Context(), p)
+	err = s.app.Save(r.Context(), req.Data)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("Save")
 		web.SendError(ctx, w, err)
 		return
 	}
-	web.SendPayload(ctx, w, "ok", peoplepb.SavePayload{Id: p.Id})
+	web.SendPayload(ctx, w, "ok", peoplepb.SavePayload{Id: req.Data.Id})
 }
 
 func (s *server) Update(w http.ResponseWriter, r *http.Request) {
@@ -109,9 +107,9 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	p := req.ToPerson()
+
 	logger.InfoCtx(ctx).Any("person", &req).Msg("Update")
-	err = s.app.Update(r.Context(), p)
+	err = s.app.Update(r.Context(), req.Data)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Any("person", &req).Msg("Update")
 		web.SendError(ctx, w, err)

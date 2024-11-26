@@ -1,17 +1,18 @@
 package rest
 
 import (
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 )
 
 type (
 	server struct {
-		app app.App
+		app *app.App
 	}
 )
 
-func New(a app.App) *server {
+func New(a *app.App) *server {
 	return &server{
 		app: a,
 	}

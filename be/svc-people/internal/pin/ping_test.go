@@ -4,9 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 )
 
 func TestEgn(t *testing.T) {
@@ -18,7 +19,7 @@ func TestEgn(t *testing.T) {
 	res, err := Parse(egn2)
 	require.NoError(t, err)
 	assert.Equal(t, res, ddd.PinValidation{
-		Dob:    ddd.Dob{Year: 1942, Month: 2, Day: 13},
+		DOB:    ddd.DOB{Year: 1942, Month: 2, Day: 13},
 		Gender: "male",
 	})
 	t.Logf("%+v", res)
@@ -26,7 +27,7 @@ func TestEgn(t *testing.T) {
 	res, err = Parse(os.Getenv("PIN2"))
 	require.NoError(t, err)
 	assert.Equal(t, res, ddd.PinValidation{
-		Dob:    ddd.Dob{Year: 1978, Month: 2, Day: 13},
+		DOB:    ddd.DOB{Year: 1978, Month: 2, Day: 13},
 		Gender: "male",
 	})
 

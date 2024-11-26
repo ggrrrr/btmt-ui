@@ -13,22 +13,22 @@ import (
 )
 
 type (
-	AppConfiguration func(a *application) error
+	AppConfiguration func(a *App) error
 
 	Filters map[string][]string
 
-	application struct {
+	App struct {
 		repoPeople ddd.PeopleRepo
 		appPolices roles.AppPolices
 	}
 
-	App interface {
-		Save(ctx context.Context, p *ddd.Person) error
-		List(ctx context.Context, filters Filters) ([]ddd.Person, error)
-		GetById(ctx context.Context, id string) (*ddd.Person, error)
-		Update(ctx context.Context, p *ddd.Person) error
-		PinParse(ctx context.Context, pin string) (*ddd.PinValidation, error)
-	}
+	// App interface {
+	// 	Save(ctx context.Context, p *peoplepb.Person) error
+	// 	List(ctx context.Context, filters Filters) ([]*peoplepb.Person, error)
+	// 	GetById(ctx context.Context, id string) (*peoplepb.Person, error)
+	// 	Update(ctx context.Context, p *peoplepb.Person) error
+	// 	// PinParse(ctx context.Context, pin string) (*peoplepb.PinValidation, error)
+	// }
 )
 
 var (
@@ -39,10 +39,10 @@ var (
 	FilterAttrs  string = "attrs"
 )
 
-var _ (App) = (*application)(nil)
+// var _ (App) = (*App)(nil)
 
-func New(cfgs ...AppConfiguration) (*application, error) {
-	a := &application{}
+func New(cfgs ...AppConfiguration) (*App, error) {
+	a := &App{}
 	for _, c := range cfgs {
 		err := c(a)
 		if err != nil {
@@ -57,20 +57,20 @@ func New(cfgs ...AppConfiguration) (*application, error) {
 }
 
 func WithPeopleRepo(repo ddd.PeopleRepo) AppConfiguration {
-	return func(a *application) error {
+	return func(a *App) error {
 		a.repoPeople = repo
 		return nil
 	}
 }
 
 func WithAppPolicies(appPolices roles.AppPolices) AppConfiguration {
-	return func(a *application) error {
+	return func(a *App) error {
 		a.appPolices = appPolices
 		return nil
 	}
 }
 
-func (a *application) Save(ctx context.Context, p *ddd.Person) (err error) {
+func (a *App) Save(ctx context.Context, p *peoplepb.Person) (err error) {
 	ctx, span := logger.Span(ctx, "Save", p)
 	defer func() {
 		span.End(err)
@@ -105,7 +105,7 @@ func (a *application) Save(ctx context.Context, p *ddd.Person) (err error) {
 	return nil
 }
 
-func (a *application) GetById(ctx context.Context, id string) (person *ddd.Person, err error) {
+func (a *App) GetById(ctx context.Context, id string) (person *peoplepb.Person, err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "Save", nil, logger.TraceKVString("person.id", id))
 	defer func() {
 		span.End(err)
@@ -129,7 +129,7 @@ func (a *application) GetById(ctx context.Context, id string) (person *ddd.Perso
 	return person, nil
 }
 
-func (a *application) List(ctx context.Context, filters Filters) (result []ddd.Person, err error) {
+func (a *App) List(ctx context.Context, filters Filters) (result []*peoplepb.Person, err error) {
 	ctx, span := logger.Span(ctx, "List", nil)
 	defer func() {
 		span.End(err)
@@ -170,7 +170,7 @@ func (a *application) List(ctx context.Context, filters Filters) (result []ddd.P
 	return out, nil
 }
 
-func (a *application) Update(ctx context.Context, p *ddd.Person) (err error) {
+func (a *App) Update(ctx context.Context, p *peoplepb.Person) (err error) {
 	ctx, span := logger.Span(ctx, "Update", p)
 	defer func() {
 		span.End(err)
@@ -186,7 +186,7 @@ func (a *application) Update(ctx context.Context, p *ddd.Person) (err error) {
 	return err
 }
 
-func (*application) PinParse(ctx context.Context, number string) (result *ddd.PinValidation, err error) {
+func (*App) PinParse(ctx context.Context, number string) (result ddd.PinValidation, err error) {
 	_, span := logger.Span(ctx, "PinParse", nil)
 	defer func() {
 		span.End(err)
@@ -196,29 +196,26 @@ func (*application) PinParse(ctx context.Context, number string) (result *ddd.Pi
 	if err != nil {
 		return
 	}
-	return &ddd.PinValidation{
-		Dob:    info.Dob,
-		Gender: info.Gender,
-	}, nil
+	return info, nil
 }
 
-func parseEGN(person *ddd.Person) {
+func parseEGN(person *peoplepb.Person) {
 	res, err := pin.Parse(person.IdNumbers["EGN"])
 	if err != nil {
 		logger.Error(err).Any("EGN", person)
 		return
 	}
-	if person.DOB == nil {
-		person.DOB = &ddd.Dob{}
+	if person.Dob == nil {
+		person.Dob = &peoplepb.Dob{}
 	}
-	if res.Dob.Year > 0 {
-		person.DOB.Year = res.Dob.Year
+	if res.DOB.Year > 0 {
+		person.Dob.Year = uint32(res.DOB.Year)
 	}
-	if res.Dob.Month > 0 {
-		person.DOB.Month = res.Dob.Month
+	if res.DOB.Month > 0 {
+		person.Dob.Month = uint32(res.DOB.Month)
 	}
-	if res.Dob.Day > 0 {
-		person.DOB.Day = res.Dob.Day
+	if res.DOB.Day > 0 {
+		person.Dob.Day = uint32(res.DOB.Day)
 	}
 	if len(res.Gender) > 0 {
 		person.Gender = res.Gender

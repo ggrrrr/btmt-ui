@@ -11,11 +11,11 @@ import (
 )
 
 type server struct {
-	app app.App
+	app *app.App
 	peoplepb.UnimplementedPeopleSvcServer
 }
 
-func RegisterServer(app app.App, registrar grpc.ServiceRegistrar) {
+func RegisterServer(app *app.App, registrar grpc.ServiceRegistrar) {
 	logger.Info().Msg("grpc.RegisterServer")
 	peoplepb.RegisterPeopleSvcServer(registrar, &server{
 		app: app,
@@ -23,15 +23,14 @@ func RegisterServer(app app.App, registrar grpc.ServiceRegistrar) {
 }
 
 func (s *server) Save(ctx context.Context, req *peoplepb.SaveRequest) (*peoplepb.SaveResponse, error) {
-	person := req.ToPerson()
-	err := s.app.Save(ctx, person)
+	err := s.app.Save(ctx, req.Data)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Any("person", &req).Msg("Save")
 		return nil, err
 	}
 	return &peoplepb.SaveResponse{
 		Payload: &peoplepb.SavePayload{
-			Id: person.Id,
+			Id: req.Data.Id,
 		},
 	}, nil
 }
@@ -43,7 +42,7 @@ func (s *server) Get(ctx context.Context, req *peoplepb.GetRequest) (*peoplepb.G
 		return nil, err
 	}
 	return &peoplepb.GetResponse{
-		Payload: peoplepb.FromPerson(res),
+		Payload: res,
 	}, nil
 }
 
@@ -60,14 +59,13 @@ func (s *server) List(ctx context.Context, req *peoplepb.ListRequest) (*peoplepb
 	}
 	out.Payload = []*peoplepb.Person{}
 	for _, p := range list {
-		out.Payload = append(out.Payload, peoplepb.FromPerson(&p))
+		out.Payload = append(out.Payload, p)
 	}
 	return &out, nil
 }
 
 func (s *server) Update(ctx context.Context, req *peoplepb.UpdateRequest) (*peoplepb.UpdateResponse, error) {
-	p := req.ToPerson()
-	err := s.app.Update(ctx, p)
+	err := s.app.Update(ctx, req.Data)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Any("req", &req).Msg("Update")
 		return nil, err

@@ -32,7 +32,7 @@ func Parse(e string) (ddd.PinValidation, error) {
 	eg.Ok = eg.validate()
 	if eg.Ok {
 		return ddd.PinValidation{
-			Dob: ddd.Dob{
+			DOB: ddd.DOB{
 				Year:  eg.year + 1900,
 				Month: eg.month,
 				Day:   eg.day,

@@ -12,8 +12,8 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
+	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 type (
@@ -24,6 +24,9 @@ type (
 )
 
 func TestSave(t *testing.T) {
+
+	createAdDurtion := 200 * time.Millisecond
+
 	rootCtx := context.Background()
 	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "mock", app.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{Subject: "some"})
@@ -47,7 +50,7 @@ func TestSave(t *testing.T) {
 			testFunc: func(tt *testing.T) {
 				_, err = testApp.GetById(rootCtx, "asd")
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
-				err := testApp.Save(ctxNormal, &ddd.Person{
+				err := testApp.Save(ctxNormal, &peoplepbv1.Person{
 					IdNumbers:  map[string]string{"pin": "pin1"},
 					LoginEmail: "new@asd",
 					Emails:     map[string]string{"g": "new@asd"},
@@ -57,18 +60,18 @@ func TestSave(t *testing.T) {
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 				_, err = testApp.GetById(ctxNormal, "asd")
 				assert.ErrorIs(tt, err, app.ErrForbidden)
-				err = testApp.Update(ctxNormal, &ddd.Person{})
+				err = testApp.Update(ctxNormal, &peoplepbv1.Person{})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
-				err = testApp.Update(ctxNormal, &ddd.Person{})
+				err = testApp.Update(ctxNormal, &peoplepbv1.Person{})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
-				err = testApp.Save(ctxNormal, &ddd.Person{})
+				err = testApp.Save(ctxNormal, &peoplepbv1.Person{})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 			},
 		},
 		{
 			test: "save",
 			testFunc: func(tt *testing.T) {
-				p1 := &ddd.Person{
+				p1 := &peoplepbv1.Person{
 					IdNumbers:  map[string]string{"pin": "pin1"},
 					Name:       "name 1",
 					LoginEmail: "email 1",
@@ -84,22 +87,22 @@ func TestSave(t *testing.T) {
 				require.NoError(tt, err)
 				p2, err := testApp.GetById(ctxAdmin, p1.Id)
 				require.NoError(tt, err)
-				assert.WithinDuration(tt, ts, p1.CreatedTime, 1+time.Second)
+				assert.WithinDuration(tt, ts, p1.CreatedAt.AsTime(), createAdDurtion)
 				tt.Logf("p1: %v \n", p1)
-				repo.TestPerson(tt, p2, p1, 10)
+				repo.TestPerson(tt, p2, p1, createAdDurtion)
 				list, err := testApp.List(ctxAdmin, nil)
 				require.NoError(tt, err)
 				require.True(tt, len(list) > 0)
 				tt.Logf("list: %v \n", len(list))
 				// require.True(tt, list[0].CreatedTime == 1)
-				tt.Logf("list: %v \n", list[0].CreatedTime)
+				tt.Logf("list: %v \n", list[0].CreatedAt)
 
 			},
 		},
 		{
 			test: "forbidden",
 			testFunc: func(tt *testing.T) {
-				p1 := &ddd.Person{
+				p1 := &peoplepbv1.Person{
 					IdNumbers:  map[string]string{"pin": "pin1"},
 					Name:       "name 1",
 					LoginEmail: "email 1",
@@ -120,7 +123,7 @@ func TestSave(t *testing.T) {
 		{
 			test: "pin validator",
 			testFunc: func(tt *testing.T) {
-				p1 := &ddd.Person{
+				p1 := &peoplepbv1.Person{
 					IdNumbers:  map[string]string{"EGN": os.Getenv("PIN2")},
 					Name:       "name 1",
 					LoginEmail: "email 1",
@@ -132,28 +135,26 @@ func TestSave(t *testing.T) {
 				}
 				err := testApp.Save(ctxAdmin, p1)
 				require.NoError(tt, err)
-				assert.Equal(tt, p1.DOB, &ddd.Dob{Year: 1978, Month: 2, Day: 13})
+				assert.Equal(tt, p1.Dob, &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 13})
 				tt.Logf("%+v \n", p1)
-				age := time.Now().Year() - p1.DOB.Year
-				p1.Age = &age
 
 				p2, err := testApp.GetById(ctxAdmin, p1.Id)
 				require.NoError(tt, err)
 				assert.Equal(tt, p2.Gender, "male")
 				assert.Equal(tt, p1.Gender, "male")
-				repo.TestPerson(tt, p2, p1, 10)
+				repo.TestPerson(tt, p2, p1, createAdDurtion)
 			},
 		},
 		{
 			test: "update",
 			testFunc: func(tt *testing.T) {
-				p1 := &ddd.Person{}
-				p2 := &ddd.Person{
+				p1 := &peoplepbv1.Person{}
+				expected := &peoplepbv1.Person{
 					IdNumbers:  map[string]string{"pin": "pin1"},
 					LoginEmail: "loginemail",
 					Name:       "name1",
 					FullName:   "full name",
-					DOB: &ddd.Dob{
+					Dob: &peoplepbv1.Dob{
 						Year:  1978,
 						Month: 2,
 						Day:   13,
@@ -164,17 +165,15 @@ func TestSave(t *testing.T) {
 					Labels: []string{"atttre"},
 					Attr:   map[string]string{"attr": "atttrvalue"},
 				}
-				p2.CreatedTime = time.Now()
 				err := testApp.Save(ctxAdmin, p1)
 				require.NoError(tt, err)
-				tt.Logf("%+v \n", p1)
-				p2.Id = p1.Id
-				err = testApp.Update(ctxAdmin, p2)
+				expected.Id = p1.Id
+				expected.CreatedAt = p1.CreatedAt
+				err = testApp.Update(ctxAdmin, expected)
 				require.NoError(tt, err)
-				p3, err := testApp.GetById(ctxAdmin, p2.Id)
-				p3.Age = nil
+				actual, err := testApp.GetById(ctxAdmin, expected.Id)
 				require.NoError(tt, err)
-				repo.TestPerson(tt, p3, p2, 5)
+				repo.TestPerson(tt, expected, actual, createAdDurtion)
 			},
 		},
 	}

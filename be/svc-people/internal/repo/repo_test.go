@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 type (
@@ -23,11 +23,13 @@ type (
 )
 
 func TestSave(t *testing.T) {
+
+	expectedDuration := time.Duration(400 * time.Millisecond)
+
 	ctx := context.Background()
 	cfg := mgo.MgoTestCfg("test_people")
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
-	// defer testRepo.Close()
 	defer testDb.Close(ctx)
 
 	testRepo := New(cfg.Collection, testDb)
@@ -47,7 +49,7 @@ func TestSave(t *testing.T) {
 		{
 			test: "happy save get",
 			run: func(t *testing.T) {
-				p1 := &ddd.Person{
+				expected := &peoplepbv1.Person{
 					IdNumbers: map[string]string{"pin": "pin1"},
 					Name:      "ggrrrr",
 					Emails:    map[string]string{"": "asdasd@asd"},
@@ -59,35 +61,28 @@ func TestSave(t *testing.T) {
 				}
 				ts := time.Now()
 
-				err = testRepo.Save(ctx, p1)
+				err = testRepo.Save(ctx, expected)
 				require.NoError(t, err)
-				assert.True(t, p1.Id != "")
-				assert.True(t, !p1.CreatedTime.IsZero(), "Created Time must be set")
-				assert.WithinDuration(t, ts, p1.CreatedTime, 1*time.Second)
-				fmt.Printf("p1.Idp1.Idp1.Idp1.Idp1.Id: %v \n", p1.Id)
-				p2, err := testRepo.GetById(ctx, p1.Id)
-				require.NoError(t, err)
-				require.NotNil(t, p2)
-				t.Logf("%+v \n", p1)
-				t.Logf("%+v \n", p2)
-				assert.WithinDuration(t, ts, p2.CreatedTime, 1*time.Second)
+				assert.True(t, expected.Id != "")
+				assert.True(t, !expected.CreatedAt.AsTime().IsZero(), "Created Time must be set")
+				assert.WithinDuration(t, ts, expected.CreatedAt.AsTime(), expectedDuration)
 
-				assert.True(t, !p2.CreatedTime.IsZero())
-				p1.CreatedTime = p2.CreatedTime
-				TestPerson(t, p2, p1, 10)
-				fmt.Printf("got %v \n", p2)
+				actual, err := testRepo.GetById(ctx, expected.Id)
+				require.NoError(t, err)
+				require.NotNil(t, actual)
+				TestPerson(t, actual, expected, expectedDuration)
 			},
 		},
 		{
 			test: "update all",
 			run: func(t *testing.T) {
-				p1 := &ddd.Person{}
+				p1 := &peoplepbv1.Person{}
 				err = testRepo.Save(ctx, p1)
 				assert.NoError(t, err)
 				assert.True(t, p1.Id != "")
-				assert.True(t, !p1.CreatedTime.IsZero())
+				assert.True(t, !p1.CreatedAt.AsTime().IsZero())
 
-				p2 := &ddd.Person{
+				expected := &peoplepbv1.Person{
 					Id:         p1.Id,
 					LoginEmail: "login@Email",
 					Name:       "ggrrrr",
@@ -98,29 +93,21 @@ func TestSave(t *testing.T) {
 					Phones:     map[string]string{"mobile": "123123123"},
 					Attr:       map[string]string{"food": "veg"},
 					Gender:     "male",
-					DOB:        &ddd.Dob{Year: 1978, Month: 2, Day: 2},
+					Dob:        &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 2},
+					CreatedAt:  p1.CreatedAt,
 				}
 
-				err = testRepo.Update(ctx, p2)
+				err = testRepo.Update(ctx, expected)
 				require.NoError(t, err)
-				p3, err := testRepo.GetById(ctx, p1.Id)
+				actual, err := testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
-				require.NotNil(t, p3)
-				logger.Info().Any("got", p3).Msg("Asd")
+				require.NotNil(t, actual)
 
-				p3.CreatedTime = p1.CreatedTime
-				assert.Equal(t, p3.IdNumbers, p2.IdNumbers)
-				assert.Equal(t, p3.LoginEmail, p2.LoginEmail)
-				assert.Equal(t, p3.Emails, p2.Emails)
-				assert.Equal(t, p3.Name, p2.Name)
-				assert.Equal(t, p3.FullName, p2.FullName)
-				assert.Equal(t, p3.DOB, p2.DOB)
-				assert.Equal(t, p3.Gender, p2.Gender)
-				assert.Equal(t, p3.Phones, p2.Phones)
-				assert.Equal(t, p3.Labels, p2.Labels)
-				assert.Equal(t, p3.Attr, p2.Attr)
+				expected.UpdatedAt = timestamppb.Now()
 
-				p4 := &ddd.Person{
+				TestPerson(t, expected, actual, expectedDuration)
+
+				expected = &peoplepbv1.Person{
 					Id:         p1.Id,
 					LoginEmail: " ",
 					Name:       " ",
@@ -131,18 +118,23 @@ func TestSave(t *testing.T) {
 					Phones:     map[string]string{"mobile": "123123123"},
 					Attr:       map[string]string{"food": "veg"},
 					Gender:     " ",
-					DOB:        &ddd.Dob{Year: 1978, Month: 2, Day: 2},
+					Dob:        &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 2},
+					CreatedAt:  p1.CreatedAt,
 				}
-				err = testRepo.Update(ctx, p4)
-				require.NoError(t, err)
-				p3, err = testRepo.GetById(ctx, p1.Id)
-				require.NoError(t, err)
-				assert.Equal(t, p3.IdNumbers, map[string]string{"pin": "pin1"})
-				assert.Equal(t, p3.LoginEmail, "")
-				assert.Equal(t, p3.Name, "")
-				assert.Equal(t, p3.FullName, "")
-				assert.Equal(t, p3.Gender, "")
 
+				err = testRepo.Update(ctx, expected)
+				require.NoError(t, err)
+				actual, err = testRepo.GetById(ctx, p1.Id)
+				require.NoError(t, err)
+
+				expected.LoginEmail = ""
+				expected.Name = ""
+				expected.FullName = ""
+				expected.Gender = ""
+				expected.IdNumbers = map[string]string{"pin": "pin1"}
+				expected.UpdatedAt = timestamppb.Now()
+
+				TestPerson(t, expected, actual, expectedDuration)
 			},
 		},
 	}
@@ -169,7 +161,7 @@ func TestList(t *testing.T) {
 
 	testRepo.CreateIndex(ctx)
 
-	newData := map[string]*ddd.Person{
+	newData := map[string]*peoplepbv1.Person{
 		"ggrrrr": {
 			IdNumbers: map[string]string{"pin": "ggrrrrpin"},
 			Name:      "ggrrrr",
@@ -227,7 +219,7 @@ func TestList(t *testing.T) {
 				for _, p := range list {
 					fmt.Printf("%+v \n", p)
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -239,7 +231,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, 3, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -254,7 +246,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, 3, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -270,7 +262,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, 1, len(list), "records")
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -287,7 +279,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -304,7 +296,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 0)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -321,7 +313,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -338,7 +330,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -355,7 +347,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 2)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -372,7 +364,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -389,7 +381,7 @@ func TestList(t *testing.T) {
 				assert.Equal(tt, len(list), 1)
 				for _, p := range list {
 					newData[p.Name].Id = p.Id
-					TestPerson(tt, &p, newData[p.Name], 0)
+					TestPerson(tt, p, newData[p.Name], 0)
 				}
 				printList("LIST", list)
 			}),
@@ -427,7 +419,7 @@ func TestUpdate(t *testing.T) {
 		}, {
 			test: "happy save get",
 			run: func(t *testing.T) {
-				p1 := &ddd.Person{
+				p1 := &peoplepbv1.Person{
 					IdNumbers: map[string]string{"pin": "pin1"},
 					Name:      "ggrrrr",
 					Emails:    map[string]string{"": "asdasd@asd"},
@@ -440,12 +432,12 @@ func TestUpdate(t *testing.T) {
 				err = testRepo.Save(ctx, p1)
 				require.NoError(t, err)
 				require.True(t, p1.Id != "")
-				require.True(t, !p1.CreatedTime.IsZero(), "Created Time must be set")
+				require.True(t, !p1.CreatedAt.AsTime().IsZero(), "Created Time must be set")
 
 				p2, err := testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
-				require.True(t, !p2.CreatedTime.IsZero())
-				p1.CreatedTime = p2.CreatedTime
+				require.True(t, !p2.CreatedAt.AsTime().IsZero())
+				p1.CreatedAt = p2.CreatedAt
 				TestPerson(t, p2, p1, 10)
 				fmt.Printf("got %v \n", p2)
 			},
@@ -453,7 +445,7 @@ func TestUpdate(t *testing.T) {
 		{
 			test: "update",
 			run: func(t *testing.T) {
-				p1 := &ddd.Person{
+				p1 := &peoplepbv1.Person{
 					Name:     "ggrrrr",
 					Emails:   map[string]string{"": "asdasd@asd"},
 					FullName: "not varban krushev",
@@ -461,9 +453,9 @@ func TestUpdate(t *testing.T) {
 				err = testRepo.Save(ctx, p1)
 				assert.NoError(t, err)
 				assert.True(t, p1.Id != "")
-				assert.True(t, !p1.CreatedTime.IsZero())
+				assert.True(t, !p1.CreatedAt.AsTime().IsZero())
 
-				p2 := &ddd.Person{
+				p2 := &peoplepbv1.Person{
 					Id:        p1.Id,
 					IdNumbers: map[string]string{"pin": "pin1"},
 					Labels:    []string{"tours:bike", "tours:hike", "kids"},
@@ -475,7 +467,7 @@ func TestUpdate(t *testing.T) {
 				err = testRepo.Update(ctx, p2)
 				p3, err := testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
-				p3.CreatedTime = p1.CreatedTime
+				p3.CreatedAt = p1.CreatedAt
 				assert.Equal(t, p3.Name, p1.Name)
 				assert.Equal(t, p3.Emails, p1.Emails)
 				assert.Equal(t, p3.FullName, p1.FullName)
@@ -495,7 +487,7 @@ func TestUpdate(t *testing.T) {
 
 }
 
-func printList(name string, list []ddd.Person) {
+func printList(name string, list []*peoplepbv1.Person) {
 	fmt.Printf("%s: START---------------\n", name)
 	for _, v := range list {
 		fmt.Printf("%s: %#v\n", name, v)
@@ -503,7 +495,7 @@ func printList(name string, list []ddd.Person) {
 	fmt.Printf("%s: END.\n\n", name)
 }
 
-func printMap(name string, list map[string]*ddd.Person) {
+func printMap(name string, list map[string]*peoplepbv1.Person) {
 	fmt.Printf("%s: START---------------\n", name)
 	for _, v := range list {
 		fmt.Printf("%s: %#v\n", name, v)

@@ -8,12 +8,14 @@ import (
 
 	"github.com/stackus/errors"
 	"go.mongodb.org/mongo-driver/mongo"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
+	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 type (
@@ -22,10 +24,10 @@ type (
 		db         mgo.Repo
 	}
 
-	Repo interface {
-		Close() error
-		Save(ctx context.Context, p *ddd.Person) error
-	}
+	// Repo interface {
+	// 	Close() error
+	// 	Save(ctx context.Context, p *ddd.Person) error
+	// }
 )
 
 var _ (ddd.PeopleRepo) = (*repo)(nil)
@@ -53,13 +55,13 @@ func (r *repo) CreateIndex(ctx context.Context) {
 	}
 }
 
-func (r *repo) Save(ctx context.Context, p *ddd.Person) (err error) {
-	ctx, span := logger.Span(ctx, "repo.Save", nil)
+func (r *repo) Save(ctx context.Context, p *peoplepbv1.Person) (err error) {
+	ctx, span := logger.Span(ctx, "repo.Save", p)
 	defer func() {
 		span.End(err)
 	}()
 
-	p.CreatedTime = time.Now()
+	p.CreatedAt = timestamppb.Now()
 	newPerson, err := fromPerson(p)
 	if err != nil {
 		return
@@ -73,8 +75,8 @@ func (r *repo) Save(ctx context.Context, p *ddd.Person) (err error) {
 	return nil
 }
 
-func (r *repo) Update(ctx context.Context, p *ddd.Person) (err error) {
-	_, span := logger.Span(ctx, "repo.Update", nil)
+func (r *repo) Update(ctx context.Context, p *peoplepbv1.Person) (err error) {
+	_, span := logger.Span(ctx, "repo.Update", p)
 	defer func() {
 		span.End(err)
 	}()
@@ -83,6 +85,9 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) (err error) {
 		err = app.BadRequestError("person.id is empty", nil)
 		return
 	}
+
+	p.UpdatedAt = timestamppb.Now()
+
 	newPerson, err := fromPerson(p)
 	if err != nil {
 		return err
@@ -122,6 +127,8 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) (err error) {
 		setReq[FieldAttr] = newPerson.Attr
 	}
 
+	setReq[FieldUpdatedAt] = newPerson.UpdatedAt
+
 	if len(setReq) == 0 {
 		err = app.BadRequestError("empty person update", nil)
 		return
@@ -143,7 +150,7 @@ func (r *repo) Update(ctx context.Context, p *ddd.Person) (err error) {
 	return nil
 }
 
-func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd.Person, err error) {
+func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []*peoplepbv1.Person, err error) {
 	_, span := logger.Span(ctx, "repo.List", nil)
 	defer func() {
 		span.End(err)
@@ -157,7 +164,7 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []ddd
 	return
 }
 
-func (r *repo) GetById(ctx context.Context, fromId string) (result *ddd.Person, err error) {
+func (r *repo) GetById(ctx context.Context, fromId string) (result *peoplepbv1.Person, err error) {
 	_, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.TraceKVString("id", fromId))
 	defer func() {
 		span.End(err)
@@ -188,11 +195,11 @@ func (r *repo) GetById(ctx context.Context, fromId string) (result *ddd.Person, 
 	if err != nil {
 		return nil, app.SystemError("unable to decode record", err)
 	}
-	result = out.toPerson()
+	result = out.toProto()
 	return
 }
 
-func (r *repo) list(ctx context.Context, filter any) ([]ddd.Person, error) {
+func (r *repo) list(ctx context.Context, filter any) ([]*peoplepbv1.Person, error) {
 
 	cur, err := r.db.Find(ctx, r.collection, filter)
 	if err != nil {
@@ -203,7 +210,7 @@ func (r *repo) list(ctx context.Context, filter any) ([]ddd.Person, error) {
 		return nil, errors.Wrap(err, "cursor")
 	}
 
-	var out = make([]ddd.Person, 0)
+	var out = make([]*peoplepbv1.Person, 0)
 	for cur.Next(context.Background()) {
 		if cur.Err() != nil {
 			return nil, errors.Wrap(err, "cursor.Error")
@@ -214,7 +221,7 @@ func (r *repo) list(ctx context.Context, filter any) ([]ddd.Person, error) {
 			log.Println(err)
 			return nil, errors.Wrap(err, "Decode")
 		}
-		out = append(out, *result.toPerson())
+		out = append(out, result.toProto())
 	}
 
 	return out, nil

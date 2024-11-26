@@ -95,7 +95,7 @@ func TestTelephoneServer_GetContact(t *testing.T) {
 
 }
 
-func testServer(_ context.Context, app app.App) (peoplepb.PeopleSvcClient, func()) {
+func testServer(_ context.Context, app *app.App) (peoplepb.PeopleSvcClient, func()) {
 	buffer := 101024 * 1024
 	lis := bufconn.Listen(buffer)
 
