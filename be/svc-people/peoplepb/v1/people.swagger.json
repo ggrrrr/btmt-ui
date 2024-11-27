@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "peoplepb/v1/people.proto",
-    "description": "Manages people in the system(s)\nPeople can be clients, user, admins any person which interacts with the system.",
+    "description": "Manages people in the system(s)\nPeople can be clients, users, admins or any person.",
     "version": "version not set"
   },
   "tags": [

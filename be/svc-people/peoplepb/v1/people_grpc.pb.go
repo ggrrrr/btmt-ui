@@ -5,7 +5,7 @@
 // source: peoplepb/v1/people.proto
 
 // Manages people in the system(s)
-// People can be clients, user, admins any person which interacts with the system.
+// People can be clients, users, admins or any person.
 
 package peoplepbv1
 

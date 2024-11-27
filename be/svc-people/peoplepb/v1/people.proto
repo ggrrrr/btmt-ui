@@ -93,7 +93,7 @@ message GetResponse{
   Person payload = 1;
 }
 
-message DOB {
+message Dob {
   uint32 year  = 1;
   uint32 month  = 2;
   uint32 day  = 3;
@@ -109,7 +109,7 @@ message Person{
   string login_email = 3 [json_name = "login_email"];
   string name = 4 [json_name = "name"];
   string full_name = 5 [json_name = "full_name"];
-  DOB dob = 6 [json_name = "dob"];
+  Dob dob = 6 [json_name = "dob"];
   string gender = 7 [json_name = "gender"];
   map<string,string> emails = 8 [json_name = "emails"];
   map<string,string> phones = 9 [json_name = "phones"];
