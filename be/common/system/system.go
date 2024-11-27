@@ -3,7 +3,6 @@ package system
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -28,7 +27,6 @@ type (
 		aws          *session.Session
 		verifier     token.Verifier
 		buildVersion string
-		buildTime    time.Time
 	}
 
 	Service interface {
@@ -51,12 +49,10 @@ var _ (Service) = (*System)(nil)
 func NewSystem(cfg config.AppConfig) (*System, error) {
 	s := System{
 		cfg:          cfg,
-		buildVersion: buildversion.BuildVersion("./build_ver.txt"),
-		buildTime:    buildversion.BuildTime("./build_ts.txt"),
+		buildVersion: buildversion.BuildVersion(),
 	}
 	logger.Info().
 		Str("build.version", s.buildVersion).
-		Time("build.time", s.buildTime).
 		Msg("system.init...")
 
 	if cfg.Otel.Enabled {

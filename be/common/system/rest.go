@@ -128,7 +128,6 @@ func (s *System) httpHandlerVersion(endpoint string) func(http.Handler) http.Han
 			if (r.Method == "GET") && strings.EqualFold(r.URL.Path, endpoint) {
 				ver := httpVersionReponse{
 					BuildVersion: s.buildVersion,
-					BuildTime:    s.buildTime,
 				}
 				web.SendPayload(r.Context(), w, "ok", ver)
 				return
