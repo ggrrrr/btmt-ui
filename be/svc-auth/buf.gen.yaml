@@ -2,7 +2,8 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1
+    # default: be/svc-auth/authpb/v1
+    default: github.com/ggrrrr/btmt-ui/be/svc-auth/authpb
     except:
       - buf.build/googleapis/googleapis
 plugins:

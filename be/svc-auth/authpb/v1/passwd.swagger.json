@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "authpb/v1/passwd.proto",
-    "description": "Authentication service for users of the systems\nUsers in this case are pople who needs interact with the system.",
+    "description": "Authentication service for users of the systems\nUsers in this case are people who interact with the system via UI.",
     "version": "version not set"
   },
   "tags": [

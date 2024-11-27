@@ -5,7 +5,7 @@
 // source: authpb/v1/passwd.proto
 
 // Authentication service for users of the systems
-// Users in this case are pople who needs interact with the system.
+// Users in this case are people who interact with the system via UI.
 
 package authpbv1
 
