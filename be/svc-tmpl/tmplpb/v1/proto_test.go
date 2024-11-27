@@ -12,6 +12,17 @@ import (
 	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
+func TestAsd(t *testing.T) {
+
+	val := &tmplpbv1.TemplateData{}
+
+	fmt.Printf("%#vv", val.ProtoReflect().Type().Descriptor())
+	// lisText :=
+
+	// proto.Message
+
+}
+
 func TestDataJSON(t *testing.T) {
 
 	structValue, err := structpb.NewStruct(map[string]any{
