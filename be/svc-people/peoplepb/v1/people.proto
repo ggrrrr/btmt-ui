@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 // Manages people in the system(s)
-// People can be clients, user, admins any person which interacts with the system.
+// People can be clients, users, admins or any person.
 package peoplepb.v1;
 
 import "google/protobuf/struct.proto";
@@ -44,6 +44,7 @@ service PeopleSvc {
 message PinParseRequest {
   string pin = 1;
 }
+
 message PinParsePayload {
   Dob dob = 1;
   string gender = 2;
@@ -52,7 +53,6 @@ message PinParsePayload {
 message PinParseResponse {
   PinParsePayload payload = 1;
 }
-
 
 message SaveRequest{
   Person data = 1;
