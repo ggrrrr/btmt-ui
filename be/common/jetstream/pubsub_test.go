@@ -91,27 +91,17 @@ func TestPublish(t *testing.T) {
 
 	testPublisher, err := NewPublisher(conn, "test", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
 	require.NoError(t, err)
-	defer func() {
-		_ = testPublisher.Shutdown()
-		fmt.Println("testPublisher.Shutdown")
-	}()
 
 	consumer1, err := NewConsumer(rootCtx, conn, "test", "group2", verifier)
 	require.NoError(t, err)
-	defer func() {
-		_ = consumer1.Shutdown()
-		fmt.Println("consumer.Shutdown")
-	}()
+
 	consunerHandler1 := handlerSvc{t: t, wg: &wg, name: "consumer -- 1"}
 	err = consumer1.ConsumerLoop(consunerHandler1.handle)
 	require.NoError(t, err)
 
 	consumer2, err := NewConsumer(rootCtx, conn, "test", "group2", verifier)
 	require.NoError(t, err)
-	defer func() {
-		_ = consumer2.Shutdown()
-		fmt.Println("consumer.Shutdown")
-	}()
+
 	consunerHandler2 := handlerSvc{t: t, wg: &wg, name: "consumer -- 2"}
 	err = consumer2.ConsumerLoop(consunerHandler2.handle)
 	require.NoError(t, err)

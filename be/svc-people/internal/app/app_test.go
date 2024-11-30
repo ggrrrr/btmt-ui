@@ -12,6 +12,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
 	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
@@ -41,6 +42,7 @@ func TestSave(t *testing.T) {
 	testApp, err := New(
 		WithPeopleRepo(testRepo),
 		WithAppPolicies(roles.NewAppPolices()),
+		WithStateStore(state.NewMockStore()),
 	)
 	require.NoError(t, err)
 
@@ -135,7 +137,9 @@ func TestSave(t *testing.T) {
 				}
 				err := testApp.Save(ctxAdmin, p1)
 				require.NoError(tt, err)
-				assert.Equal(tt, p1.Dob, &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 13})
+				assert.Equal(tt, p1.Dob.Day, uint32(13))
+				assert.Equal(tt, p1.Dob.Month, uint32(2))
+				assert.Equal(tt, p1.Dob.Year, uint32(1978))
 				tt.Logf("%+v \n", p1)
 
 				p2, err := testApp.GetById(ctxAdmin, p1.Id)

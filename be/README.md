@@ -1,6 +1,6 @@
 # Install
 
-## Some golang 
+## Some golang
 
 * [uber guidelines](https://github.com/uber-go/guide/blob/master/style.md)
 * [ardanlabs DDD](https://github.com/ardanlabs/service6-video/tree/main)
@@ -12,16 +12,13 @@ brew tap nats-io/nats-tools
 brew install nats-io/nats-tools/nats
 
 # add stream
-
-
-
 ```
 
-## GoTemplate 
-
-https://gotemplate.io/
+## GoTemplate   <https://gotemplate.io/>
 
 ## gRPC
+
+* buf generator <https://buf.build/docs/installation/>
 
 ```sh
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
@@ -30,19 +27,17 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
-- buf generator <https://buf.build/docs/installation/>
-
 ## Docs
 
-- gRPC Gateway <https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/>
-  - <https://github.com/grpc-ecosystem/grpc-gateway#installation>
-- gRPC auth with JWT <https://dev.to/techschoolguru/use-grpc-interceptor-for-authorization-with-jwt-1c5h>
+* gRPC Gateway <https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/>
+  * <https://github.com/grpc-ecosystem/grpc-gateway#installation>
+* gRPC auth with JWT <https://dev.to/techschoolguru/use-grpc-interceptor-for-authorization-with-jwt-1c5h>
 
-- Rule Engine or DSL or HCL ?
+* Rule Engine or DSL or HCL ?
 
 ## HTTP standards
 
-- <https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml>
+* <https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml>
 
 ## LOCALSTACK
 
@@ -57,7 +52,7 @@ add the following to your /etc/hosts
 
 ### Create table in AWS dynamodb
 
-```
+```sh
 awslocal dynamodb create-table \
    --table-name module-auth \
    --attribute-definitions \
@@ -69,12 +64,12 @@ awslocal dynamodb create-table \
 
 ## List record in table AWS dynamodb
 
-```
+```sh
 awslocal dynamodb list-tables
 awslocal dynamodb scan --table-name module-auth
 ```
 
-```
+```sh
 # Create/update admin user
 
 go get -u ./...

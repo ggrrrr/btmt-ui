@@ -18,6 +18,7 @@ import (
 	commonApp "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
 	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
@@ -38,6 +39,7 @@ func Test_Save(t *testing.T) {
 	app, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
+		app.WithStateStore(state.NewMockStore()),
 	)
 	require.NoError(t, err)
 
@@ -83,6 +85,7 @@ func Test_List(t *testing.T) {
 	app, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
+		app.WithStateStore(state.NewMockStore()),
 	)
 	require.NoError(t, err)
 

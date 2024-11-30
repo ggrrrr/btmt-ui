@@ -16,6 +16,7 @@ import (
 	commonApp "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
 	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
@@ -43,6 +44,7 @@ func TestTelephoneServer_GetContact(t *testing.T) {
 	testApp, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
+		app.WithStateStore(state.NewMockStore()),
 	)
 	require.NoError(t, err)
 

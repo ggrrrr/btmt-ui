@@ -58,6 +58,11 @@ func New(cfgs ...AppConfiguration) (*App, error) {
 		logger.Warn().Msg("use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
+	if a.appPolices == nil ||
+		a.repoPeople == nil ||
+		a.stateStore == nil {
+		return nil, fmt.Errorf("interface is nil")
+	}
 	return a, nil
 }
 
