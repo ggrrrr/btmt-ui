@@ -30,13 +30,7 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	people := []*peoplepb.Person{}
-	for _, p := range out {
-		// logger.DebugCtx(r.Context()).Any("person from", p).Msg("ListResult")
-		// logger.DebugCtx(r.Context()).Any("person to", p).Msg("ListResult")
-		people = append(people, p)
-	}
-	web.SendPayload(ctx, w, "ok", people)
+	web.SendPayload(ctx, w, "ok", out)
 }
 
 func (s *server) Get(w http.ResponseWriter, r *http.Request) {
