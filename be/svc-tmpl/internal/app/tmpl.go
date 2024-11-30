@@ -3,12 +3,13 @@ package app
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -141,19 +142,17 @@ func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmp
 }
 
 func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
-	tmplBlobId, err := a.tmplFolder.SetIdVersionFromString(tmpl.Id)
+	var err error
+
+	value, err := proto.Marshal(tmpl)
 	if err != nil {
-		return app.SystemError("cant create template blob name", err)
+		return app.SystemError("cant marshal template", err)
 	}
 
-	buffer := strings.NewReader(tmpl.Body)
-
-	_, err = a.blobStore.Push(ctx, authInfo.Realm, tmplBlobId, blob.BlobMD{
-		Type:          blob.BlobTypeTemplate,
-		ContentType:   tmpl.ContentType,
-		Name:          tmpl.Name,
-		ContentLength: int64(len(tmpl.Body)),
-	}, buffer)
+	_, err = a.stateStore.Push(ctx, state.NewEntity{
+		Key:   tmpl.Id,
+		Value: value,
+	})
 	if err != nil {
 		return app.SystemError("cant push template to blob store", err)
 	}

@@ -37,6 +37,10 @@ go_clean:
 	# go clean -fuzzcache
 	# go clean -modcache
 
+go_run_monolith:
+	docker compose up -d localstack mongo nats otel postgres
+	go run be/monolith/main.go
+
 go_test:
 	docker-compose start postgres mongo localstack nats
 	go test -cover  ./be/...

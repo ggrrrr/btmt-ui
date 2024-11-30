@@ -11,3 +11,6 @@ message ResponseError{
     string message = 2;
     repeated string errors = 3;
 }
+
+message ResponseTest{
+}

@@ -232,7 +232,7 @@
       "type": "object",
       "properties": {
         "payload": {
-          "$ref": "#/definitions/v1Template"
+          "$ref": "#/definitions/v1TemplateUpdate"
         }
       }
     },
@@ -327,6 +327,41 @@
         },
         "data": {
           "type": "object"
+        }
+      }
+    },
+    "v1TemplateUpdate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "content_type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {
+          "type": "string"
         }
       }
     }

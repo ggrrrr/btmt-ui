@@ -26,7 +26,7 @@ type (
 
 	NatsConsumer struct {
 		consumerId uuid.UUID
-		conn       *natsConn
+		conn       *NatsConnection
 		stream     jetstream.Stream
 		consumer   jetstream.Consumer
 		verifier   token.Verifier
@@ -34,12 +34,8 @@ type (
 	}
 )
 
-func NewConsumer(ctx context.Context, url string, streamName string, group string, verifier token.Verifier) (*NatsConsumer, error) {
+func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, group string, verifier token.Verifier) (*NatsConsumer, error) {
 	consumerId := uuid.New()
-	conn, err := connect(url)
-	if err != nil {
-		return nil, err
-	}
 
 	stream, err := conn.js.Stream(ctx, streamName)
 	if err != nil {

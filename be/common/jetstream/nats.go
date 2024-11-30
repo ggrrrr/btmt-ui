@@ -7,13 +7,19 @@ import (
 
 const authHeaderName string = "authorization"
 
-type natsConn struct {
-	conn *nats.Conn
-	js   jetstream.JetStream
-}
+type (
+	Config struct {
+		URL string
+	}
 
-func connect(url string) (*natsConn, error) {
-	cn, err := nats.Connect(url)
+	NatsConnection struct {
+		conn *nats.Conn
+		js   jetstream.JetStream
+	}
+)
+
+func Connect(cfg Config) (*NatsConnection, error) {
+	cn, err := nats.Connect(cfg.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -25,14 +31,14 @@ func connect(url string) (*natsConn, error) {
 		return nil, err
 	}
 
-	return &natsConn{
+	return &NatsConnection{
 		conn: cn,
 		js:   js,
 	}, nil
 
 }
 
-func (c *natsConn) shutdown() error {
+func (c *NatsConnection) shutdown() error {
 	if c.conn == nil {
 		return nil
 	}

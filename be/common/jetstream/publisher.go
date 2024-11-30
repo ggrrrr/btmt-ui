@@ -14,17 +14,13 @@ import (
 
 type (
 	NatsPublisher struct {
-		conn           *natsConn
+		conn           *NatsConnection
 		subject        string
 		tokenGenerator token.ServiceTokenGenerator
 	}
 )
 
-func NewPublisher(url string, subject string, tokenGenerator token.ServiceTokenGenerator) (*NatsPublisher, error) {
-	conn, err := connect(url)
-	if err != nil {
-		return nil, err
-	}
+func NewPublisher(conn *NatsConnection, subject string, tokenGenerator token.ServiceTokenGenerator) (*NatsPublisher, error) {
 
 	return &NatsPublisher{
 		conn:           conn,

@@ -11,6 +11,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -65,7 +66,7 @@ end.
 		blobStore:    &mockBlobStore{},
 		appPolices:   roles.NewAppPolices(),
 		imagesFolder: blob.BlobId{},
-		tmplFolder:   blob.BlobId{},
+		stateStore:   state.NewMockStore(),
 		repo:         nil,
 	}
 

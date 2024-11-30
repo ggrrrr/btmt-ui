@@ -2,10 +2,14 @@ package app
 
 import (
 	"context"
+	"fmt"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/pin"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/repo"
@@ -20,6 +24,7 @@ type (
 	App struct {
 		repoPeople ddd.PeopleRepo
 		appPolices roles.AppPolices
+		stateStore state.StateStore
 	}
 
 	// App interface {
@@ -70,6 +75,13 @@ func WithAppPolicies(appPolices roles.AppPolices) AppConfiguration {
 	}
 }
 
+func WithStateStore(store state.StateStore) AppConfiguration {
+	return func(a *App) error {
+		a.stateStore = store
+		return nil
+	}
+}
+
 func (a *App) Save(ctx context.Context, p *peoplepb.Person) (err error) {
 	ctx, span := logger.Span(ctx, "Save", p)
 	defer func() {
@@ -101,6 +113,12 @@ func (a *App) Save(ctx context.Context, p *peoplepb.Person) (err error) {
 	if err != nil {
 		return err
 	}
+
+	err = a.updateStore(ctx, p)
+	if err != nil {
+		return err
+	}
+
 	logger.DebugCtx(ctx).Any("data", p).Msg("Save")
 	return nil
 }
@@ -183,6 +201,12 @@ func (a *App) Update(ctx context.Context, p *peoplepb.Person) (err error) {
 	}
 	logger.DebugCtx(ctx).Any("person", p).Msg("Update")
 	err = a.repoPeople.Update(ctx, p)
+	if err != nil {
+		return
+	}
+
+	err = a.updateStore(ctx, p)
+
 	return err
 }
 
@@ -221,4 +245,21 @@ func parseEGN(person *peoplepb.Person) {
 		person.Gender = res.Gender
 	}
 	logger.Debug().Any("pin", person)
+}
+
+func (a *App) updateStore(ctx context.Context, person *peoplepb.Person) error {
+	value, err := proto.Marshal(person)
+	if err != nil {
+		return fmt.Errorf("updateStore.Marshal: %w", err)
+	}
+
+	_, err = a.stateStore.Push(ctx, state.NewEntity{
+		Key:   person.Id,
+		Value: value,
+	})
+	if err != nil {
+		return fmt.Errorf("updateStore.Push: %w", err)
+	}
+
+	return nil
 }

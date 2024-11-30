@@ -3,11 +3,12 @@ package system
 import (
 	"context"
 	"errors"
+	"runtime"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/go-chi/chi/v5"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	grpcRuntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
 	"github.com/ggrrrr/btmt-ui/be/common/buildversion"
@@ -22,7 +23,7 @@ type (
 		cfg          config.AppConfig
 		mux          *chi.Mux
 		waiter       waiter.Waiter
-		gateway      *runtime.ServeMux
+		gateway      *grpcRuntime.ServeMux
 		grpc         *grpc.Server
 		aws          *session.Session
 		verifier     token.Verifier
@@ -53,6 +54,7 @@ func NewSystem(cfg config.AppConfig) (*System, error) {
 	}
 	logger.Info().
 		Str("build.version", s.buildVersion).
+		Int("max.procs", runtime.GOMAXPROCS(0)).
 		Msg("system.init...")
 
 	if cfg.Otel.Enabled {
@@ -122,7 +124,7 @@ func (s *System) Mux() *chi.Mux {
 	return s.mux
 }
 
-func (s *System) Gateway() *runtime.ServeMux {
+func (s *System) Gateway() *grpcRuntime.ServeMux {
 	return s.gateway
 }
 

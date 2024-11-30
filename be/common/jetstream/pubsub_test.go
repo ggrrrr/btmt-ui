@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,7 +17,42 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
-var natsUrl = "localhost:4222"
+var cfg = Config{
+	URL: "localhost:4222",
+}
+
+func TestMain(t *testing.T) {
+
+	myVal := "some value 1"
+
+	rootCtx := context.Background()
+
+	conn, err := Connect(cfg)
+	require.NoError(t, err)
+	defer func() {
+		conn.conn.Close()
+		fmt.Println("conn.conn.Close")
+	}()
+
+	kvStore, err := conn.js.CreateKeyValue(rootCtx, jetstream.KeyValueConfig{
+		Bucket:      "test-kv",
+		Description: "",
+	})
+	require.NoError(t, err)
+
+	rev, err := kvStore.Put(rootCtx, "somekey1", []byte(myVal))
+	require.NoError(t, err)
+	fmt.Printf("rev: %v \n", rev)
+
+	asd, err := kvStore.GetRevision(rootCtx, "somekey1", rev)
+	require.NoError(t, err)
+	fmt.Printf("%#v rev: %v %v \n", asd, asd.Key(), string(asd.Value()))
+
+	keys, err := kvStore.Keys(rootCtx)
+	require.NoError(t, err)
+
+	fmt.Printf("keys: %#v", keys)
+}
 
 func TestPublish(t *testing.T) {
 	verifier := token.NewVerifierMock()
@@ -35,7 +71,7 @@ func TestPublish(t *testing.T) {
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	conn, err := connect("localhost:4222")
+	conn, err := Connect(cfg)
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()
@@ -53,14 +89,14 @@ func TestPublish(t *testing.T) {
 	ctx, span := logger.Span(rootCtx, "main.Method", nil)
 	logger.InfoCtx(ctx).Msg("main.Method")
 
-	testPublisher, err := NewPublisher(natsUrl, "test", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
+	testPublisher, err := NewPublisher(conn, "test", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
 	require.NoError(t, err)
 	defer func() {
 		_ = testPublisher.Shutdown()
 		fmt.Println("testPublisher.Shutdown")
 	}()
 
-	consumer1, err := NewConsumer(rootCtx, natsUrl, "test", "group2", verifier)
+	consumer1, err := NewConsumer(rootCtx, conn, "test", "group2", verifier)
 	require.NoError(t, err)
 	defer func() {
 		_ = consumer1.Shutdown()
@@ -70,7 +106,7 @@ func TestPublish(t *testing.T) {
 	err = consumer1.ConsumerLoop(consunerHandler1.handle)
 	require.NoError(t, err)
 
-	consumer2, err := NewConsumer(rootCtx, natsUrl, "test", "group2", verifier)
+	consumer2, err := NewConsumer(rootCtx, conn, "test", "group2", verifier)
 	require.NoError(t, err)
 	defer func() {
 		_ = consumer2.Shutdown()

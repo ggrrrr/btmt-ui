@@ -8,6 +8,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -30,7 +31,7 @@ type (
 		appPolices   roles.AppPolices
 		blobStore    blob.Store
 		imagesFolder blob.BlobId
-		tmplFolder   blob.BlobId
+		stateStore   state.StateStore
 		repo         tmplRepo
 	}
 )
@@ -41,14 +42,8 @@ func New(opts ...OptionsFunc) (*App, error) {
 		return nil, err
 	}
 
-	tmplFolder, err := blob.ParseBlobDir(tmplTmplFolder)
-	if err != nil {
-		return nil, err
-	}
-
 	a := &App{
 		imagesFolder: imagesFolder,
-		tmplFolder:   tmplFolder,
 	}
 	for _, optFunc := range opts {
 		err := optFunc(a)
@@ -64,6 +59,22 @@ func New(opts ...OptionsFunc) (*App, error) {
 		return nil, fmt.Errorf("blobStore is nil")
 	}
 
+	if a.appPolices == nil {
+		return nil, fmt.Errorf("appPolices is nil")
+	}
+
+	if a.blobStore == nil {
+		return nil, fmt.Errorf("blobStore is nil")
+	}
+
+	if a.repo == nil {
+		return nil, fmt.Errorf("repo is nil")
+	}
+
+	if a.stateStore == nil {
+		return nil, fmt.Errorf("stateStore is nil")
+	}
+
 	return a, nil
 }
 
@@ -77,6 +88,13 @@ func WithBlobStore(blobStore blob.Store) OptionsFunc {
 func WithTmplRepo(repo tmplRepo) OptionsFunc {
 	return func(a *App) error {
 		a.repo = repo
+		return nil
+	}
+}
+
+func WithStateStore(store state.StateStore) OptionsFunc {
+	return func(a *App) error {
+		a.stateStore = store
 		return nil
 	}
 }

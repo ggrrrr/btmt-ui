@@ -1,6 +1,9 @@
 # Install
 
-## Some golang [guidelines](https://github.com/uber-go/guide/blob/master/style.md)
+## Some golang 
+
+* [uber guidelines](https://github.com/uber-go/guide/blob/master/style.md)
+* [ardanlabs DDD](https://github.com/ardanlabs/service6-video/tree/main)
 
 ## NATS
 

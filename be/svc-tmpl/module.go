@@ -6,12 +6,15 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob/awss3"
+	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/repo"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/rest"
+	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
 type Module struct{}
@@ -49,10 +52,21 @@ func Root(ctx context.Context, s system.Service) error {
 		return err
 	}
 
-	a, _ := app.New(
+	stateStore, err := jetstream.NewStateStore(ctx, jetstream.Config{
+		URL: "localhost:4222",
+	}, state.EntityTypeFromProto(&tmplpbv1.TemplateData{}))
+	if err != nil {
+		return err
+	}
+
+	a, err := app.New(
 		app.WithBlobStore(blobClient),
 		app.WithTmplRepo(appRepo),
+		app.WithStateStore(stateStore),
 	)
+	if err != nil {
+		return err
+	}
 
 	if s.Mux() == nil {
 		return fmt.Errorf("system.Mux is nil")

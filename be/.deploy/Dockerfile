@@ -21,13 +21,23 @@ RUN go build  -ldflags "-X ${VER_PACKAGE}.version=${GIT_HASH}" \
 
 FROM alpine:latest AS runtime
 ARG GIT_HASH
+ARG MAIN_FILE
 
 RUN apk add --no-cache curl
 WORKDIR /app
-COPY --from=builder /app/app /app/app
+
+RUN addgroup -g 1000 -S app && \
+    adduser -u 1000 -h /app -G app -S app
+
+COPY --from=builder --chown=app:app /app/app /app/app
 
 # COPY --from=builder /app/config.yaml /app/config.yaml
 # COPY --from=builder /app/jwt.key /app/jwt.key
 # COPY --from=builder /app/jwt.crt /app/jwt.crt
 
 CMD ["/app/app", "server"]
+
+## Some labels
+LABEL org.opencontainers.image.title="${MAIN_FILE}" \
+    org.opencontainers.image.revision="${GIT_HASH}" \
+    org.opencontainers.image.vendor="btmt.io"

@@ -70,11 +70,11 @@ message GetByIdResponse {
 
 
 message SaveRequest {
-    Template payload = 1 [json_name = "payload"]; 
+  TemplateUpdate payload = 1 [json_name = "payload"]; 
 }
 
 message SaveResponse {
-    Template payload = 1 [json_name = "payload"]; 
+  Template payload = 1 [json_name = "payload"]; 
 }
 
 message Template{
@@ -87,4 +87,14 @@ message Template{
     string body = 7 [json_name = "body"];
     google.protobuf.Timestamp created_at = 9 [json_name = "created_at"];
     google.protobuf.Timestamp updated_at = 10 [json_name = "updated_at"];
+}
+
+message TemplateUpdate{
+  string id = 1 [json_name = "id"];
+  string content_type = 2 [json_name = "content_type"];
+  string name = 3 [json_name = "name"];
+  repeated string labels = 4 [json_name = "labels"];
+  repeated string images = 5 [json_name = "images"];
+  map<string,string>  files = 6 [json_name = "files"];
+  string body = 7 [json_name = "body"];
 }

@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"io"
 	"testing"
 	"time"
 
@@ -12,13 +11,18 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
-	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/blob/awss3"
+	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/repo"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
+
+var natsCfg = jetstream.Config{
+	URL: "localhost:4222",
+}
 
 func Test_Save(t *testing.T) {
 
@@ -37,13 +41,16 @@ func Test_Save(t *testing.T) {
 
 	testRepo := repo.New(cfg.Collection, testDb)
 
+	stateStore, err := jetstream.NewStateStore(ctx, natsCfg, state.MustParseEntityType("templates"))
+	require.NoError(t, err)
+
 	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.AwsConfig{
 		Region:   "us-east-1",
 		Endpoint: "http://localhost:4566",
 	})
 	require.NoError(t, err)
 
-	testApp, err := New(WithBlobStore(blobClient), WithTmplRepo(testRepo))
+	testApp, err := New(WithBlobStore(blobClient), WithTmplRepo(testRepo), WithStateStore(stateStore))
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -76,31 +83,25 @@ func Test_Save(t *testing.T) {
 
 				tmplpb.MatchTemplate(t, newTmpl, savedTmpl)
 
-				blobId1, err := testApp.tmplFolder.SetIdVersionFromString(savedTmpl.Id)
-				require.NoError(t, err)
-
-				blobId, err := testApp.tmplFolder.SetIdVersionFromString(blobId1.Id())
-				require.NoError(t, err)
-
 				// fmt.Printf("blobId: %#v, \n", blobId)
 
-				blobList, err := blobClient.List(ctx, realm, blobId)
-				require.NoError(t, err)
-				require.Equal(t, len(blobList), 1)
-				require.Equal(t, len(blobList[0].Versions), 0)
+				// blobList, err := stateStore.History(ctx, uuid.MustParse(newTmpl.Id))
+				// require.NoError(t, err)
+				// require.Equal(t, len(blobList), 1)
+				// require.Equal(t, len(blobList[0].Versions), 0)
 
-				require.Equal(t, blobList[0].Id.Id(), savedTmpl.Id)
-				require.Equal(t, blobList[0].MD.ContentType, savedTmpl.ContentType)
-				require.Equal(t, blobList[0].MD.Type, blob.BlobTypeTemplate)
+				// require.Equal(t, blobList[0].Id.Id(), savedTmpl.Id)
+				// require.Equal(t, blobList[0].MD.ContentType, savedTmpl.ContentType)
+				// require.Equal(t, blobList[0].MD.Type, blob.BlobTypeTemplate)
 
-				tmplBlob, err := blobClient.Fetch(ctx, realm, blobId)
-				require.NoError(t, err)
+				// tmplBlob, err := blobClient.Fetch(ctx, realm, blobId)
+				// require.NoError(t, err)
 
-				tmplBlobBody, err := io.ReadAll(tmplBlob.ReadCloser)
-				require.NoError(t, err)
-				require.Equal(t, newTmpl.Body, string(tmplBlobBody))
+				// tmplBlobBody, err := io.ReadAll(tmplBlob.ReadCloser)
+				// require.NoError(t, err)
+				// require.Equal(t, newTmpl.Body, string(tmplBlobBody))
 
-				fmt.Printf("blobList: %v, \n", string(tmplBlobBody))
+				// fmt.Printf("blobList: %v, \n", string(tmplBlobBody))
 
 				savedTmpl1, err := testApp.GetTmpl(ctx, newTmpl.Id)
 				require.NoError(t, err)
@@ -113,10 +114,10 @@ func Test_Save(t *testing.T) {
 				require.NoError(t, err)
 				tmplpb.MatchTemplate(t, savedTmpl1, savedTmpl1Actual)
 
-				blobList, err = blobClient.List(ctx, realm, blobId)
-				require.NoError(t, err)
-				require.Equal(t, len(blobList), 1)
-				require.Equal(t, len(blobList[0].Versions), 0)
+				// blobList, err = blobClient.List(ctx, realm, blobId)
+				// require.NoError(t, err)
+				// require.Equal(t, len(blobList), 1)
+				// require.Equal(t, len(blobList[0].Versions), 0)
 
 				savedTmpl1.Body = "update body from test"
 				savedTmpl1.UpdatedAt = timestamppb.New(time.Now())
@@ -129,12 +130,12 @@ func Test_Save(t *testing.T) {
 
 				fmt.Printf("size:  %#v \n\n\n", savedTmpl1Actual)
 
-				blobList, err = blobClient.List(ctx, realm, blobId)
-				require.NoError(t, err)
-				require.Equal(t, len(blobList), 1)
-				require.Equal(t, len(blobList[0].Versions), 1)
+				// blobList, err = blobClient.List(ctx, realm, blobId)
+				// require.NoError(t, err)
+				// require.Equal(t, len(blobList), 1)
+				// require.Equal(t, len(blobList[0].Versions), 1)
 
-				fmt.Printf("size: %v   %#v \n", len(blobList), blobList)
+				// fmt.Printf("size: %v   %#v \n", len(blobList), blobList)
 
 			},
 		},
