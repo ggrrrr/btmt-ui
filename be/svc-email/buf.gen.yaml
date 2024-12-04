@@ -2,7 +2,8 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: be/common/app
+    # default: be/svc-auth/authpb/v1
+    default: github.com/ggrrrr/btmt-ui/be/svc-email/emailpb
     except:
       - buf.build/googleapis/googleapis
 plugins:
@@ -10,17 +11,17 @@ plugins:
     out: .
     opt:
       - paths=source_relative
-  # - name: go-grpc
-  # out: .
-  # opt:
-  # - paths=source_relative
-  # - name: grpc-gateway
-  # out: .
-  # opt:
-  # - paths=source_relative
-  # - grpc_api_configuration=internal/rest/api.annotations.yaml
-  # - name: openapiv2
-  # out: .
+  - name: go-grpc
+    out: .
+    opt:
+      - paths=source_relative
+  - name: grpc-gateway
+    out: .
+    opt:
+      - paths=source_relative
+      # - grpc_api_configuration=internal/rest/api.annotations.yaml
+  - name: openapiv2
+    out: .
 
   # - name: openapiv2
   #   out: internal/rest

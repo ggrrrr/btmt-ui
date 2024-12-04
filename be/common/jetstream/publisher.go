@@ -29,6 +29,33 @@ func NewPublisher(conn *NatsConnection, subject string, tokenGenerator token.Ser
 	}, nil
 }
 
+func (c *NatsPublisher) Publish(ctx context.Context, msg *PublishMsg) error {
+
+	subject := c.subject
+	if msg.SubjectKey != "" {
+		subject = fmt.Sprintf("%s.%s", subject, msg.SubjectKey)
+	}
+
+	msg.msg = nats.Msg{
+		Subject: subject,
+		Data:    msg.Payload,
+		Header:  nats.Header{},
+	}
+
+	msg.Set("Content-Type", msg.ContentType)
+
+	token, err := c.tokenGenerator.TokenForService(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to sign msg: %w", err)
+	}
+
+	otel.GetTextMapPropagator().Inject(ctx, msg)
+
+	msg.msg.Header.Set(authHeaderName, token)
+
+	return c.publish(ctx, msg.UniqId, &msg.msg)
+}
+
 func (c *NatsPublisher) Shutdown() error {
 	if c.conn == nil {
 		return nil
@@ -55,31 +82,4 @@ func (c *NatsPublisher) publish(ctx context.Context, uniqId string, msg *nats.Ms
 
 	addSpanAttributes(span, ack)
 	return nil
-}
-
-func (c *NatsPublisher) Publish(ctx context.Context, msg *PublishMsg) error {
-
-	subject := c.subject
-	if msg.SubjectKey != "" {
-		subject = fmt.Sprintf("%s.%s", subject, msg.SubjectKey)
-	}
-
-	msg.msg = nats.Msg{
-		Subject: subject,
-		Data:    msg.Payload,
-		Header:  nats.Header{},
-	}
-
-	msg.Set("Content-Type", msg.ContentType)
-
-	token, err := c.tokenGenerator.TokenForService(ctx)
-	if err != nil {
-		return fmt.Errorf("unable to sign msg: %w", err)
-	}
-
-	otel.GetTextMapPropagator().Inject(ctx, msg)
-
-	msg.msg.Header.Set(authHeaderName, token)
-
-	return c.publish(ctx, msg.UniqId, &msg.msg)
 }

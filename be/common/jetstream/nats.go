@@ -3,22 +3,30 @@ package jetstream
 import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+
+	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 const authHeaderName string = "authorization"
 
 type (
+	ConnOptionFunc func(a *NatsConnection) error
+
 	Config struct {
 		URL string
 	}
 
 	NatsConnection struct {
-		conn *nats.Conn
-		js   jetstream.JetStream
+		conn     *nats.Conn
+		js       jetstream.JetStream
+		verifier token.Verifier
+	}
+
+	Connector interface {
 	}
 )
 
-func Connect(cfg Config) (*NatsConnection, error) {
+func Connect(cfg Config, opts ...ConnOptionFunc) (*NatsConnection, error) {
 	cn, err := nats.Connect(cfg.URL)
 	if err != nil {
 		return nil, err
@@ -31,10 +39,19 @@ func Connect(cfg Config) (*NatsConnection, error) {
 		return nil, err
 	}
 
-	return &NatsConnection{
+	n := &NatsConnection{
 		conn: cn,
 		js:   js,
-	}, nil
+	}
+
+	for _, f := range opts {
+		err = f(n)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return n, nil
 
 }
 
@@ -48,4 +65,11 @@ func (c *NatsConnection) shutdown() error {
 	c.conn.Close()
 	return nil
 
+}
+
+func WithVerifier(verifier token.Verifier) ConnOptionFunc {
+	return func(n *NatsConnection) error {
+		n.verifier = verifier
+		return nil
+	}
 }

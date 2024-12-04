@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	StateGetter interface {
+	StateFetcher interface {
 		Fetch(ctx context.Context, key string) (EntityState, error)
 		History(ctx context.Context, key string) ([]EntityState, error)
 	}
@@ -16,7 +16,7 @@ type (
 	}
 
 	StateStore interface {
-		StateGetter
+		StateFetcher
 		StatePusher
 	}
 )

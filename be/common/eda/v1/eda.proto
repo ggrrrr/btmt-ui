@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+// Email sender service
+package eda.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+message Metadata {
+    map<string,string> data = 1;  
+}
+
+message Command {
+    string id = 1;
+    string domain = 2;
+    string name = 3;
+    Metadata md = 4;
+    google.protobuf.Any payload = 5;
+    google.protobuf.Timestamp  created_at = 6;
+}
+
+message Event {
+    string id = 1;
+    string domain = 2;
+    string name = 3;
+    Metadata md = 4;
+    google.protobuf.Any details = 5;
+    google.protobuf.Timestamp  created_at = 6;
+}
+

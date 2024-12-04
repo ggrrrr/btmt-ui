@@ -21,7 +21,8 @@ var cfg = Config{
 	URL: "localhost:4222",
 }
 
-func TestMain(t *testing.T) {
+func TestKeyValue(t *testing.T) {
+	// verifier := token.NewVerifierMock()
 
 	myVal := "some value 1"
 
@@ -71,7 +72,7 @@ func TestPublish(t *testing.T) {
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	conn, err := Connect(cfg)
+	conn, err := Connect(cfg, WithVerifier(verifier))
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()
@@ -79,6 +80,7 @@ func TestPublish(t *testing.T) {
 	}()
 
 	stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test.*"})
+	// stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test.*"})
 	require.NoError(t, err)
 	defer func() {
 		err = conn.PruneStream(rootCtx, stream.CachedInfo().Config.Name)
@@ -92,18 +94,18 @@ func TestPublish(t *testing.T) {
 	testPublisher, err := NewPublisher(conn, "test", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
 	require.NoError(t, err)
 
-	consumer1, err := NewConsumer(rootCtx, conn, "test", "group2", verifier)
+	consumer1, err := NewConsumer(rootCtx, conn, "test", "group2")
 	require.NoError(t, err)
 
 	consunerHandler1 := handlerSvc{t: t, wg: &wg, name: "consumer -- 1"}
-	err = consumer1.ConsumerLoop(consunerHandler1.handle)
+	err = consumer1.Consume(ctx, consunerHandler1.handle)
 	require.NoError(t, err)
 
-	consumer2, err := NewConsumer(rootCtx, conn, "test", "group2", verifier)
+	consumer2, err := NewConsumer(rootCtx, conn, "test", "group2")
 	require.NoError(t, err)
 
 	consunerHandler2 := handlerSvc{t: t, wg: &wg, name: "consumer -- 2"}
-	err = consumer2.ConsumerLoop(consunerHandler2.handle)
+	err = consumer2.Consume(ctx, consunerHandler2.handle)
 	require.NoError(t, err)
 
 	time.Sleep(1 * time.Second)

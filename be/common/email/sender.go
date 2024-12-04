@@ -12,6 +12,10 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
+const (
+	AuthTypePlain AuthType = "plain"
+)
+
 type (
 	AuthType string
 
@@ -37,18 +41,25 @@ type (
 	}
 
 	// Implements SenderCloser
-	Sender struct {
+	sender struct {
 		cfg        Config
 		tcpConn    net.Conn
 		smtpClient extSmtpClient
 	}
+
+	SmtpSender interface {
+		Send(ctx context.Context, email *Msg) error
+		Close() error
+	}
+
+	SmtpConnector interface {
+		Connect(ctx context.Context) (SmtpSender, error)
+	}
 )
 
-const (
-	AuthTypePlain AuthType = "plain"
-)
+var _ (SmtpSender) = (*sender)(nil)
 
-func NewSender(ctx context.Context, cfg Config) (*Sender, error) {
+func (cfg Config) Connect(ctx context.Context) (*sender, error) {
 	var err error
 	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.TraceKVString("smtp.host.addr", cfg.SMTPAddr))
 	defer func() {
@@ -61,7 +72,7 @@ func NewSender(ctx context.Context, cfg Config) (*Sender, error) {
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 10 * time.Second
 	}
-	sender := &Sender{
+	sender := &sender{
 		cfg: cfg,
 	}
 
@@ -107,7 +118,7 @@ func NewSender(ctx context.Context, cfg Config) (*Sender, error) {
 	return sender, err
 }
 
-func (a *Sender) Send(ctx context.Context, email *Msg) error {
+func (a *sender) Send(ctx context.Context, email *Msg) error {
 	if len(email.parts) == 0 {
 		return &MailFormatError{
 			msg: "body",
@@ -150,7 +161,7 @@ func (a *Sender) Send(ctx context.Context, email *Msg) error {
 	return nil
 }
 
-func (conn *Sender) Close() error {
+func (conn *sender) Close() error {
 	var err error
 	if conn.smtpClient != nil {
 		err = conn.smtpClient.Quit()
@@ -169,7 +180,7 @@ func (conn *Sender) Close() error {
 	return nil
 }
 
-func (sender *Sender) smtpAuth() error {
+func (sender *sender) smtpAuth() error {
 	var err error
 
 	logger.Debug().Msg("smtpAuth.start")
