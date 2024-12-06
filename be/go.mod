@@ -87,6 +87,7 @@ require (
 require (
 	github.com/XSAM/otelsql v0.34.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/mileusna/useragent v1.3.4
 	github.com/riandyrn/otelchi v0.10.0

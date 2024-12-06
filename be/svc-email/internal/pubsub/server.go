@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
@@ -32,7 +30,9 @@ func NewCommandHandler(ctx context.Context, app senderApp, conn *jetstream.NatsC
 	_, err := conn.CreateStream(ctx, "svc-email", "email sender", []string{
 		"test.*",
 	})
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
 
 	consumer, err := jetstream.NewConsumer(context.Background(), conn, streamName, group)
 	if err != nil {
