@@ -4,15 +4,15 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/propagation"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 type (
-	PublishMsg struct {
-		UniqId      string
-		SubjectKey  string
-		ContentType string
-		Payload     []byte
-		msg         nats.Msg
+	publishMsg struct {
+		md      app.ProducerMD
+		payload []byte
+		msg     nats.Msg
 	}
 
 	jsMsg struct {
@@ -20,7 +20,7 @@ type (
 	}
 )
 
-var _ (propagation.TextMapCarrier) = (*PublishMsg)(nil)
+var _ (propagation.TextMapCarrier) = (*publishMsg)(nil)
 
 var _ (propagation.TextMapCarrier) = (*jsMsg)(nil)
 
@@ -60,7 +60,7 @@ func (j jsMsg) Set(key string, value string) {
 }
 
 // Get implements propagation.TextMapCarrier.
-func (n PublishMsg) Get(key string) string {
+func (n publishMsg) Get(key string) string {
 	if n.msg.Header == nil {
 		return ""
 	}
@@ -68,7 +68,7 @@ func (n PublishMsg) Get(key string) string {
 }
 
 // Keys implements propagation.TextMapCarrier.
-func (n *PublishMsg) Keys() []string {
+func (n *publishMsg) Keys() []string {
 	if n.msg.Header == nil {
 		return []string{}
 	}
@@ -80,7 +80,7 @@ func (n *PublishMsg) Keys() []string {
 }
 
 // Set implements propagation.TextMapCarrier.
-func (n *PublishMsg) Set(key string, value string) {
+func (n *publishMsg) Set(key string, value string) {
 	if n.msg.Header == nil {
 		n.msg.Header = nats.Header{}
 	}

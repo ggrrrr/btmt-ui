@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -111,20 +112,18 @@ func TestPublish(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	wg.Add(2)
-	err = testPublisher.Publish(ctx, &PublishMsg{
-		UniqId:      "",
-		SubjectKey:  "2",
-		ContentType: "",
-		Payload:     []byte("test payload 2222"),
-	})
+	err = testPublisher.Publish(
+		ctx,
+		app.NewEventMD(app.WithContentType("type"), app.WithOrderKey("2"), app.WithUniqId("")),
+		[]byte("test payload 2222"),
+	)
 	require.NoError(t, err)
 
-	err = testPublisher.Publish(ctx, &PublishMsg{
-		UniqId:      "",
-		SubjectKey:  "3",
-		ContentType: "",
-		Payload:     []byte("test payload 33333"),
-	})
+	err = testPublisher.Publish(
+		ctx,
+		app.NewEventMD(app.WithContentType("type"), app.WithOrderKey("3"), app.WithUniqId("")),
+		[]byte("test payload 33333"),
+	)
 	require.NoError(t, err)
 
 	span.End(nil)
