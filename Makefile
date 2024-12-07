@@ -8,6 +8,9 @@ build_svc_%:
 		--tag ${DOCKER_REPO}/be/$*:${GIT_HASH} \
 		./be
 
+kind_image_svc_%:
+	kind load docker-image ${DOCKER_REPO}/be/$*:${GIT_HASH}
+
 tag_svc_%:
 	docker tag ${DOCKER_REPO}/be/$*:${GIT_HASH} ${DOCKER_REPO}/be/$*:latest
 
@@ -49,3 +52,4 @@ go_test:
 
 lint:
 	golangci-lint run -v be/...
+

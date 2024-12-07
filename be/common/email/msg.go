@@ -1,10 +1,12 @@
 package email
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type (
@@ -160,4 +162,34 @@ func newStringCopier(s string) func(io.Writer) error {
 		_, err := io.WriteString(w, s)
 		return err
 	}
+}
+
+func (m *Msg) DumpToText() string {
+	var buffer bytes.Buffer
+	buffer.WriteString("to:")
+	buffer.WriteString(m.to.AddressList())
+	buffer.WriteString("\n")
+
+	buffer.WriteString("from:")
+	buffer.WriteString(m.from.Formatted())
+	buffer.WriteString("\n")
+
+	for _, v := range m.headers {
+		buffer.WriteString("header:")
+		buffer.WriteString(string(v.key))
+		buffer.WriteString(":")
+		buffer.WriteString(strings.Join(v.values, ","))
+		buffer.WriteString("\n")
+	}
+	// buffer.WriteString("from:")
+	// buffer.WriteString(m.headers)
+	// buffer.WriteString("\n")
+
+	for _, v := range m.parts {
+		v.copier(&buffer)
+	}
+
+	// m.parts
+
+	return buffer.String()
 }

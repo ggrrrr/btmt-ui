@@ -8,6 +8,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDumpToText(t *testing.T) {
+
+	msg := Msg{
+		from: Rcpt{addr: "from@amil.com", name: "from"},
+		to:   RcptList{Rcpt{addr: "to@mail.com", name: "to"}},
+		headers: []smtpHeader{
+			{key: "a", values: []string{"b"}},
+		},
+		parts:       []*bodyPart{{contentType: "", copier: newStringCopier("body text")}},
+		attachments: []*attachmentPart{},
+		encoding:    QuotedPrintable,
+		charset:     "",
+	}
+
+	actual := msg.DumpToText()
+
+	require.Equal(t, "to:to@mail.com\nfrom:\"from\" <from@amil.com>\nheader:a:b\nbody text", actual, "%v", actual)
+
+}
+
 func TestRcptMail(t *testing.T) {
 	tests := []struct {
 		name     string

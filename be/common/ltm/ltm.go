@@ -6,3 +6,7 @@ type LTM struct {
 	Otel   any
 	Metric any
 }
+
+func init() {
+	defaultLog()
+}

@@ -12,7 +12,6 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
-	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 type (
@@ -29,12 +28,23 @@ type (
 		conn       *NatsConnection
 		stream     jetstream.Stream
 		consumer   jetstream.Consumer
-		verifier   token.Verifier
 		shutdown   func()
+	}
+
+	Consumer interface {
+		Consume(ctx context.Context, handler DataHandler) error
+		Shutdown() error
 	}
 )
 
-func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, group string, verifier token.Verifier) (*NatsConsumer, error) {
+var _ (Consumer) = (*NatsConsumer)(nil)
+
+func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, group string) (*NatsConsumer, error) {
+
+	if conn.verifier == nil {
+		return nil, fmt.Errorf("verifier is not set")
+	}
+
 	consumerId := uuid.New()
 
 	stream, err := conn.js.Stream(ctx, streamName)
@@ -56,14 +66,14 @@ func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, g
 		conn:       conn,
 		stream:     stream,
 		consumer:   c,
-		verifier:   verifier,
 	}, nil
 }
 
-func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
+func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandler) error {
 	logger.Info().
 		Str("consumer.id", c.consumerId.String()).
 		Msg("ConsumerLoop.started")
+	// TODO use ctx for shutdown
 
 	// c.consumer.Qon
 	consLoop, err := c.consumer.Consume(
@@ -75,7 +85,7 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 			}
 
 			// TODO try to pass context from executor
-			ctx := otel.GetTextMapPropagator().Extract(context.Background(), intMsg)
+			ctx := otel.GetTextMapPropagator().Extract(ctx, intMsg)
 			ctx, span := c.consumerSpan(ctx, msg)
 			defer func() {
 				if err != nil {
@@ -85,7 +95,7 @@ func (c *NatsConsumer) ConsumerLoop(handler DataHandler) error {
 				span.End()
 			}()
 
-			authInfo, err := c.verifier.Verify(app.AuthData{
+			authInfo, err := c.conn.verifier.Verify(app.AuthData{
 				// We don`t set Auth Schema in our publisher since this is internal svc only channel
 				AuthScheme: roles.AuthSchemeBearer,
 				AuthToken:  intMsg.Get(authHeaderName),

@@ -8,12 +8,12 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 )
 
-var _ (state.StateGetter) = (*StateStore)(nil)
+var _ (state.StateFetcher) = (*StateStore)(nil)
 
 func (s *StateStore) History(ctx context.Context, key string) (states []state.EntityState, err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.store.History", nil,
-		logger.TraceKVString("entity.id", key),
-		logger.TraceKVString("entity.type", s.bucket),
+		logger.TraceKVString("store.entity.id", key),
+		logger.TraceKVString("store.entity.type", s.bucket),
 	)
 	defer func() {
 		span.End(err)
@@ -44,7 +44,7 @@ func (s *StateStore) History(ctx context.Context, key string) (states []state.En
 }
 
 func (s *StateStore) Fetch(ctx context.Context, key string) (entity state.EntityState, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.store.Get", nil,
+	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.store.Fetch", nil,
 		logger.TraceKVString("entity.id", key),
 		logger.TraceKVString("entity.type", s.bucket),
 	)
@@ -54,7 +54,7 @@ func (s *StateStore) Fetch(ctx context.Context, key string) (entity state.Entity
 
 	entry, err := s.kv.Get(ctx, key)
 	if err != nil {
-		err = fmt.Errorf("StateGetter[%s].Get(%s) %w", s.bucket, key, err)
+		err = fmt.Errorf("StateGetter[%s].Fetch(%s) %w", s.bucket, key, err)
 		return
 	}
 

@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/help"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/help"
 )
 
 var (
@@ -23,7 +24,7 @@ var (
 	repoFolder = help.RepoDir()
 )
 
-func loadConfig() {
+func LoadTestCfg() {
 	email_from = os.Getenv("EMAIL_FROM1")
 	email1 = os.Getenv("EMAIL_EMAIL1")
 	email2 = os.Getenv("EMAIL_EMAIL2")
@@ -39,7 +40,7 @@ func loadConfig() {
 func TestIntDialAndSend(t *testing.T) {
 	newLine = []byte("\r\n")
 
-	loadConfig()
+	LoadTestCfg()
 	t.Skip("NO Addr CONFIG")
 	ctx := context.Background()
 	if cfg.SMTPAddr == "" {
@@ -67,7 +68,7 @@ func TestIntDialAndSend(t *testing.T) {
 		return tmpl.Execute(w, myData)
 	})
 
-	client, err := NewSender(ctx, cfg)
+	client, err := cfg.Connect(ctx)
 	require.NoError(t, err)
 	defer client.Close()
 
@@ -79,7 +80,7 @@ func TestIntDialAndSend(t *testing.T) {
 func TestIntMultipleMsg(t *testing.T) {
 
 	newLine = []byte("\r\n")
-	loadConfig()
+	LoadTestCfg()
 	t.Skip("NO Addr CONFIG")
 	if cfg.SMTPAddr == "" {
 		t.Skip("NO Addr CONFIG")
@@ -96,7 +97,7 @@ func TestIntMultipleMsg(t *testing.T) {
 	tmpl := template.Must(template.New("template_data").Parse(template_data))
 
 	ctx := context.Background()
-	conn, err := NewSender(ctx, cfg)
+	conn, err := cfg.Connect(ctx)
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -124,7 +125,7 @@ func TestIntMultipleMsg(t *testing.T) {
 func TestAuth(t *testing.T) {
 	newLine = []byte("\r\n")
 
-	testSender := &Sender{
+	testSender := &sender{
 		cfg:        Config{},
 		tcpConn:    nil,
 		smtpClient: nil,
@@ -311,7 +312,7 @@ c2VjcmV0
 		t.Run(tc.name, func(t *testing.T) {
 			smtpClientMock := NewSmtpClientMock()
 
-			testSender := &Sender{
+			testSender := &sender{
 				cfg: Config{
 					SMTPHost: "",
 					SMTPAddr: "",
@@ -361,7 +362,7 @@ func TestCreateSender(t *testing.T) {
 		Timeout:  time.Second * 2,
 	}
 
-	smtp, err := NewSender(ctx, cfg)
+	smtp, err := cfg.Connect(ctx)
 	require.NoError(t, err)
 
 	err = smtp.smtpClient.Quit()
@@ -386,7 +387,7 @@ func TestCreateSenderError(t *testing.T) {
 		Timeout:  time.Second * 2,
 	}
 
-	_, err = NewSender(ctx, cfg)
+	_, err = cfg.Connect(ctx)
 	require.Error(t, err)
 	authErr := &SmtpAuthError{}
 	assert.ErrorAs(t, err, &authErr)

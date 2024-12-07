@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+// Email sender service
+package emailpb.v1;
+
+// import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+message RawBody {
+    string content_type = 1;
+    string subject = 2;
+    string body = 3;
+}
+
+message TemplateBody {
+    string template_id = 1;
+    google.protobuf.Struct data = 5;
+}
+
+message ToEmail {
+    string name = 2;
+    string email = 3;
+}
+
+message SenderAccount {
+    string realm = 1;
+    string name = 2;
+    string email = 3;
+}
+
+message EmailMessage {
+    SenderAccount from_account = 1;
+    repeated ToEmail to_email = 2;
+    repeated ToEmail cc_email = 3;
+    repeated ToEmail bcc_email = 4;
+    oneof body {
+        RawBody raw_body = 5;
+        TemplateBody template_body = 6;
+    }
+}
+
+message SendEmail {
+    string id = 1;
+    EmailMessage message = 2;
+
+}
