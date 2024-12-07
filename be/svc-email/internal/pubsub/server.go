@@ -28,7 +28,7 @@ func NewCommandHandler(ctx context.Context, app senderApp, conn *jetstream.NatsC
 	group := "email-sender"
 
 	_, err := conn.CreateStream(ctx, "svc-email", "email sender", []string{
-		"test.*",
+		"svc-email.>",
 	})
 	if err != nil {
 		return err

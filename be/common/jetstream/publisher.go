@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
@@ -29,20 +30,25 @@ func NewPublisher(conn *NatsConnection, subject string, tokenGenerator token.Ser
 	}, nil
 }
 
-func (c *NatsPublisher) Publish(ctx context.Context, msg *PublishMsg) error {
+func (c *NatsPublisher) Publish(ctx context.Context, md app.ProducerMD, payload []byte) error {
+
+	msg := &publishMsg{
+		md:      md,
+		payload: payload,
+	}
 
 	subject := c.subject
-	if msg.SubjectKey != "" {
-		subject = fmt.Sprintf("%s.%s", subject, msg.SubjectKey)
+	if md.OrderKey() != "" {
+		subject = fmt.Sprintf("%s.%s", subject, msg.md.OrderKey())
 	}
 
 	msg.msg = nats.Msg{
 		Subject: subject,
-		Data:    msg.Payload,
+		Data:    msg.payload,
 		Header:  nats.Header{},
 	}
 
-	msg.Set("Content-Type", msg.ContentType)
+	msg.Set("Content-Type", md.ContentType())
 
 	token, err := c.tokenGenerator.TokenForService(ctx)
 	if err != nil {
@@ -53,7 +59,7 @@ func (c *NatsPublisher) Publish(ctx context.Context, msg *PublishMsg) error {
 
 	msg.msg.Header.Set(authHeaderName, token)
 
-	return c.publish(ctx, msg.UniqId, &msg.msg)
+	return c.publish(ctx, msg.md.UniqId(), &msg.msg)
 }
 
 func (c *NatsPublisher) Shutdown() error {

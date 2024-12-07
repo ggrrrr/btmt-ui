@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -20,6 +21,7 @@ type mockApp struct {
 
 // SendEmail implements senderApp.
 func (m *mockApp) SendEmail(ctx context.Context, msg *emailpbv1.EmailMessage) error {
+	fmt.Printf("msg %#v\n", msg)
 	return m.err
 }
 
@@ -53,5 +55,45 @@ func TestServer(t *testing.T) {
 
 	err = NewCommandHandler(ctx, testApp, conn)
 	require.NoError(t, err)
+
+	// command := &eventv1.Command{}
+
+	// sendEmail := &emailpbv1.SendEmail{
+	// 	Id: "some_id",
+	// 	Message: &emailpbv1.EmailMessage{
+	// 		FromAccount: &emailpbv1.SenderAccount{
+	// 			Realm: "localhost",
+	// 		},
+	// 		ToEmail: []*emailpbv1.ToEmail{&emailpbv1.ToEmail{
+	// 			Name:  "from",
+	// 			Email: "from@me",
+	// 		}},
+	// 		// Body: "some body",
+	// 	},
+	// }
+	// details, err := ptypes.MarshalAny(sendEmail)
+	// command.Details = details
+	// // details, err := types.MarshalAny(sendEmail)
+	// // err = command.Details.MarshalFrom(sendEmail)
+	// require.NoError(t, err)
+
+	// commandBytes, err := proto.Marshal(command)
+	// require.NoError(t, err)
+
+	// publisher, err := jetstream.NewPublisher(conn, "svc-email", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
+	// require.NoError(t, err)
+
+	// err = publisher.Publish(ctx, app.NewMetadata(), commandBytes)
+	// require.NoError(t, err)
+
+	time.Sleep(10 * time.Second)
+}
+
+func TestMsg(t *testing.T) {
+
+	test := &emailpbv1.SendEmail{}
+	fmt.Printf("%#v \n", test.ProtoReflect().Descriptor())
+	fmt.Printf("%#v \n", test.ProtoReflect().Descriptor().Name())
+	fmt.Printf("%#v \n", test.ProtoReflect().Descriptor().ParentFile())
 
 }
