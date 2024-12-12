@@ -36,7 +36,7 @@ func TestSend(t *testing.T) {
 				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
 				// require.NoError(t, err)
 				return &emailpbv1.EmailMessage{
-					ToEmail: []*emailpbv1.ToEmail{
+					ToEmail: []*emailpbv1.EmailAddr{
 						{
 							Name:  "to email",
 							Email: "some@mail.com",
@@ -65,7 +65,7 @@ func TestSend(t *testing.T) {
 				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
 				// require.NoError(t, err)
 				return &emailpbv1.EmailMessage{
-					ToEmail: []*emailpbv1.ToEmail{
+					ToEmail: []*emailpbv1.EmailAddr{
 						{
 							Name:  "to email",
 							Email: "some@mail.com",

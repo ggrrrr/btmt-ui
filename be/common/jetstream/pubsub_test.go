@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
@@ -57,6 +58,10 @@ func TestKeyValue(t *testing.T) {
 }
 
 func TestPublish(t *testing.T) {
+
+	testId := uuid.New()
+
+	topic := "test"
 	verifier := token.NewVerifierMock()
 	wg := sync.WaitGroup{}
 
@@ -92,17 +97,17 @@ func TestPublish(t *testing.T) {
 	ctx, span := logger.Span(rootCtx, "main.Method", nil)
 	logger.InfoCtx(ctx).Msg("main.Method")
 
-	testPublisher, err := NewPublisher(conn, "test", token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
+	testPublisher, err := NewPublisher(conn, topic, token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
 	require.NoError(t, err)
 
-	consumer1, err := NewConsumer(rootCtx, conn, "test", "group2")
+	consumer1, err := NewConsumer(rootCtx, conn, topic, "group2")
 	require.NoError(t, err)
 
 	consunerHandler1 := handlerSvc{t: t, wg: &wg, name: "consumer -- 1"}
 	err = consumer1.Consume(ctx, consunerHandler1.handle)
 	require.NoError(t, err)
 
-	consumer2, err := NewConsumer(rootCtx, conn, "test", "group2")
+	consumer2, err := NewConsumer(rootCtx, conn, topic, "group2")
 	require.NoError(t, err)
 
 	consunerHandler2 := handlerSvc{t: t, wg: &wg, name: "consumer -- 2"}
@@ -114,14 +119,14 @@ func TestPublish(t *testing.T) {
 	wg.Add(2)
 	err = testPublisher.Publish(
 		ctx,
-		app.NewEventMD(app.WithContentType("type"), app.WithOrderKey("2"), app.WithUniqId("")),
+		msgbus.Metadata{Id: testId},
 		[]byte("test payload 2222"),
 	)
 	require.NoError(t, err)
 
 	err = testPublisher.Publish(
 		ctx,
-		app.NewEventMD(app.WithContentType("type"), app.WithOrderKey("3"), app.WithUniqId("")),
+		msgbus.Metadata{},
 		[]byte("test payload 33333"),
 	)
 	require.NoError(t, err)
@@ -139,11 +144,12 @@ type handlerSvc struct {
 	name string
 }
 
-func (h handlerSvc) handle(ctx context.Context, subject string, data []byte) {
+func (h handlerSvc) handle(ctx context.Context, subject string, _ msgbus.Metadata, data []byte) error {
 	defer h.wg.Done()
 	ctx, span := logger.Span(ctx, "ConsumerLoop.handler", nil)
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	assert.Equalf(h.t, "mockuser", authInfo.Subject, "authInfo is not set %#v", authInfo)
 	logger.InfoCtx(ctx).Str("group", h.name).Any("data", string(data)).Msg("ConsumerLoop")
 	span.End(nil)
+	return nil
 }

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+// Message bus
+package msgbus.v1;
+
+message TestCommand {
+    string id = 1;
+    string name = 2;
+    string info = 3 [deprecated = true];
+}

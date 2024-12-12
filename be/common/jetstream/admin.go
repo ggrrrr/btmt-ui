@@ -2,11 +2,15 @@ package jetstream
 
 import (
 	"context"
+	"strings"
 
 	"github.com/nats-io/nats.go/jetstream"
+
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 func (c *NatsConnection) CreateStream(ctx context.Context, name string, descr string, subjects []string) (jetstream.Stream, error) {
+	logger.Info().Str("subjects", strings.Join(subjects, ",")).Str("name", name).Msg("CreateStream")
 
 	stream, err := c.js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:        name,
@@ -52,6 +56,7 @@ func (c *NatsConnection) PruneStream(ctx context.Context, name string) error {
 }
 
 func (c *NatsConnection) Stream(ctx context.Context, name string) (jetstream.Stream, error) {
+	logger.Info().Str("name", name).Msg("Stream")
 	s, err := c.js.Stream(ctx, name)
 	return s, err
 }

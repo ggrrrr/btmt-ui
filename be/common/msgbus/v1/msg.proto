@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+// Message bus
+package msgbus.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+message Metadata {
+    map<string,string> data = 1;  
+}
+
+enum MessageType {
+    MESSAGE_TYPE_UNSPECIFIED = 0;
+    MESSAGE_TYPE_EVENT = 1;
+    MESSAGE_TYPE_COMMAND = 2;
+}
+
+message Message {
+    bytes id = 1;
+    MessageType message_type = 2;
+    string domain = 3;
+    string name = 4;
+    Metadata md = 5;
+    google.protobuf.Any payload = 6;
+    google.protobuf.Timestamp  created_at = 7;
+}
+

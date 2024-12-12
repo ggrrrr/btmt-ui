@@ -5,12 +5,12 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/propagation"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 )
 
 type (
 	publishMsg struct {
-		md      app.ProducerMD
+		md      msgbus.Metadata
 		payload []byte
 		msg     nats.Msg
 	}

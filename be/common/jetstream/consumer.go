@@ -11,6 +11,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -21,7 +22,7 @@ type (
 		Payload     []byte
 	}
 
-	DataHandler func(ctx context.Context, subject string, data []byte)
+	DataHandlerFunc func(ctx context.Context, subject string, md msgbus.Metadata, data []byte) error
 
 	NatsConsumer struct {
 		consumerId uuid.UUID
@@ -32,7 +33,7 @@ type (
 	}
 
 	Consumer interface {
-		Consume(ctx context.Context, handler DataHandler) error
+		Consume(ctx context.Context, handler DataHandlerFunc) error
 		Shutdown() error
 	}
 )
@@ -69,7 +70,7 @@ func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, g
 	}, nil
 }
 
-func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandler) error {
+func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandlerFunc) error {
 	logger.Info().
 		Str("consumer.id", c.consumerId.String()).
 		Msg("ConsumerLoop.started")
@@ -84,7 +85,6 @@ func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandler) error {
 				msg: msg,
 			}
 
-			// TODO try to pass context from executor
 			ctx := otel.GetTextMapPropagator().Extract(ctx, intMsg)
 			ctx, span := c.consumerSpan(ctx, msg)
 			defer func() {
@@ -106,11 +106,19 @@ func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandler) error {
 			}
 			ctx = roles.CtxWithAuthInfo(ctx, authInfo)
 
+			md := createMessageMD(msg)
+
 			err = msg.Ack()
 			if err != nil {
 				logger.ErrorCtx(ctx, err).Msg("msg.Ack failed")
 			}
-			handler(ctx, msg.Subject(), msg.Data())
+
+			err = handler(ctx, msg.Subject(), md, msg.Data())
+			if err != nil {
+				// TODO now what!?
+				// write to DLQ (Dead Letter Queue)
+				logger.ErrorCtx(ctx, err).Msg("handler")
+			}
 		},
 		jetstream.ConsumeErrHandler(func(consumeCtx jetstream.ConsumeContext, err error) {
 			fmt.Printf("some error, %+v %+v \n\n", consumeCtx, err)

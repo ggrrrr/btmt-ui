@@ -4,12 +4,12 @@ import "context"
 
 type MockConsumer struct {
 	Err         error
-	HandlerFunc DataHandler
+	HandlerFunc DataHandlerFunc
 }
 
 type MockConnecter struct {
 	Err         error
-	HandlerFunc DataHandler
+	HandlerFunc DataHandlerFunc
 }
 
 var _ (Consumer) = (*MockConsumer)(nil)
@@ -17,7 +17,7 @@ var _ (Consumer) = (*MockConsumer)(nil)
 var _ (Consumer) = (*MockConsumer)(nil)
 
 // Consume implements Consumer.
-func (m *MockConsumer) Consume(ctx context.Context, handler DataHandler) error {
+func (m *MockConsumer) Consume(ctx context.Context, handler DataHandlerFunc) error {
 	if m.Err != nil {
 		return m.Err
 	}

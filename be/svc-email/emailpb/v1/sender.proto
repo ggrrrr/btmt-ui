@@ -17,7 +17,7 @@ message TemplateBody {
     google.protobuf.Struct data = 5;
 }
 
-message ToEmail {
+message EmailAddr {
     string name = 2;
     string email = 3;
 }
@@ -30,9 +30,9 @@ message SenderAccount {
 
 message EmailMessage {
     SenderAccount from_account = 1;
-    repeated ToEmail to_email = 2;
-    repeated ToEmail cc_email = 3;
-    repeated ToEmail bcc_email = 4;
+    repeated EmailAddr to_email = 2;
+    repeated EmailAddr cc_email = 3;
+    repeated EmailAddr bcc_email = 4;
     oneof body {
         RawBody raw_body = 5;
         TemplateBody template_body = 6;
@@ -42,5 +42,4 @@ message EmailMessage {
 message SendEmail {
     string id = 1;
     EmailMessage message = 2;
-
 }
