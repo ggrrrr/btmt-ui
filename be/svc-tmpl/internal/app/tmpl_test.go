@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
+	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/blob/awss3"
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
@@ -22,6 +23,27 @@ import (
 
 var natsCfg = jetstream.Config{
 	URL: "localhost:4222",
+}
+
+func TestMock(t *testing.T) {
+	blobStore := new(blob.MockBlobStore)
+	stateStore := new(state.MockStore)
+
+	realm := "localhost"
+	ctx := context.Background()
+	ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(realm, "admin", app.Device{}))
+	var err error
+
+	cfg := mgo.MgoTestCfg("tmpl")
+	testDb, err := mgo.New(ctx, cfg)
+	require.NoError(t, err)
+	// defer testRepo.Close()
+	defer testDb.Close(ctx)
+	testRepo := repo.New(cfg.Collection, testDb)
+
+	_, err = New(WithBlobStore(blobStore), WithTmplRepo(testRepo), WithStateStore(stateStore))
+	require.NoError(t, err)
+
 }
 
 func Test_Save(t *testing.T) {
@@ -61,72 +83,53 @@ func Test_Save(t *testing.T) {
 			name: "save new",
 			testFunc: func(t *testing.T) {
 				var err error
-				newTmpl := &tmplpb.Template{
+				newTmpl := &tmplpb.TemplateUpdate{
 					Id:          "",
 					ContentType: "text/html",
 					Name:        "test tmpl",
 					Labels:      []string{"new:label"},
-					Images:      []string{"image-1"},
-					Files:       map[string]string{},
-					Body:        "new template body",
+					// Images:      []string{"image-1"},
+					Body: "new template body",
 					// CreatedAt:   ,
 					// UpdatedAt:   time.Time{},
 				}
 
-				tmplErr, err := testApp.SaveTmpl(ctx, newTmpl)
+				tmplId, err := testApp.SaveTmpl(ctx, newTmpl)
 				require.NoError(t, err)
-				require.Equal(t, TmplError(nil), tmplErr)
-				require.True(t, newTmpl.Id != "")
+				require.True(t, tmplId != "")
 
+				newTmpl.Id = tmplId
 				savedTmpl, err := testApp.GetTmpl(ctx, newTmpl.Id)
 				require.NoError(t, err)
 
-				tmplpb.MatchTemplate(t, newTmpl, savedTmpl)
-
-				// fmt.Printf("blobId: %#v, \n", blobId)
-
-				// blobList, err := stateStore.History(ctx, uuid.MustParse(newTmpl.Id))
-				// require.NoError(t, err)
-				// require.Equal(t, len(blobList), 1)
-				// require.Equal(t, len(blobList[0].Versions), 0)
-
-				// require.Equal(t, blobList[0].Id.Id(), savedTmpl.Id)
-				// require.Equal(t, blobList[0].MD.ContentType, savedTmpl.ContentType)
-				// require.Equal(t, blobList[0].MD.Type, blob.BlobTypeTemplate)
-
-				// tmplBlob, err := blobClient.Fetch(ctx, realm, blobId)
-				// require.NoError(t, err)
-
-				// tmplBlobBody, err := io.ReadAll(tmplBlob.ReadCloser)
-				// require.NoError(t, err)
-				// require.Equal(t, newTmpl.Body, string(tmplBlobBody))
-
-				// fmt.Printf("blobList: %v, \n", string(tmplBlobBody))
+				tmplpb.MatchTemplateUpdate(t, time.Now(), []string{}, newTmpl, savedTmpl)
 
 				savedTmpl1, err := testApp.GetTmpl(ctx, newTmpl.Id)
 				require.NoError(t, err)
 
-				savedTmpl1.Labels = []string{"new:update-label"}
-				_, err = testApp.SaveTmpl(ctx, savedTmpl1)
+				newTmpl.Id = tmplId
+				newTmpl.Labels = []string{"new:update-label"}
+				tmplId, err = testApp.SaveTmpl(ctx, newTmpl)
 				require.NoError(t, err)
+				assert.Equal(t, newTmpl.Id, tmplId)
 
 				savedTmpl1Actual, err := testApp.GetTmpl(ctx, savedTmpl1.Id)
 				require.NoError(t, err)
-				tmplpb.MatchTemplate(t, savedTmpl1, savedTmpl1Actual)
+				tmplpb.MatchTemplateUpdate(t, time.Now(), []string{}, newTmpl, savedTmpl1Actual)
 
 				// blobList, err = blobClient.List(ctx, realm, blobId)
 				// require.NoError(t, err)
 				// require.Equal(t, len(blobList), 1)
 				// require.Equal(t, len(blobList[0].Versions), 0)
 
-				savedTmpl1.Body = "update body from test"
-				savedTmpl1.UpdatedAt = timestamppb.New(time.Now())
-				_, err = testApp.SaveTmpl(ctx, savedTmpl1)
+				newTmpl.Body = "update body from test"
+				// savedTmpl1.UpdatedAt = timestamppb.New(time.Now())
+				_, err = testApp.SaveTmpl(ctx, newTmpl)
 				require.NoError(t, err)
 
 				savedTmpl1Actual, err = testApp.GetTmpl(ctx, savedTmpl1.Id)
 				require.NoError(t, err)
-				tmplpb.MatchTemplate(t, savedTmpl1, savedTmpl1Actual)
+				tmplpb.MatchTemplateUpdate(t, time.Now(), []string{}, newTmpl, savedTmpl1Actual)
 
 				fmt.Printf("size:  %#v \n\n\n", savedTmpl1Actual)
 

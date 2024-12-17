@@ -291,12 +291,6 @@
             "type": "string"
           }
         },
-        "files": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "body": {
           "type": "string"
         },
@@ -345,18 +339,6 @@
         "labels": {
           "type": "array",
           "items": {
-            "type": "string"
-          }
-        },
-        "images": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "files": {
-          "type": "object",
-          "additionalProperties": {
             "type": "string"
           }
         },

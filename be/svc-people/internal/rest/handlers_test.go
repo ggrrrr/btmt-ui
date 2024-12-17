@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -34,12 +35,12 @@ func Test_Save(t *testing.T) {
 	testDb, err := mgo.New(rootCtx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
-
+	mockState := &state.MockStore{}
 	testRepo := repo.New(cfg.Collection, testDb)
 	app, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
-		app.WithStateStore(state.NewMockStore()),
+		app.WithStateStore(mockState),
 	)
 	require.NoError(t, err)
 
@@ -48,6 +49,7 @@ func Test_Save(t *testing.T) {
 	reqStr := `{"data":{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
 	httpReq = httpReq.WithContext(roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "asd", commonApp.Device{})))
+	mockState.On("Push", mock.Anything).Return(uint64(1), nil)
 	testServer.Save(w, httpReq)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 
@@ -85,7 +87,7 @@ func Test_List(t *testing.T) {
 	app, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
-		app.WithStateStore(state.NewMockStore()),
+		app.WithStateStore(&state.MockStore{}),
 	)
 	require.NoError(t, err)
 

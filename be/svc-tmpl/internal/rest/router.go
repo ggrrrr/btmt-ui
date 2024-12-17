@@ -1,16 +1,35 @@
 package rest
 
 import (
+	"context"
+
 	"github.com/go-chi/chi/v5"
 
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
+	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/blob"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
+	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-type server struct {
-	app *app.App
-}
+type (
+	tmplApp interface {
+		SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error)
+		ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error)
+		GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error)
+		RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (string, error)
 
-func New(a *app.App) *server {
+		// images
+		GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error)
+		PutImage(ctx context.Context, tempFile blob.TempFile) error
+		ListImages(ctx context.Context) ([]ddd.ImageInfo, error)
+		GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error)
+	}
+	server struct {
+		app tmplApp
+	}
+)
+
+func New(a tmplApp) *server {
 	return &server{
 		app: a,
 	}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
@@ -44,8 +45,8 @@ func TestCreateProtoMD(t *testing.T) {
 			result: protoMetadata{
 				msgType:     msgTypeEvent,
 				messageType: msgbusv1.MessageType_MESSAGE_TYPE_EVENT,
-				domain:      "app",
-				name:        "ResponseTest",
+				domain:      "msgbus.v1",
+				name:        "TestCommand",
 			},
 		},
 	}
@@ -98,6 +99,10 @@ func TestPubSubNats(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+	defer func() {
+		err = conn.PruneStream(rootCtx, commandConsumer.internalMsg.streamName())
+		assert.NoError(t, err)
+	}()
 
 	testId := uuid.New()
 

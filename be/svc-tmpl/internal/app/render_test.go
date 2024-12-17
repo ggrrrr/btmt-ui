@@ -66,7 +66,7 @@ end.
 		blobStore:    &mockBlobStore{},
 		appPolices:   roles.NewAppPolices(),
 		imagesFolder: blob.BlobId{},
-		stateStore:   state.NewMockStore(),
+		stateStore:   &state.MockStore{},
 		repo:         nil,
 	}
 

@@ -45,7 +45,7 @@ func (c *NatsPublisher) Publish(ctx context.Context, md msgbus.Metadata, payload
 
 	subject := c.topic
 	if md.Id != uuid.Nil {
-		subject = fmt.Sprintf("%s.%s", c.topic, msg.md.Id)
+		subject = fmt.Sprintf("%s.%s", c.topic, msg.md.Id.String())
 	}
 
 	msg.msg = nats.Msg{

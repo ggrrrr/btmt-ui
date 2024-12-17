@@ -14,20 +14,22 @@ import (
 	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-func StoreData(t *testing.T, store *state.MockStore, d *tmplpbv1.Template) {
+func storeData(t *testing.T, store *state.MockStore, d *tmplpbv1.Template) {
 	bytes, err := proto.Marshal(d)
 	require.NoError(t, err)
-	store.Data = state.EntityState{
+	data := state.EntityState{
 		Revision: 1,
-		Key:      "123",
+		Key:      d.Id,
 		Value:    bytes,
 	}
+
+	store.On("Fetch", data.Key).Return(data, nil)
 }
 
 func TestCreateMsg(t *testing.T) {
 	ctx := context.Background()
 
-	tmplFetcher := state.NewMockStore()
+	tmplFetcher := &state.MockStore{}
 
 	testApp := &Application{
 		tmplFetcher: tmplFetcher,
@@ -45,6 +47,7 @@ func TestCreateMsg(t *testing.T) {
 			from: func(t *testing.T) *emailpbv1.EmailMessage {
 				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
 				// require.NoError(t, err)
+
 				return &emailpbv1.EmailMessage{
 					ToEmail: []*emailpbv1.EmailAddr{
 						{
@@ -74,8 +77,8 @@ func TestCreateMsg(t *testing.T) {
 				mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
 				require.NoError(t, err)
 
-				StoreData(t, tmplFetcher, &tmplpbv1.Template{
-					Id:          "asd",
+				storeData(t, tmplFetcher, &tmplpbv1.Template{
+					Id:          "template_id_1",
 					ContentType: "type",
 					Name:        "name",
 					Body:        "some body {{ .mapKey_1 }}",
@@ -110,7 +113,7 @@ func TestCreateMsg(t *testing.T) {
 				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
 				// require.NoError(t, err)
 
-				StoreData(t, tmplFetcher, &tmplpbv1.Template{
+				storeData(t, tmplFetcher, &tmplpbv1.Template{
 					Id:          "asd",
 					ContentType: "type",
 					Name:        "name",
@@ -139,12 +142,7 @@ func TestCreateMsg(t *testing.T) {
 			from: func(t *testing.T) *emailpbv1.EmailMessage {
 				mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
 				require.NoError(t, err)
-				tmplFetcher.Data = state.EntityState{
-					Revision: 1,
-					Key:      "12",
-					Value:    []byte{'1', '2'},
-				}
-
+				tmplFetcher.On("Fetch", "template_id_2").Return(state.EntityState{}, fmt.Errorf("asdasd"))
 				return &emailpbv1.EmailMessage{
 					ToEmail: []*emailpbv1.EmailAddr{
 						{
@@ -159,7 +157,7 @@ func TestCreateMsg(t *testing.T) {
 					},
 					Body: &emailpbv1.EmailMessage_TemplateBody{
 						TemplateBody: &emailpbv1.TemplateBody{
-							TemplateId: "template_id_1",
+							TemplateId: "template_id_2",
 							Data:       mapData,
 						},
 					},
@@ -177,9 +175,9 @@ func TestCreateMsg(t *testing.T) {
 				require.Equal(t, tc.expected, msg.DumpToText())
 			} else {
 				require.ErrorAs(t, err, &tc.expErr)
-				fmt.Printf("%s %v %#v \n\n\n", tc.name, err, err)
+				fmt.Printf("%s %v %#v \n", tc.name, err, err)
+				fmt.Printf("%s %v %#v \n", tc.name, &tc.expErr, &tc.expErr)
 			}
-
 		})
 	}
 

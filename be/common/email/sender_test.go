@@ -140,7 +140,7 @@ func TestAuth(t *testing.T) {
 		{
 			name: "ok",
 			prep: func() {
-				testSender.smtpClient = NewSmtpClientMock()
+				testSender.smtpClient = newSmtpClientMock()
 			},
 			respErr:   nil,
 			respErrAs: nil,
@@ -148,7 +148,7 @@ func TestAuth(t *testing.T) {
 		{
 			name: "extension error",
 			prep: func() {
-				smtpClient := NewSmtpClientMock()
+				smtpClient := newSmtpClientMock()
 				smtpClient.falseOnExtension = true
 				testSender.smtpClient = smtpClient
 			},
@@ -158,7 +158,7 @@ func TestAuth(t *testing.T) {
 		{
 			name: "starttls error",
 			prep: func() {
-				smtpClient := NewSmtpClientMock()
+				smtpClient := newSmtpClientMock()
 				smtpClient.errorOnStartTLS = true
 				testSender.smtpClient = smtpClient
 			},
@@ -168,7 +168,7 @@ func TestAuth(t *testing.T) {
 		{
 			name: "auth error",
 			prep: func() {
-				smtpClient := NewSmtpClientMock()
+				smtpClient := newSmtpClientMock()
 				smtpClient.errorOnAuth = true
 				testSender.smtpClient = smtpClient
 			},
@@ -310,7 +310,7 @@ c2VjcmV0
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			smtpClientMock := NewSmtpClientMock()
+			smtpClientMock := newSmtpClientMock()
 
 			testSender := &sender{
 				cfg: Config{
@@ -338,7 +338,7 @@ c2VjcmV0
 
 }
 
-func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *SmtpClientMock) {
+func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *smtpClientMock) {
 	expected := strings.ReplaceAll(expectedData, "ce82d13b7cf05644c1a5c74b4c700dae854b1213f93ddf4fb12d7fb0c910", email.rootWriter.boundary)
 	require.True(t, actualData.dataBlocks[0] != "", "actual data is empty")
 	assert.Equal(t, expected, actualData.dataBlocks[0], "data dont match")
@@ -349,7 +349,7 @@ func testMockedEmail(t *testing.T, email *Msg, expectedData string, actualData *
 func TestCreateSender(t *testing.T) {
 	ctx := context.Background()
 
-	tcpServerMock, err := NewTCPServerMock(":12346")
+	tcpServerMock, err := newTCPServerMock(":12346")
 	require.NoError(t, err)
 	go tcpServerMock.Start()
 
@@ -374,7 +374,7 @@ func TestCreateSender(t *testing.T) {
 func TestCreateSenderError(t *testing.T) {
 	ctx := context.Background()
 
-	tcpServerMock, err := NewTCPServerMock(":12345")
+	tcpServerMock, err := newTCPServerMock(":12345")
 	require.NoError(t, err)
 	go tcpServerMock.Start()
 

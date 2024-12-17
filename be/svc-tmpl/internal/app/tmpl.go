@@ -13,9 +13,9 @@ import (
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-func (a *App) SaveTmpl(ctx context.Context, tmpl *tmplpb.Template) (TmplError, error) {
+func (a *App) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "SaveTmpl", tmpl)
+	ctx, span := logger.SpanWithAttributes(ctx, "SaveTmpl", tmplUpdate)
 	defer func() {
 		span.End(err)
 	}()
@@ -23,46 +23,29 @@ func (a *App) SaveTmpl(ctx context.Context, tmpl *tmplpb.Template) (TmplError, e
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	render, err := a.validate(ctx, authInfo, tmpl)
+	render, err := a.validate(ctx, authInfo, tmplUpdate)
 	if err != nil {
-		return nil, app.BadRequestError("validate", err)
+		return "", app.BadRequestError("validate", err)
 	}
 	if len(render.errors) > 0 {
-		fmt.Printf("\n\n\n %#v \n", render.errors)
+		logger.ErrorCtx(ctx, &render.errors)
 		err = fmt.Errorf("validator error(s)")
-		return render.errors, app.BadRequestError("validate", err)
+		return "", render.errors
+		// , app.BadRequestError("validate", err)
 	}
 
+	tmpl := tmplFromUpdate(tmplUpdate, render)
+
 	if tmpl.Id == "" {
-		return nil, a.saveTmpl(ctx, authInfo, tmpl)
+		return a.saveTmpl(ctx, authInfo, tmpl)
 	}
 
 	err = a.updateTmpl(ctx, authInfo, tmpl)
 
-	return nil, nil
-}
-
-func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
-	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
-	defer func() {
-		span.End(err)
-	}()
-
-	err = a.repo.Save(ctx, tmpl)
-	if err != nil {
-		return err
-	}
-
-	err = a.uploadTmplBody(ctx, authInfo, tmpl)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return tmpl.Id, nil
 }
 
 func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error) {
@@ -106,6 +89,26 @@ func (a *App) GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error) 
 	}
 
 	return result, nil
+}
+
+func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) (string, error) {
+	var err error
+	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
+	defer func() {
+		span.End(err)
+	}()
+
+	err = a.repo.Save(ctx, tmpl)
+	if err != nil {
+		return "", err
+	}
+
+	err = a.uploadTmplBody(ctx, authInfo, tmpl)
+	if err != nil {
+		return "", err
+	}
+
+	return tmpl.Id, nil
 }
 
 func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
@@ -158,4 +161,20 @@ func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl 
 	}
 
 	return nil
+}
+
+func tmplFromUpdate(tmplUpdate *tmplpb.TemplateUpdate, validator *tmplValidator) *tmplpb.Template {
+	tmtpl := &tmplpb.Template{
+		ContentType: tmplUpdate.ContentType,
+		Name:        tmplUpdate.Name,
+		Labels:      tmplUpdate.Labels,
+		Body:        tmplUpdate.Body,
+		Images:      validator.images,
+	}
+
+	if tmplUpdate.Id != "" {
+		tmtpl.Id = tmplUpdate.Id
+	}
+
+	return tmtpl
 }

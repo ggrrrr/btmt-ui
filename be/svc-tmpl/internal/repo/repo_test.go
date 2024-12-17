@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,8 +37,6 @@ func TestSave(t *testing.T) {
 		Body: `<p> {{ .UserInfo.Device.DeviceInfo }}</p>
 <p> {{ .UserInfo.Subject }}</p>
 {{ renderImg "IMG4944.JPG:1" }}`,
-		CreatedAt: timestamppb.Now(),
-		UpdatedAt: timestamppb.Now(),
 	}
 	err = testRepo.Save(ctx, firstTmpl)
 	require.NoError(t, err)
@@ -47,12 +46,12 @@ func TestSave(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, actualTmpl)
 
-	tmplpb.MatchTemplate(t, firstTmpl, actualTmpl)
+	tmplpb.MatchTemplate(t, time.Now(), firstTmpl, actualTmpl)
 
 	listResult, err := testRepo.List(ctx, nil)
 	require.NoError(t, err)
 
-	tmplpb.MatchTemplate(t, firstTmpl, listResult[0])
+	tmplpb.MatchTemplate(t, time.Now(), firstTmpl, listResult[0])
 
 	updateTmpl := &tmplpb.Template{
 		Id:          firstTmpl.Id,
@@ -73,11 +72,11 @@ func TestSave(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotNil(t, actualTmpl)
-	tmplpb.MatchTemplate(t, updateTmpl, actualTmpl)
+	tmplpb.MatchTemplate(t, time.Now(), updateTmpl, actualTmpl)
 
 	actualTmpl, err = testRepo.GetById(ctx, updateTmpl.Id)
 	require.NoError(t, err)
 
-	tmplpb.MatchTemplate(t, updateTmpl, actualTmpl)
+	tmplpb.MatchTemplate(t, time.Now(), updateTmpl, actualTmpl)
 
 }

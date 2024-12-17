@@ -8,7 +8,7 @@ import (
 	"net/smtp"
 )
 
-type SmtpClientMock struct {
+type smtpClientMock struct {
 	errorOnStartTLS  bool
 	falseOnExtension bool
 	errorOnAuth      bool
@@ -18,12 +18,12 @@ type SmtpClientMock struct {
 	to               []string
 }
 
-func (d *SmtpClientMock) Write(p []byte) (n int, err error) {
+func (d *smtpClientMock) Write(p []byte) (n int, err error) {
 	// fmt.Printf("data write-> %s||\n", string(p))
 	return d.buf.Write(p)
 }
 
-func (d *SmtpClientMock) Close() (err error) {
+func (d *smtpClientMock) Close() (err error) {
 	if d.buf != nil {
 		d.dataBlocks = append(d.dataBlocks, d.buf.String())
 		d.buf = nil
@@ -31,53 +31,53 @@ func (d *SmtpClientMock) Close() (err error) {
 	return nil
 }
 
-var _ (extSmtpClient) = (*SmtpClientMock)(nil)
+var _ (extSmtpClient) = (*smtpClientMock)(nil)
 
-func NewSmtpClientMock() *SmtpClientMock {
-	return &SmtpClientMock{
+func newSmtpClientMock() *smtpClientMock {
+	return &smtpClientMock{
 		buf:        nil,
 		dataBlocks: []string{},
 		to:         []string{},
 	}
 }
 
-func (*SmtpClientMock) Hello(string) error {
+func (*smtpClientMock) Hello(string) error {
 	return nil
 }
 
-func (s *SmtpClientMock) Extension(string) (bool, string) {
+func (s *smtpClientMock) Extension(string) (bool, string) {
 	return true, ""
 }
 
-func (s *SmtpClientMock) StartTLS(*tls.Config) error {
+func (s *smtpClientMock) StartTLS(*tls.Config) error {
 	if s.errorOnStartTLS {
 		return fmt.Errorf("starttls")
 	}
 	return nil
 }
 
-func (s *SmtpClientMock) Auth(smtp.Auth) error {
+func (s *smtpClientMock) Auth(smtp.Auth) error {
 	if s.errorOnAuth {
 		return fmt.Errorf("auth")
 	}
 	return nil
 }
 
-func (s *SmtpClientMock) Mail(from string) error {
+func (s *smtpClientMock) Mail(from string) error {
 	s.from = from
 	return nil
 }
 
-func (s *SmtpClientMock) Rcpt(rcpt string) error {
+func (s *smtpClientMock) Rcpt(rcpt string) error {
 	s.to = append(s.to, rcpt)
 	return nil
 }
 
-func (d *SmtpClientMock) Data() (io.WriteCloser, error) {
+func (d *smtpClientMock) Data() (io.WriteCloser, error) {
 	d.buf = bytes.NewBufferString("")
 	return d, nil
 }
 
-func (*SmtpClientMock) Quit() error {
+func (*smtpClientMock) Quit() error {
 	return nil
 }

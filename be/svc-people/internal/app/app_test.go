@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
@@ -39,10 +40,12 @@ func TestSave(t *testing.T) {
 
 	testRepo := repo.New(cfg.Collection, testDb)
 
+	mockState := &state.MockStore{}
+
 	testApp, err := New(
 		WithPeopleRepo(testRepo),
 		WithAppPolicies(roles.NewAppPolices()),
-		WithStateStore(state.NewMockStore()),
+		WithStateStore(mockState),
 	)
 	require.NoError(t, err)
 
@@ -52,6 +55,7 @@ func TestSave(t *testing.T) {
 			testFunc: func(tt *testing.T) {
 				_, err = testApp.GetById(rootCtx, "asd")
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
+				mockState.On("Push", mock.Anything).Return(uint64(1), nil)
 				err := testApp.Save(ctxNormal, &peoplepbv1.Person{
 					IdNumbers:  map[string]string{"pin": "pin1"},
 					LoginEmail: "new@asd",

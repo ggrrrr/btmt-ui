@@ -85,7 +85,7 @@ func TestPublish(t *testing.T) {
 		fmt.Println("conn.conn.Close")
 	}()
 
-	stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test.*"})
+	stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test", "test.*"})
 	// stream, err := conn.CreateStream(rootCtx, "test", "test new stream", []string{"test.*"})
 	require.NoError(t, err)
 	defer func() {

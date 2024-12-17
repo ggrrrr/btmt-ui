@@ -16,7 +16,7 @@ func TestSend(t *testing.T) {
 
 	ctx := context.Background()
 
-	tmplFetcher := state.NewMockStore()
+	tmplFetcher := &state.MockStore{}
 	mockSender := &email.MockSmtpConnector{}
 	testApp := &Application{
 		connector:   mockSender,

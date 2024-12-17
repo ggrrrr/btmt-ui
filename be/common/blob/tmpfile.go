@@ -21,7 +21,7 @@ func (f TempFile) Delete(ctx context.Context) {
 		logger.WarnCtx(ctx).
 			Err(err).
 			Str("temp.file", f.TempFileName).
-			Msg("TempFile")
+			Msg("Delete")
 		return
 	}
 

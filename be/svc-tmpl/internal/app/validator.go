@@ -25,7 +25,30 @@ type (
 	TmplError map[string]string
 )
 
-func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *tmplpb.Template) (*tmplValidator, error) {
+func (v *tmplValidator) RenderImg(imageName string) htmltemplate.HTML {
+	imageId, err := v.app.imagesFolder.SetIdVersionFromString(imageName)
+	if err != nil {
+		v.errors[imageName] = fmt.Sprintf("name %v", err)
+		return htmltemplate.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
+	}
+
+	_, err = v.app.blobStore.Head(v.ctx, v.realm, imageId)
+	if err != nil {
+		v.errors[imageName] = fmt.Sprintf("fetch %v", err)
+		return htmltemplate.HTML(fmt.Sprintf(`<strong> image %s not found</strong>`, imageName))
+	}
+
+	v.images = append(v.images, imageName)
+	suffixUrl := ""
+
+	if v.resized {
+		suffixUrl = "/resized"
+	}
+
+	return htmltemplate.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, suffixUrl))
+}
+
+func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *tmplpb.TemplateUpdate) (*tmplValidator, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "validate", template)
 	defer func() {
@@ -63,24 +86,16 @@ func validator(ctx context.Context, realm string, app *App) *tmplValidator {
 	}
 }
 
-func (v *tmplValidator) RenderImg(imageName string) htmltemplate.HTML {
-	imageId, err := v.app.imagesFolder.SetIdVersionFromString(imageName)
-	if err != nil {
-		v.errors[imageName] = fmt.Sprintf("image name:[%s] %v", imageName, err)
-		return htmltemplate.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
+func (errs TmplError) Error() string {
+	if errs == nil {
+		return ""
 	}
-
-	_, err = v.app.blobStore.Head(v.ctx, v.realm, imageId)
-	if err != nil {
-		v.errors[imageName] = fmt.Sprintf("fetch image:[%s]  %v", imageName, err)
-		return htmltemplate.HTML(fmt.Sprintf(`<strong> incorrect image name %s </strong>`, imageName))
+	if len(errs) == 0 {
+		return ""
 	}
-
-	suffixUrl := ""
-
-	if v.resized {
-		suffixUrl = "/resized"
+	var buffer bytes.Buffer
+	for k, v := range errs {
+		buffer.WriteString(fmt.Sprintf("file[%s]:%v", k, v))
 	}
-
-	return htmltemplate.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, suffixUrl))
+	return buffer.String()
 }

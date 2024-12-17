@@ -29,7 +29,6 @@ func (from internalTmpl) toTemplate() *tmplpb.Template {
 		Name:        from.Name,
 		Labels:      from.Labels,
 		Images:      from.Images,
-		Files:       from.Files,
 		Body:        from.Body,
 		CreatedAt:   timestamppb.New(from.CreatedAt.Time()),
 		UpdatedAt:   timestamppb.New(from.UpdatedAt.Time()),
@@ -50,7 +49,6 @@ func fromTemplate(from *tmplpb.Template) (internalTmpl, error) {
 		Name:        from.Name,
 		Body:        from.Body,
 		Images:      from.Images,
-		Files:       from.Files,
 		CreatedAt:   mgo.FromTimeOrNow(from.CreatedAt.AsTime()),
 		UpdatedAt:   mgo.FromTimeOrNow(from.UpdatedAt.AsTime()),
 	}, nil

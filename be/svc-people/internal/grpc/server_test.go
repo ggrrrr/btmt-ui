@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -41,10 +42,12 @@ func TestTelephoneServer_GetContact(t *testing.T) {
 	require.NoError(t, err)
 	// defer testRepo.Close()
 
+	mockState := &state.MockStore{}
+
 	testApp, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
-		app.WithStateStore(state.NewMockStore()),
+		app.WithStateStore(mockState),
 	)
 	require.NoError(t, err)
 
@@ -64,6 +67,7 @@ func TestTelephoneServer_GetContact(t *testing.T) {
 		{
 			test: "save get ok",
 			testFunc: func(tt *testing.T) {
+				mockState.On("Push", mock.Anything).Return(uint64(2), nil)
 				res, err := client.Save(ctx, &peoplepb.SaveRequest{
 					Data: &peoplepb.Person{
 						IdNumbers: map[string]string{"pin": "pin1"},

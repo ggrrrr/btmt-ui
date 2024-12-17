@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type TCPServerMock struct {
+type tcpServerMock struct {
 	listen net.Listener
 }
 
@@ -17,18 +17,18 @@ type tcpSession struct {
 	writer *bufio.Writer
 }
 
-func NewTCPServerMock(addr string) (*TCPServerMock, error) {
+func newTCPServerMock(addr string) (*tcpServerMock, error) {
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
-	out := &TCPServerMock{
+	out := &tcpServerMock{
 		listen: listen,
 	}
 	return out, nil
 }
 
-func (m *TCPServerMock) Start() {
+func (m *tcpServerMock) Start() {
 	func() {
 		for {
 			conn, err := m.listen.Accept()
@@ -66,7 +66,7 @@ func (sess *tcpSession) write(str string) {
 	fmt.Printf("MOCK.server.sess.S -> %s\n", str)
 }
 
-func (*TCPServerMock) handle(sess *tcpSession) {
+func (*tcpServerMock) handle(sess *tcpSession) {
 	defer sess.conn.Close()
 	fmt.Printf("MOCK.server.sess.new: %+v\n", sess.conn.RemoteAddr())
 	sess.write("220 localhost")
@@ -105,7 +105,7 @@ func (*TCPServerMock) handle(sess *tcpSession) {
 
 }
 
-func (m *TCPServerMock) Close() {
+func (m *tcpServerMock) Close() {
 	err := m.listen.Close()
 	if err != nil {
 		fmt.Printf("MOCK.server.error: %+v\n", err)

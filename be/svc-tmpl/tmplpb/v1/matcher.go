@@ -5,38 +5,40 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
-func MatchTemplate(t *testing.T, expected *Template, actual *Template) bool {
+func MatchTemplateUpdate(t *testing.T, ts time.Time, images []string, expected *TemplateUpdate, actual *Template) {
 	delta := 200 * time.Millisecond
-	if !assert.WithinDurationf(t, expected.UpdatedAt.AsTime(), actual.UpdatedAt.AsTime(), delta, "UpdatedAt: expected: %v actual:%v", expected.UpdatedAt, actual.UpdatedAt) {
-		return false
+	if !assert.WithinDurationf(t, ts, actual.UpdatedAt.AsTime(), delta, "UpdatedAt: expected: %v actual:%v", ts, actual.UpdatedAt) {
+		return
 	}
-	if !assert.WithinDurationf(t, expected.CreatedAt.AsTime(), actual.CreatedAt.AsTime(), delta, "CreatedAt: expected: %v actual:%v", expected.CreatedAt, actual.CreatedAt) {
-		return false
+	if !assert.WithinDurationf(t, ts, actual.CreatedAt.AsTime(), delta, "CreatedAt: expected: %v actual:%v", ts, actual.CreatedAt) {
+		return
 	}
 
-	actual.CreatedAt = expected.CreatedAt
-	actual.UpdatedAt = expected.UpdatedAt
+	assert.Equal(t, expected.Id, actual.Id)
+	assert.Equal(t, expected.Name, actual.Name)
+	assert.Equal(t, expected.ContentType, actual.ContentType)
+	assert.Equal(t, expected.Labels, actual.Labels)
+	assert.Equal(t, expected.Body, actual.Body)
+	assert.Equal(t, images, actual.Images)
 
-	ok := proto.Equal(expected, actual)
-	require.Truef(t, ok, "expected: %#v, actual: %#v ")
-	return ok
 }
 
-var _ (logger.TraceDataExtractor) = (*Template)(nil)
+func MatchTemplate(t *testing.T, ts time.Time, expected *Template, actual *Template) {
+	delta := 200 * time.Millisecond
+	if !assert.WithinDurationf(t, ts, actual.UpdatedAt.AsTime(), delta, "UpdatedAt: expected: %v actual:%v", ts, actual.UpdatedAt) {
+		return
+	}
+	if !assert.WithinDurationf(t, ts, actual.CreatedAt.AsTime(), delta, "CreatedAt: expected: %v actual:%v", ts, actual.CreatedAt) {
+		return
+	}
 
-func (t *Template) Extract() logger.TraceData {
-	out := logger.TraceData{
-		"tmpl.Name":        logger.TraceValueString(t.Name),
-		"tmpl.ContentType": logger.TraceValueString(t.ContentType),
-	}
-	if t.Id != "" {
-		out["tmpl.Id"] = logger.TraceValueString(t.Id)
-	}
-	return out
+	assert.Equal(t, expected.Id, actual.Id)
+	assert.Equal(t, expected.Name, actual.Name)
+	assert.Equal(t, expected.ContentType, actual.ContentType)
+	assert.Equal(t, expected.Labels, actual.Labels)
+	assert.Equal(t, expected.Body, actual.Body)
+	assert.Equal(t, expected.Images, actual.Images)
+
 }

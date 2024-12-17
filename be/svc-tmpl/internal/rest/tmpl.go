@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -24,24 +23,25 @@ func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 	}()
 	logger.InfoCtx(r.Context()).Msg("rest.SaveTmpl")
 
-	var template *tmplpb.Template
+	var template *tmplpb.TemplateUpdate
 	err = web.DecodeJsonRequest(r, &template)
 	if err != nil {
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	tmplErrors, err := s.app.SaveTmpl(ctx, template)
+	id, err := s.app.SaveTmpl(ctx, template)
 	if err != nil {
-		fmt.Printf("\n\n\t\t%#v \n\n", tmplErrors)
-		if tmplErrors != nil {
-			web.SendErrorBadRequestWithBody(ctx, w, "validation error", err, tmplErrors)
-			return
-		}
+		// TODO work on form fields error
+		// fmt.Printf("\n\n\t\t%#v \n\n", tmplErrors)
+		// if tmplErrors != nil {
+		// 	web.SendErrorBadRequestWithBody(ctx, w, "validation error", err, tmplErrors)
+		// 	return
+		// }
 		web.SendError(ctx, w, err)
 		return
 	}
-
+	template.Id = id
 	web.SendPayload(ctx, w, "ok", template)
 }
 
