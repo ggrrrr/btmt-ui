@@ -144,6 +144,7 @@ func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmp
 	return nil
 }
 
+// TODO use authInfo.realm to push into state store
 func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
 	var err error
 
