@@ -12,6 +12,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
+	templv1 "github.com/ggrrrr/btmt-ui/be/common/templ/v1"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -71,11 +72,7 @@ end.
 	}
 
 	actualHTml, err := testApp.RenderHtml(rootCtx, &tmplpb.RenderRequest{
-		Data: &tmplpb.TemplateData{
-			Items: map[string]string{
-				"item_key_1": "item_value_1",
-			},
-		},
+		Data: &templv1.Data{},
 		Body: `Hi,
 some data {{ .Items.item_key_1 }}
 {{ renderImg "imageName" }}

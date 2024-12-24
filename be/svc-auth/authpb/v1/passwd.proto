@@ -4,6 +4,8 @@ syntax = "proto3";
 // Users in this case are people who interact with the system via UI.
 package authpb.v1;
 
+option go_package = "svc-auth/authpb/v1;authpbv1";
+
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 

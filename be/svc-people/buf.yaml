@@ -1,11 +1,13 @@
-version: v1
+version: v2
+modules:
+  - path: peoplepb
 breaking:
   use:
     - FILE
 lint:
   use:
     - STANDARD
-  allow_comment_ignores: true
+  # allow_comment_ignores: true
   service_suffix: Svc
 deps:
   - buf.build/googleapis/googleapis

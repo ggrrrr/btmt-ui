@@ -8,6 +8,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/templ"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -27,7 +28,7 @@ func (a *App) RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (str
 	tmplValidator := validator(ctx, authInfo.Realm, a)
 	tmplValidator.resized = true
 
-	tmpl, err := htmltemplate.New("template_data").
+	htmlTmpl, err := htmltemplate.New("template_data").
 		Funcs(htmltemplate.FuncMap{
 			"renderImg": tmplValidator.RenderImg,
 		}).
@@ -37,8 +38,10 @@ func (a *App) RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (str
 		return "", app.BadRequestError("parse body", err)
 	}
 
+	templData := templ.TemplateData{}
+
 	buf := bytes.NewBuffer([]byte{})
-	err = tmpl.Execute(buf, render.Data)
+	err = htmlTmpl.Execute(buf, templData)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("tmpl.Execute")
 		return "", app.BadRequestError("template execute", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ggrrrr/btmt-ui/be/common/email"
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
 )
@@ -29,13 +30,19 @@ func (a *Application) SendEmail(ctx context.Context, emailMsg *emailpbv1.EmailMe
 		return err
 	}
 
-	senderInst, err := a.connector.Connect(ctx)
+	smtpInst, err := a.connector.Connect(ctx)
 	if err != nil {
 		// TODO 400 or 500 error
 		return err
 	}
+	defer func() {
+		err = smtpInst.Close()
+		if err != nil {
+			logger.ErrorCtx(ctx, err).Msg("SendEmail.smtp.Close")
+		}
+	}()
 
-	err = senderInst.Send(ctx, email)
+	err = smtpInst.Send(ctx, email)
 	if err != nil {
 		return err
 	}

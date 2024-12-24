@@ -4,6 +4,8 @@ syntax = "proto3";
 // People can be clients, users, admins or any person.
 package peoplepb.v1;
 
+option go_package = "svc-people/peoplepb/v1;peoplepbv1";
+
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
@@ -106,7 +108,7 @@ message IdNumberReponse {
 message Person{
   string id = 1 [json_name = "id"];;
   map<string,string> id_numbers = 2 [json_name = "id_numbers"];
-  string login_email = 3 [json_name = "login_email"];
+  string primary_email = 3 [json_name = "primary_email"];
   string name = 4 [json_name = "name"];
   string full_name = 5 [json_name = "full_name"];
   Dob dob = 6 [json_name = "dob"];

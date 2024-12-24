@@ -57,11 +57,11 @@ func TestSave(t *testing.T) {
 				assert.ErrorIs(tt, err, app.ErrAuthUnauthenticated)
 				mockState.On("Push", mock.Anything).Return(uint64(1), nil)
 				err := testApp.Save(ctxNormal, &peoplepbv1.Person{
-					IdNumbers:  map[string]string{"pin": "pin1"},
-					LoginEmail: "new@asd",
-					Emails:     map[string]string{"g": "new@asd"},
-					Name:       "new",
-					Phones:     map[string]string{"mobile": "123123"},
+					IdNumbers:    map[string]string{"pin": "pin1"},
+					PrimaryEmail: "new@asd",
+					Emails:       map[string]string{"g": "new@asd"},
+					Name:         "new",
+					Phones:       map[string]string{"mobile": "123123"},
 				})
 				assert.ErrorIs(tt, err, app.ErrForbidden)
 				_, err = testApp.GetById(ctxNormal, "asd")
@@ -78,11 +78,11 @@ func TestSave(t *testing.T) {
 			test: "save",
 			testFunc: func(tt *testing.T) {
 				p1 := &peoplepbv1.Person{
-					IdNumbers:  map[string]string{"pin": "pin1"},
-					Name:       "name 1",
-					LoginEmail: "email 1",
-					Emails:     map[string]string{"g": "asd@asd"},
-					FullName:   "full name 1",
+					IdNumbers:    map[string]string{"pin": "pin1"},
+					Name:         "name 1",
+					PrimaryEmail: "email 1",
+					Emails:       map[string]string{"g": "asd@asd"},
+					FullName:     "full name 1",
 					// Phones:   map[string]string{"mobile": "phone1"},
 					// Attr:     make(map[string]string),
 					// Labels: []string{},
@@ -109,11 +109,11 @@ func TestSave(t *testing.T) {
 			test: "forbidden",
 			testFunc: func(tt *testing.T) {
 				p1 := &peoplepbv1.Person{
-					IdNumbers:  map[string]string{"pin": "pin1"},
-					Name:       "name 1",
-					LoginEmail: "email 1",
-					Emails:     map[string]string{"g1": "asd@asd1"},
-					FullName:   "full name 1",
+					IdNumbers:    map[string]string{"pin": "pin1"},
+					Name:         "name 1",
+					PrimaryEmail: "email 1",
+					Emails:       map[string]string{"g1": "asd@asd1"},
+					FullName:     "full name 1",
 					// Phones:   map[string]string{"mobile": "phone1"},
 					// Attr:     make(map[string]string),
 					// Labels: []string{},
@@ -130,11 +130,11 @@ func TestSave(t *testing.T) {
 			test: "pin validator",
 			testFunc: func(tt *testing.T) {
 				p1 := &peoplepbv1.Person{
-					IdNumbers:  map[string]string{"EGN": os.Getenv("PIN2")},
-					Name:       "name 1",
-					LoginEmail: "email 1",
-					Emails:     map[string]string{"g1": "asd@asd1"},
-					FullName:   "full name 1",
+					IdNumbers:    map[string]string{"EGN": os.Getenv("PIN2")},
+					Name:         "name 1",
+					PrimaryEmail: "email 1",
+					Emails:       map[string]string{"g1": "asd@asd1"},
+					FullName:     "full name 1",
 					// Phones:   map[string]string{"mobile": "phone1"},
 					// Attr:     make(map[string]string),
 					// Labels: []string{},
@@ -158,10 +158,10 @@ func TestSave(t *testing.T) {
 			testFunc: func(tt *testing.T) {
 				p1 := &peoplepbv1.Person{}
 				expected := &peoplepbv1.Person{
-					IdNumbers:  map[string]string{"pin": "pin1"},
-					LoginEmail: "loginemail",
-					Name:       "name1",
-					FullName:   "full name",
+					IdNumbers:    map[string]string{"pin": "pin1"},
+					PrimaryEmail: "loginemail",
+					Name:         "name1",
+					FullName:     "full name",
 					Dob: &peoplepbv1.Dob{
 						Year:  1978,
 						Month: 2,

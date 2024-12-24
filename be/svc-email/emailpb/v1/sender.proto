@@ -3,8 +3,12 @@ syntax = "proto3";
 // Email sender service
 package emailpb.v1;
 
+option go_package = "svc-email/emailpb/v1;emailpbv1";
+
 // import "google/protobuf/timestamp.proto";
-import "google/protobuf/struct.proto";
+// import "google/protobuf/struct.proto";
+// import "templ/v1/data.proto";
+import "be/common/templ/v1/templ.proto";
 
 message RawBody {
     string content_type = 1;
@@ -14,7 +18,8 @@ message RawBody {
 
 message TemplateBody {
     string template_id = 1;
-    google.protobuf.Struct data = 5;
+    templ.v1.Data data = 2 [json_name = "data"];
+    // Data data = 2;
 }
 
 message EmailAddr {

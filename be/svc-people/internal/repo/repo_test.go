@@ -83,18 +83,18 @@ func TestSave(t *testing.T) {
 				assert.True(t, !p1.CreatedAt.AsTime().IsZero())
 
 				expected := &peoplepbv1.Person{
-					Id:         p1.Id,
-					LoginEmail: "login@Email",
-					Name:       "ggrrrr",
-					Emails:     map[string]string{"": "asdasd@asd"},
-					FullName:   "not varban krushev",
-					IdNumbers:  map[string]string{"pin": "pin1"},
-					Labels:     []string{"tours:bike", "tours:hike", "kids"},
-					Phones:     map[string]string{"mobile": "123123123"},
-					Attr:       map[string]string{"food": "veg"},
-					Gender:     "male",
-					Dob:        &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 2},
-					CreatedAt:  p1.CreatedAt,
+					Id:           p1.Id,
+					PrimaryEmail: "login@Email",
+					Name:         "ggrrrr",
+					Emails:       map[string]string{"": "asdasd@asd"},
+					FullName:     "not varban krushev",
+					IdNumbers:    map[string]string{"pin": "pin1"},
+					Labels:       []string{"tours:bike", "tours:hike", "kids"},
+					Phones:       map[string]string{"mobile": "123123123"},
+					Attr:         map[string]string{"food": "veg"},
+					Gender:       "male",
+					Dob:          &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 2},
+					CreatedAt:    p1.CreatedAt,
 				}
 
 				err = testRepo.Update(ctx, expected)
@@ -108,18 +108,18 @@ func TestSave(t *testing.T) {
 				TestPerson(t, expected, actual, expectedDuration)
 
 				expected = &peoplepbv1.Person{
-					Id:         p1.Id,
-					LoginEmail: " ",
-					Name:       " ",
-					Emails:     map[string]string{"": "asdasd@asd"},
-					FullName:   " ",
-					IdNumbers:  map[string]string{"pin ": "pin1 "},
-					Labels:     []string{"tours:bike", "tours:hike", "kids"},
-					Phones:     map[string]string{"mobile": "123123123"},
-					Attr:       map[string]string{"food": "veg"},
-					Gender:     " ",
-					Dob:        &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 2},
-					CreatedAt:  p1.CreatedAt,
+					Id:           p1.Id,
+					PrimaryEmail: " ",
+					Name:         " ",
+					Emails:       map[string]string{"": "asdasd@asd"},
+					FullName:     " ",
+					IdNumbers:    map[string]string{"pin ": "pin1 "},
+					Labels:       []string{"tours:bike", "tours:hike", "kids"},
+					Phones:       map[string]string{"mobile": "123123123"},
+					Attr:         map[string]string{"food": "veg"},
+					Gender:       " ",
+					Dob:          &peoplepbv1.Dob{Year: 1978, Month: 2, Day: 2},
+					CreatedAt:    p1.CreatedAt,
 				}
 
 				err = testRepo.Update(ctx, expected)
@@ -127,7 +127,7 @@ func TestSave(t *testing.T) {
 				actual, err = testRepo.GetById(ctx, p1.Id)
 				require.NoError(t, err)
 
-				expected.LoginEmail = ""
+				expected.PrimaryEmail = ""
 				expected.Name = ""
 				expected.FullName = ""
 				expected.Gender = ""

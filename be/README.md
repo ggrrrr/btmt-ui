@@ -18,7 +18,18 @@ brew install nats-io/nats-tools/nats
 
 ## gRPC
 
-* buf generator <https://buf.build/docs/installation/>
+https://github.com/googleapis/googleapis/tree/master/google/api
+
+```sh
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
+
+##  Not in use buf generator <https://buf.build/docs/installation/>
 
 ```sh
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest

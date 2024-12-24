@@ -51,19 +51,12 @@ const strokeColor = ref("red");
 const profileFeatureRef = ref(null);
 const selectConditions = inject("ol-selectconditions");
 const selectCondition = selectConditions.pointerMove;
-
-// import Map from 'ol/Map';
-
-//[ 25.26545469532615, 41.649423540053725 
-// 25.26545469532615, 42.649423540053725
-// 24.06133289448917, 42.09481257945299
 const center = ref([24.06133289448917, 42.09481257945299]);
 const projection = ref('EPSG:4326');//EPSG:7796. EPSG:4326/ EPSG:3857
 const zoom = ref(11.5);
 const rotation = ref(0);
 const format = inject('ol-format');
 const geoJson = new format.GeoJSON();
-// const mapRef = ref(null)
 
 const lineString = ref({
   gpx: [
@@ -136,7 +129,8 @@ const lineString = ref({
     [24.115197602659464, 42.16311897151172],
     [24.118831492960453, 42.163232462480664],
     [24.121933467686176, 42.162471637129784],
-    [24.124770490452647, 42.161523727700114],]
+    [24.124770490452647, 42.161523727700114],
+  ]
 })
 
 function over(event) {
@@ -149,23 +143,9 @@ function out(event) {
 
 function featureSelected(event) {
   console.log('featureSelected', event.selected);
-
-  // const selected = event.selected[0] as Feature<Point>;
-  // if (selected) {
-  //   const p = selected
-  //     .getGeometry()
-  //     ?.getClosestPoint(event.mapBrowserEvent.coordinate);
-  //   if (p) {
-  //     drawPoint("over", p);
-  //   }
-  // }
 }
 
 function handleFeaturesloadend(event) {
   console.log('handleFeaturesloadend', event);
-  // profileFeature.value = event.target.getFeatures()[0];
-  // if (profileFeature.value) {
-  //   profileControl.value?.control?.setGeometry(profileFeature.value);
-  // }
 }
 </script>

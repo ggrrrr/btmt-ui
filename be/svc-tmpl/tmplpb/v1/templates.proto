@@ -2,9 +2,17 @@ syntax = "proto3";
 
 package tmplpb.v1;
 
+option go_package = "svc-tmpl/tmplpb/v1;tmplpbv1";
+
+import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
-import "google/api/annotations.proto";
+import "be/common/templ/v1/templ.proto";
+
+message RenderRequest {
+  string body = 1 [json_name = "body"];
+  templ.v1.Data data = 2 [json_name = "data"];
+}
 
 service TmplSvc {
   rpc Save(SaveRequest) returns (SaveResponse) {
@@ -31,11 +39,6 @@ service TmplSvc {
       body: "*";
     };
   };
-}
-
-message RenderRequest {
-  string body = 1 [json_name = "body"];
-  TemplateData data = 2 [json_name = "data"];
 }
 
 message RenderResponse {

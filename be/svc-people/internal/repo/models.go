@@ -108,7 +108,7 @@ func fromPerson(p *peoplepbv1.Person) (*person, error) {
 	out := person{
 		Id:         id,
 		IdNumbers:  toSlice(p.IdNumbers),
-		LoginEmail: p.LoginEmail,
+		LoginEmail: p.PrimaryEmail,
 		Emails:     toSlice(p.Emails),
 		Name:       p.Name,
 		FullName:   p.FullName,
@@ -132,17 +132,17 @@ func fromPerson(p *peoplepbv1.Person) (*person, error) {
 
 func (p *person) toProto() *peoplepbv1.Person {
 	out := &peoplepbv1.Person{
-		Id:         p.Id.Hex(),
-		IdNumbers:  toMap(p.IdNumbers),
-		LoginEmail: p.LoginEmail,
-		Emails:     toMap(p.Emails),
-		Name:       p.Name,
-		FullName:   p.FullName,
-		Gender:     p.Gender,
-		Dob:        toDob(p.DOB),
-		Phones:     toMap(p.Phones),
-		Labels:     p.Labels,
-		Attr:       toMap(p.Attr),
+		Id:           p.Id.Hex(),
+		IdNumbers:    toMap(p.IdNumbers),
+		PrimaryEmail: p.LoginEmail,
+		Emails:       toMap(p.Emails),
+		Name:         p.Name,
+		FullName:     p.FullName,
+		Gender:       p.Gender,
+		Dob:          toDob(p.DOB),
+		Phones:       toMap(p.Phones),
+		Labels:       p.Labels,
+		Attr:         toMap(p.Attr),
 	}
 
 	if !p.CreatedAt.Time().IsZero() {

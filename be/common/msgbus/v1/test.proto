@@ -3,6 +3,8 @@ syntax = "proto3";
 // Message bus
 package msgbus.v1;
 
+option go_package = "common/msgbus/v1;msgbusv1";
+
 message TestCommand {
     string id = 1;
     string name = 2;

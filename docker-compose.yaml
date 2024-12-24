@@ -109,6 +109,19 @@ services:
     volumes:
       - ./be/postgres:/docker-entrypoint-initdb.d
 
+  postgis:
+    hostname: postgis
+    container_name: postgis
+    image: postgis/postgis:12-3.5-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgis
+      - POSTGRES_USER=postgis
+      - POSTGRES_DB=test
+    ports:
+      - "5430:5432"
+    # volumes:
+    # - ./be/postgres:/docker-entrypoint-initdb.d
+
   nats:
     hostname: nats
     container_name: nats

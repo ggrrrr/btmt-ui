@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
@@ -74,8 +73,8 @@ func TestCreateMsg(t *testing.T) {
 			name:     "tmpl",
 			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:name\nsome body val 1",
 			from: func(t *testing.T) *emailpbv1.EmailMessage {
-				mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
-				require.NoError(t, err)
+				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
+				// require.NoError(t, err)
 
 				storeData(t, tmplFetcher, &tmplpbv1.Template{
 					Id:          "template_id_1",
@@ -99,7 +98,7 @@ func TestCreateMsg(t *testing.T) {
 					Body: &emailpbv1.EmailMessage_TemplateBody{
 						TemplateBody: &emailpbv1.TemplateBody{
 							TemplateId: "template_id_1",
-							Data:       mapData,
+							// Data:       mapData,
 						},
 					},
 				}
@@ -140,8 +139,8 @@ func TestCreateMsg(t *testing.T) {
 			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:name\nsome body val 1",
 			expErr:   fmt.Errorf("asdasd"),
 			from: func(t *testing.T) *emailpbv1.EmailMessage {
-				mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
-				require.NoError(t, err)
+				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
+				// require.NoError(t, err)
 				tmplFetcher.On("Fetch", "template_id_2").Return(state.EntityState{}, fmt.Errorf("asdasd"))
 				return &emailpbv1.EmailMessage{
 					ToEmail: []*emailpbv1.EmailAddr{
@@ -158,7 +157,7 @@ func TestCreateMsg(t *testing.T) {
 					Body: &emailpbv1.EmailMessage_TemplateBody{
 						TemplateBody: &emailpbv1.TemplateBody{
 							TemplateId: "template_id_2",
-							Data:       mapData,
+							// Data:       mapData,
 						},
 					},
 				}

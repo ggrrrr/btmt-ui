@@ -6,10 +6,11 @@ import (
 	htmltemplate "html/template"
 	"io"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/ggrrrr/btmt-ui/be/common/email"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
 	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
-	"google.golang.org/protobuf/proto"
 )
 
 func (a *Application) createMsg(ctx context.Context, p *emailpbv1.EmailMessage) (*email.Msg, error) {
@@ -80,7 +81,8 @@ func (a *Application) fromTemplate(ctx context.Context, cmd *emailpbv1.EmailMess
 	}
 
 	msg.AddHtmlBodyWriter(func(w io.Writer) error {
-		return tmplParser.Execute(w, body.TemplateBody.Data.AsMap())
+		// TODO need to convert proto data to whichever
+		return tmplParser.Execute(w, body.TemplateBody.Data)
 	})
 
 	// msg.AddHtmlBodyString(tmpl.Body)

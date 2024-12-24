@@ -1,6 +1,62 @@
 DOCKER_REPO ?= "local"
 GIT_HASH ?= $(shell git log --format="%h" -n 1)
 
+PROTO_DEPS = "./"
+PROTO_DST = "./"
+
+PROTO_EXT_DEPS="./proto"
+
+protoc_common:
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common/templ/v1 \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		./be/common/templ/v1/templ.proto
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common/templ/v1 \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		./be/common/msgbus/v1/msg.proto
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common/templ/v1 \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		./be/common/msgbus/v1/test.proto
+
+protoc_svc:
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		--go-grpc_opt=paths=source_relative \
+		--go-grpc_out="./" \
+		--grpc-gateway_out="./" \
+		--grpc-gateway_opt=paths=source_relative \
+		./be/svc-auth/authpb/v1/passwd.proto
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		--go-grpc_opt=paths=source_relative \
+		--go-grpc_out="./" \
+		./be/svc-email/emailpb/v1/sender.proto
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		--go-grpc_opt=paths=source_relative \
+		--go-grpc_out="./" \
+		--grpc-gateway_out="./" \
+		--grpc-gateway_opt=paths=source_relative \
+		./be/svc-people/peoplepb/v1/people.proto
+	protoc -I ./ -I=${PROTO_EXT_DEPS} \
+		-I=./be/common \
+		--go_opt=paths=source_relative \
+		--go_out="./" \
+		--go-grpc_opt=paths=source_relative \
+		--go-grpc_out="./" \
+		./be/svc-tmpl/tmplpb/v1/templates.proto
+
 build_svc_%:
 	docker build --build-arg=MAIN_FILE=svc-$*/cmd/main.go \
 		--build-arg=GIT_HASH=${GIT_HASH} \
