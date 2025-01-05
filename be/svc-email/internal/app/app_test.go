@@ -67,7 +67,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_TemplateId{
@@ -89,7 +89,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_RawBody{
@@ -117,7 +117,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_TemplateId{
@@ -140,7 +140,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_RawBody{},
@@ -161,7 +161,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_RawBody{
@@ -185,7 +185,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_RawBody{
@@ -213,7 +213,7 @@ func TestSend(t *testing.T) {
 					},
 					ToAddresses: &emailpbv1.ToAddresses{
 						ToEmail: []*emailpbv1.EmailAddr{
-							&emailpbv1.EmailAddr{Name: "", Email: "to@email.com"},
+							{Name: "", Email: "to@email.com"},
 						},
 					},
 					Body: &emailpbv1.EmailMessage_RawBody{
