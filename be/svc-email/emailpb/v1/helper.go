@@ -2,14 +2,14 @@ package emailpbv1
 
 import "github.com/ggrrrr/btmt-ui/be/common/logger"
 
-func (c *EmailMessage) CreateToList() []string {
-	if len(c.ToEmail) == 0 {
+func CreateList(l []*EmailAddr) []string {
+	if len(l) == 0 {
 		return []string{}
 	}
 
-	list := make([]string, 0, len(c.ToEmail))
+	list := make([]string, 0, len(l))
 
-	for _, v := range c.ToEmail {
+	for _, v := range l {
 		list = append(list, v.Email)
 	}
 	return list

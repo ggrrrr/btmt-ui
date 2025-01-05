@@ -5,21 +5,12 @@ package emailpb.v1;
 
 option go_package = "svc-email/emailpb/v1;emailpbv1";
 
-// import "google/protobuf/timestamp.proto";
-// import "google/protobuf/struct.proto";
-// import "templ/v1/data.proto";
 import "be/common/templ/v1/templ.proto";
 
 message RawBody {
     string content_type = 1;
     string subject = 2;
     string body = 3;
-}
-
-message TemplateBody {
-    string template_id = 1;
-    templ.v1.Data data = 2 [json_name = "data"];
-    // Data data = 2;
 }
 
 message EmailAddr {
@@ -33,15 +24,20 @@ message SenderAccount {
     string email = 3;
 }
 
+message ToAddresses {
+    repeated EmailAddr to_email = 1;
+    repeated EmailAddr cc_email = 2;
+    repeated EmailAddr bcc_email = 3;
+}
+
 message EmailMessage {
-    SenderAccount from_account = 1;
-    repeated EmailAddr to_email = 2;
-    repeated EmailAddr cc_email = 3;
-    repeated EmailAddr bcc_email = 4;
+    SenderAccount from_account = 1 [json_name = "from_account"];
+    ToAddresses to_addresses = 2 [json_name = "to_addresses"];
     oneof body {
-        RawBody raw_body = 5;
-        TemplateBody template_body = 6;
+        RawBody raw_body = 3 [json_name = "raw_body"];
+        string template_id = 4 [json_name = "template_id"];
     }
+    templ.v1.Data data = 5 [json_name = "data"];
 }
 
 message SendEmail {

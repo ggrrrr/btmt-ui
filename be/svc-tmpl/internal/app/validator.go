@@ -9,6 +9,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/templ"
+	templv1 "github.com/ggrrrr/btmt-ui/be/common/templ/v1"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -57,17 +58,14 @@ func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *t
 
 	tmplValidator := validator(ctx, authInfo.Realm, a)
 
-	htmlTmpl, err := htmltemplate.New("template_data").
-		Funcs(htmltemplate.FuncMap{
-			"renderImg": tmplValidator.RenderImg,
-		}).
-		Parse(template.Body)
+	htmlTmpl, err := templ.NewHtml(template.Body, templ.WithRenderImg(tmplValidator.RenderImg))
+
 	if err != nil {
 		return nil, err
 	}
 
 	buf := bytes.NewBuffer([]byte{})
-	err = htmlTmpl.Execute(buf, templ.TemplateData{})
+	err = htmlTmpl.Execute(buf, &templv1.Data{})
 	if err != nil {
 		return nil, err
 	}

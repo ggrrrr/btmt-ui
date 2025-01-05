@@ -6,162 +6,177 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/ggrrrr/btmt-ui/be/common/state"
+	templv1 "github.com/ggrrrr/btmt-ui/be/common/templ/v1"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
-	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
-
-func storeData(t *testing.T, store *state.MockStore, d *tmplpbv1.Template) {
-	bytes, err := proto.Marshal(d)
-	require.NoError(t, err)
-	data := state.EntityState{
-		Revision: 1,
-		Key:      d.Id,
-		Value:    bytes,
-	}
-
-	store.On("Fetch", data.Key).Return(data, nil)
-}
 
 func TestCreateMsg(t *testing.T) {
 	ctx := context.Background()
 
-	tmplFetcher := &state.MockStore{}
-
-	testApp := &Application{
-		tmplFetcher: tmplFetcher,
-	}
+	testApp := &Application{}
 
 	tests := []struct {
 		name     string
-		from     func(t *testing.T) *emailpbv1.EmailMessage
+		from     func(t *testing.T) msgData
 		expected string
 		expErr   error
 	}{
 		{
-			name:     "raw",
+			name:     "ok and data",
+			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody val 1",
+			from: func(t *testing.T) msgData {
+
+				mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
+				require.NoError(t, err)
+
+				return msgData{
+					fromAddress: &emailpbv1.SenderAccount{
+						Realm: "",
+						Name:  "",
+						Email: "sender@mail.com",
+					},
+					addresses: &emailpbv1.ToAddresses{
+						ToEmail: []*emailpbv1.EmailAddr{
+							{
+								Name:  "",
+								Email: "some@mail.com",
+							},
+						},
+					},
+					subject: "subject",
+					body:    "body {{ .Items.data.mapKey_1 }}",
+					data: &templv1.Data{
+						Items: map[string]*structpb.Struct{
+							"data": mapData,
+						},
+					},
+				}
+			},
+			expErr: nil,
+		},
+		{
+			name:     "ok no data",
 			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody",
-			from: func(t *testing.T) *emailpbv1.EmailMessage {
-				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
-				// require.NoError(t, err)
-
-				return &emailpbv1.EmailMessage{
-					ToEmail: []*emailpbv1.EmailAddr{
-						{
-							Name:  "to email",
-							Email: "some@mail.com",
-						},
-					},
-					FromAccount: &emailpbv1.SenderAccount{
-						Realm: "localhost",
-						Name:  "Sender",
+			from: func(t *testing.T) msgData {
+				return msgData{
+					fromAddress: &emailpbv1.SenderAccount{
+						Realm: "",
+						Name:  "",
 						Email: "sender@mail.com",
 					},
-					Body: &emailpbv1.EmailMessage_RawBody{
-						RawBody: &emailpbv1.RawBody{
-							ContentType: "type",
-							Subject:     "subject",
-							Body:        "body",
+					addresses: &emailpbv1.ToAddresses{
+						ToEmail: []*emailpbv1.EmailAddr{
+							{
+								Name:  "",
+								Email: "some@mail.com",
+							},
 						},
 					},
+					subject: "subject",
+					body:    "body",
+					data:    nil,
 				}
 			},
+			expErr: nil,
 		},
 		{
-			name:     "tmpl",
-			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:name\nsome body val 1",
-			from: func(t *testing.T) *emailpbv1.EmailMessage {
-				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
-				// require.NoError(t, err)
-
-				storeData(t, tmplFetcher, &tmplpbv1.Template{
-					Id:          "template_id_1",
-					ContentType: "type",
-					Name:        "name",
-					Body:        "some body {{ .mapKey_1 }}",
-				})
-
-				return &emailpbv1.EmailMessage{
-					ToEmail: []*emailpbv1.EmailAddr{
-						{
-							Name:  "to email",
-							Email: "some@mail.com",
-						},
-					},
-					FromAccount: &emailpbv1.SenderAccount{
-						Realm: "localhost",
-						Name:  "Sender",
+			name:     "err no subject",
+			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody",
+			from: func(t *testing.T) msgData {
+				return msgData{
+					fromAddress: &emailpbv1.SenderAccount{
+						Realm: "",
+						Name:  "",
 						Email: "sender@mail.com",
 					},
-					Body: &emailpbv1.EmailMessage_TemplateBody{
-						TemplateBody: &emailpbv1.TemplateBody{
-							TemplateId: "template_id_1",
-							// Data:       mapData,
+					addresses: &emailpbv1.ToAddresses{
+						ToEmail: []*emailpbv1.EmailAddr{
+							{
+								Name:  "",
+								Email: "some@mail.com",
+							},
 						},
 					},
+					subject: "",
+					body:    "",
+					data:    nil,
 				}
 			},
+			expErr: fmt.Errorf("asd"),
 		},
 		{
-			name:     "no body",
-			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:name\nsome body val 1",
-			expErr:   &UnsupportedBodyTypeError{},
-			from: func(t *testing.T) *emailpbv1.EmailMessage {
-				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
-				// require.NoError(t, err)
-
-				storeData(t, tmplFetcher, &tmplpbv1.Template{
-					Id:          "asd",
-					ContentType: "type",
-					Name:        "name",
-					Body:        "some body {{ .mapKey_1 }}",
-				})
-
-				return &emailpbv1.EmailMessage{
-					ToEmail: []*emailpbv1.EmailAddr{
-						{
-							Name:  "to email",
-							Email: "some@mail.com",
-						},
-					},
-					FromAccount: &emailpbv1.SenderAccount{
-						Realm: "localhost",
-						Name:  "Sender",
+			name:     "err no body",
+			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody",
+			from: func(t *testing.T) msgData {
+				return msgData{
+					fromAddress: &emailpbv1.SenderAccount{
+						Realm: "",
+						Name:  "",
 						Email: "sender@mail.com",
 					},
+					addresses: &emailpbv1.ToAddresses{
+						ToEmail: []*emailpbv1.EmailAddr{
+							{
+								Name:  "",
+								Email: "some@mail.com",
+							},
+						},
+					},
+					subject: "some subject",
+					body:    "",
+					data:    nil,
 				}
 			},
+			expErr: fmt.Errorf("asd"),
 		},
 		{
-			name:     "no error on fetch tmpl",
-			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:name\nsome body val 1",
-			expErr:   fmt.Errorf("asdasd"),
-			from: func(t *testing.T) *emailpbv1.EmailMessage {
-				// mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
-				// require.NoError(t, err)
-				tmplFetcher.On("Fetch", "template_id_2").Return(state.EntityState{}, fmt.Errorf("asdasd"))
-				return &emailpbv1.EmailMessage{
-					ToEmail: []*emailpbv1.EmailAddr{
-						{
-							Name:  "to email",
-							Email: "some@mail.com",
+			name:     "err no from address",
+			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody",
+			from: func(t *testing.T) msgData {
+				return msgData{
+					addresses: &emailpbv1.ToAddresses{
+						ToEmail: []*emailpbv1.EmailAddr{
+							{
+								Name:  "",
+								Email: "some@mail.com",
+							},
 						},
 					},
-					FromAccount: &emailpbv1.SenderAccount{
-						Realm: "localhost",
-						Name:  "Sender",
-						Email: "sender@mail.com",
-					},
-					Body: &emailpbv1.EmailMessage_TemplateBody{
-						TemplateBody: &emailpbv1.TemplateBody{
-							TemplateId: "template_id_2",
-							// Data:       mapData,
-						},
-					},
+					subject: "some subject",
+					body:    "body",
+					data:    nil,
 				}
 			},
+			expErr: fmt.Errorf("asd"),
+		},
+		{
+			name:     "err no to address",
+			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody",
+			from: func(t *testing.T) msgData {
+				return msgData{
+					fromAddress: &emailpbv1.SenderAccount{},
+					subject:     "some subject",
+					body:        "body",
+					data:        nil,
+				}
+			},
+			expErr: fmt.Errorf("asd"),
+		},
+		{
+			name:     "err empty from address",
+			expected: "to:some@mail.com\nfrom:sender@mail.com\nheader:From:sender@mail.com\nheader:To:some@mail.com\nheader:Subject:subject\nbody",
+			from: func(t *testing.T) msgData {
+				return msgData{
+					fromAddress: &emailpbv1.SenderAccount{},
+					addresses:   &emailpbv1.ToAddresses{},
+					subject:     "some subject",
+					body:        "body",
+					data:        nil,
+				}
+			},
+			expErr: fmt.Errorf("asd"),
 		},
 	}
 
@@ -173,7 +188,7 @@ func TestCreateMsg(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, msg.DumpToText())
 			} else {
-				require.ErrorAs(t, err, &tc.expErr)
+				require.Error(t, err)
 				fmt.Printf("%s %v %#v \n", tc.name, err, err)
 				fmt.Printf("%s %v %#v \n", tc.name, &tc.expErr, &tc.expErr)
 			}

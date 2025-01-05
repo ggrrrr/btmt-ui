@@ -5,19 +5,18 @@ package templ.v1;
 
 option go_package = "github.com/ggrrrr/btmt-ui/be/common/templ/v1;templv1";
 
-import "google/protobuf/timestamp.proto";
+// import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
-import "google/protobuf/any.proto";
+// import "google/protobuf/any.proto";
 
 message PersonData {
-    string person_id  = 1;
-    google.protobuf.Any data = 2;
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string full_name = 4;
 }
 
 message Data {
-	map<string, PersonData> people = 1;
-    map<string, string> items = 2;
-    map<string, google.protobuf.Timestamp> dates = 4;
-    map<string, google.protobuf.Timestamp> times = 5;
-    google.protobuf.Struct data = 6;
+    PersonData person = 1;
+    map<string, google.protobuf.Struct> items = 2;
 }

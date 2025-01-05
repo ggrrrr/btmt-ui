@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
@@ -70,17 +71,23 @@ end.
 		stateStore:   &state.MockStore{},
 		repo:         nil,
 	}
+	mapData, err := structpb.NewStruct(map[string]any{"mapKey_1": "val 1"})
+	require.NoError(t, err)
 
 	actualHTml, err := testApp.RenderHtml(rootCtx, &tmplpb.RenderRequest{
-		Data: &templv1.Data{},
+		Data: &templv1.Data{
+			Items: map[string]*structpb.Struct{
+				"item_key_1": mapData,
+			},
+		},
 		Body: `Hi,
-some data {{ .Items.item_key_1 }}
+some data {{ .Items.item_key_1.mapKey_1 }}
 {{ renderImg "imageName" }}
 `,
 	})
 
 	require.NoError(t, err)
-	require.Equal(t, "Hi,\nsome data item_value_1\n<img src=\"http://localhost:8010/tmpl/image/imageName/resized\" ></img>\n", actualHTml)
+	require.Equal(t, "Hi,\nsome data val 1\n<img src=\"http://localhost:8010/tmpl/image/imageName/resized\" ></img>\n", actualHTml)
 
 	fmt.Printf("%#v \n", actualHTml)
 

@@ -57,7 +57,7 @@ func TestIntDialAndSend(t *testing.T) {
 	email, err := createMsg(
 		Rcpt{addr: email_from, name: "admin at batamata.org"},
 		[]Rcpt{{addr: email1, name: "Vesko"}},
-		"проба ?{}<> с символи!",
+		// "проба ?{}<> с символи!",
 	)
 	require.NoError(t, err)
 
@@ -109,7 +109,7 @@ func TestIntMultipleMsg(t *testing.T) {
 		msg, err := createMsg(
 			Rcpt{addr: email_from, name: "admin at batamata.org"},
 			[]Rcpt{m},
-			"testing mails",
+			// "testing mails",
 		)
 		require.NoError(t, err)
 		msg.AddHtmlBodyWriter(func(w io.Writer) error {
@@ -214,11 +214,11 @@ func TestSend(t *testing.T) {
 				testMsg, err = createMsg(
 					Rcpt{addr: "mail@from", name: "name from"},
 					[]Rcpt{{addr: "mail@to", name: "name to"}},
-					"mail subject",
+					// "mail subject",
 				)
+				require.NoError(t, err)
 				testMsg.AddCc(RcptList{Rcpt{addr: "cc@cc.cc", name: "cc name"}})
 				testMsg.AddBcc(RcptList{Rcpt{addr: "bcc@bcc.bcc", name: "bcc name"}})
-				assert.NoError(t, err, "prep email")
 			},
 			dataBlock: ``,
 			sendErrAs: &MailFormatError{},
@@ -230,8 +230,12 @@ func TestSend(t *testing.T) {
 				testMsg, err = createMsg(
 					Rcpt{addr: "mail@from", name: "name from"},
 					[]Rcpt{{addr: "mail@to", name: "name to"}},
-					"mail subject",
+					// "mail subject",
 				)
+				require.NoError(t, err)
+				err = testMsg.SetSubject("mail subject")
+				require.NoError(t, err)
+
 				testMsg.AddCc(RcptList{Rcpt{addr: "cc@cc.cc", name: "cc name"}})
 				testMsg.AddBcc(RcptList{Rcpt{addr: "bcc@bcc.bcc", name: "bcc name"}})
 				assert.NoError(t, err, "prep email")
@@ -258,14 +262,16 @@ mail body
 				testMsg, err = createMsg(
 					Rcpt{addr: "mail@from", name: "name from"},
 					[]Rcpt{{addr: "mail@to", name: "name to"}},
-					"mail subject",
+					// "mail subject",
 				)
+				require.NoError(t, err)
+				err = testMsg.SetSubject("mail subject")
+				require.NoError(t, err)
 
 				myData := struct{ User string }{User: "Pesho"}
 				template_data := `User: {{ .User }}`
 				tmpl := template.Must(template.New("template_data").Parse(template_data))
 
-				assert.NoError(t, err, "prep email")
 				testMsg.AddFile(fmt.Sprintf("%s/test.txt", repoFolder))
 				testMsg.AddAttachment("myfile.png", func(w io.Writer) error {
 					fileBody := "secret"

@@ -23,7 +23,6 @@ func (m *MockSmtpConnector) Connect(ctx context.Context) (SmtpSender, error) {
 	if m.ForErr != nil {
 		return nil, m.ForErr
 	}
-	m.Sender = &MockSmtpSender{}
 	return m.Sender, nil
 }
 

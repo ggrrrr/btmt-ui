@@ -39,7 +39,7 @@ type (
 	}
 )
 
-func CreateMsgFromString(from string, toList []string, subject string) (*Msg, error) {
+func CreateMsgFromString(from string, toList []string) (*Msg, error) {
 	rcptFrom, err := RcptFromString(from)
 	if err != nil {
 		return nil, fmt.Errorf("from address: %w", err)
@@ -53,7 +53,15 @@ func CreateMsgFromString(from string, toList []string, subject string) (*Msg, er
 		rcptTo = append(rcptTo, rcpt)
 	}
 
-	return createMsg(rcptFrom, rcptTo, subject)
+	return createMsg(rcptFrom, rcptTo)
+}
+
+func (msg *Msg) SetSubject(subject string) error {
+	if subject == "" {
+		return fmt.Errorf("subject is empty")
+	}
+	msg.setHeader(headerSubject, subject)
+	return nil
 }
 
 func (e *Msg) AddCc(cc RcptList) {
@@ -117,7 +125,7 @@ func (e *Msg) AddFile(fileName string) {
 	e.attachments = append(e.attachments, f)
 }
 
-func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
+func createMsg(from Rcpt, to RcptList) (*Msg, error) {
 	if from.addr == "" {
 		return nil, fmt.Errorf("from is empty")
 	}
@@ -129,9 +137,6 @@ func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 	}
 	if to[0].addr == "" {
 		return nil, fmt.Errorf("to[0] is empty")
-	}
-	if subject == "" {
-		return nil, fmt.Errorf("subject is empty")
 	}
 	msg := &Msg{
 		from:        from,
@@ -145,7 +150,6 @@ func createMsg(from Rcpt, to RcptList, subject string) (*Msg, error) {
 
 	msg.setHeader(headerFrom, from.Formatted())
 	msg.setHeader(headerTo, to.Formatted()...)
-	msg.setHeader(headerSubject, subject)
 
 	return msg, nil
 }

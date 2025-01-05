@@ -6,8 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ggrrrr/btmt-ui/be/help"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/help"
 )
 
 var pwd = help.RepoDir()
@@ -16,22 +18,27 @@ func Test_WriteTo(t *testing.T) {
 	newLine = []byte("\n")
 	var err error
 
-	mailEmpty, _ := createMsg(
+	mailEmpty, err := createMsg(
 		Rcpt{addr: "asd@asd", name: "From name"},
 		RcptList{Rcpt{addr: "to@to", name: "To name"}},
-		"Subject 1",
 	)
+	require.NoError(t, err)
+	err = mailEmpty.SetSubject("Subject 1")
+	require.NoError(t, err)
 
 	bufEmpty := new(bytes.Buffer)
 	err = mailEmpty.writerTo(bufEmpty)
 	err1 := &MailFormatError{}
 	assert.ErrorAs(t, err, &err1)
 
-	mail, _ := createMsg(
+	mail, err := createMsg(
 		Rcpt{addr: "asd@asd", name: "From name"},
 		RcptList{Rcpt{addr: "to@to", name: "To name"}},
-		"Subject 1",
+		// "Subject 1",
 	)
+	require.NoError(t, err)
+	err = mail.SetSubject("Subject 1")
+	require.NoError(t, err)
 
 	result := `From: "From name" <asd@asd>
 To: "To name" <to@to>

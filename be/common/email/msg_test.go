@@ -36,7 +36,9 @@ func TestRcptMail(t *testing.T) {
 		{
 			name: "ok",
 			testFunc: func(t *testing.T) {
-				msg, err := CreateMsgFromString("me@me.com", []string{"to@to.com"}, "subject")
+				msg, err := CreateMsgFromString("me@me.com", []string{"to@to.com"})
+				require.NoError(t, err)
+				err = msg.SetSubject("subject")
 				require.NoError(t, err)
 				assert.Equal(t, &Msg{
 					from: Rcpt{addr: "me@me.com"},
@@ -57,7 +59,7 @@ func TestRcptMail(t *testing.T) {
 		{
 			name: "rcpt list fail",
 			testFunc: func(t *testing.T) {
-				_, err := CreateMsgFromString("me@me.com", []string{"to@to.com", "asdasd"}, "subject")
+				_, err := CreateMsgFromString("me@me.com", []string{"to@to.com", "asdasd"})
 				require.Error(t, err)
 				err1 := &MailFormatError{}
 				require.ErrorAs(t, err, &err1)
@@ -83,17 +85,17 @@ func TestCreateMsg(t *testing.T) {
 	}
 	tst := []testCase{
 		{
-			name:    "ok",
-			from:    Rcpt{addr: "from@me", name: "c"},
-			to:      RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
-			subject: "subject1",
+			name: "ok",
+			from: Rcpt{addr: "from@me", name: "c"},
+			to:   RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
+			// subject: "subject1",
 			want: &Msg{
 				from: Rcpt{addr: "from@me", name: "c"},
 				to:   RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
 				headers: []smtpHeader{
 					{key: headerFrom, values: []string{"\"c\" <from@me>"}},
 					{key: headerTo, values: []string{"\"to\" <to@me>", "\"to1\" <to1@me>"}},
-					{key: headerSubject, values: []string{"subject1"}},
+					// {key: headerSubject, values: []string{"subject1"}},
 				},
 				parts:       []*bodyPart{},
 				attachments: []*attachmentPart{},
@@ -115,19 +117,12 @@ func TestCreateMsg(t *testing.T) {
 			want:    &Msg{},
 			err:     fmt.Errorf(""),
 		},
-		{
-			name:    "subject missing",
-			from:    Rcpt{addr: "from@me", name: "c"},
-			to:      RcptList{Rcpt{addr: "to@me", name: "to"}, {addr: "to1@me", name: "to1"}},
-			subject: "",
-			want:    &Msg{},
-			err:     fmt.Errorf(""),
-		},
 	}
 
 	for _, tc := range tst {
 		t.Run(tc.name, func(t *testing.T) {
-			m, gotErr := createMsg(tc.from, tc.to, tc.subject)
+			m, gotErr := createMsg(tc.from, tc.to)
+			// m, gotErr := createMsg(tc.from, tc.to, tc.subject)
 			if tc.err != nil {
 				assert.Error(t, gotErr)
 			} else {
