@@ -133,8 +133,10 @@ func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandlerFunc) err
 
 func (c *NatsConsumer) Shutdown() error {
 	if c.shutdown != nil {
+		logger.Info().
+			Str("consumerId", c.consumerId.String()).
+			Msg("Shutdown")
 		c.shutdown()
-		fmt.Printf("Consumer[%s].Shutdown.\n", c.consumerId.String())
 	}
 
 	if c.conn == nil {

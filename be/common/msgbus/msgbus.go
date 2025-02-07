@@ -13,9 +13,11 @@ type (
 
 	MessageConsumer[T proto.Message] interface {
 		Consumer(ctx context.Context, handler MessageHandlerFunc[T])
+		Shutdown()
 	}
 )
 
 type MessagePublisher[T proto.Message] interface {
 	Publish(ctx context.Context, md Metadata, msg T) error
+	Shutdown()
 }

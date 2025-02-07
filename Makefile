@@ -101,7 +101,7 @@ go_run_monolith:
 	go run be/monolith/main.go
 
 go_test:
-	docker-compose start postgres mongo localstack nats
+	docker compose up -d localstack mongo nats otel postgres
 	go test -cover  ./be/...
 	# go test -coverprofile cover.out
 	# go test -cover -coverprofile cover.out ./be/...

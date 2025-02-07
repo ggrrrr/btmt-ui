@@ -16,16 +16,16 @@ import (
 
 type (
 	Application struct {
-		connector    email.SmtpConnector
+		connectors   map[string]email.EmailConnector
 		tmplFetcher  state.StateFetcher
 		blobStore    blob.Store
 		imagesFolder blob.BlobId
 	}
 )
 
-func New(connector email.SmtpConnector, fetcher state.StateFetcher) (*Application, error) {
+func New(connectors map[string]email.EmailConnector, fetcher state.StateFetcher) (*Application, error) {
 	a := &Application{
-		connector:   connector,
+		connectors:  connectors,
 		tmplFetcher: fetcher,
 	}
 	return a, nil
@@ -35,6 +35,11 @@ func (a *Application) SendEmail(ctx context.Context, emailMsg *emailpbv1.EmailMe
 
 	if emailMsg == nil {
 		return fmt.Errorf("email is nil")
+	}
+
+	connector, ok := a.connectors[emailMsg.FromAccount.Realm]
+	if !ok {
+		return fmt.Errorf("connectors for %s  not found", emailMsg.FromAccount.Realm)
 	}
 
 	data := msgData{
@@ -69,7 +74,7 @@ func (a *Application) SendEmail(ctx context.Context, emailMsg *emailpbv1.EmailMe
 		return err
 	}
 
-	smtpInst, err := a.connector.Connect(ctx)
+	smtpInst, err := connector.Connect(ctx)
 	if err != nil {
 		// TODO 400 or 500 error
 		return err

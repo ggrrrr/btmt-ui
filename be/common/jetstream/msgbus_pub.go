@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	msgbusv1 "github.com/ggrrrr/btmt-ui/be/common/msgbus/v1"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -69,4 +70,11 @@ func (p *ProtoPublisher[T]) Publish(ctx context.Context, md msgbus.Metadata, msg
 
 	return p.publisher.Publish(ctx, md, bytes)
 
+}
+
+func (p *ProtoPublisher[T]) Shutdown() {
+	logger.Info().
+		Str("Subject", p.msgMD.publishSubject()).
+		Msg("Shutdown")
+	p.publisher.Shutdown()
 }

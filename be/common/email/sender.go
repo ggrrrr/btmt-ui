@@ -41,25 +41,27 @@ type (
 	}
 
 	// Implements SenderCloser
-	sender struct {
+	Sender struct {
 		cfg        Config
 		tcpConn    net.Conn
 		smtpClient extSmtpClient
 	}
 
-	SmtpSender interface {
+	EmailSender interface {
 		Send(ctx context.Context, email *Msg) error
 		Close() error
 	}
 
-	SmtpConnector interface {
-		Connect(ctx context.Context) (SmtpSender, error)
+	EmailConnector interface {
+		Connect(ctx context.Context) (EmailSender, error)
 	}
 )
 
-var _ (SmtpSender) = (*sender)(nil)
+// var _ (EmailConnector) = (*Config)(nil)
 
-func (cfg Config) Connect(ctx context.Context) (*sender, error) {
+var _ (EmailSender) = (*Sender)(nil)
+
+func (cfg *Config) Connect(ctx context.Context) (*Sender, error) {
 	var err error
 	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.TraceKVString("smtp.host.addr", cfg.SMTPAddr))
 	defer func() {
@@ -72,8 +74,8 @@ func (cfg Config) Connect(ctx context.Context) (*sender, error) {
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 10 * time.Second
 	}
-	sender := &sender{
-		cfg: cfg,
+	sender := &Sender{
+		cfg: *cfg,
 	}
 
 	tcpConn, err := net.DialTimeout("tcp", cfg.SMTPAddr, cfg.Timeout)
@@ -118,7 +120,7 @@ func (cfg Config) Connect(ctx context.Context) (*sender, error) {
 	return sender, err
 }
 
-func (a *sender) Send(ctx context.Context, email *Msg) error {
+func (a *Sender) Send(ctx context.Context, email *Msg) error {
 	if len(email.parts) == 0 {
 		return &MailFormatError{
 			msg: "body",
@@ -161,7 +163,7 @@ func (a *sender) Send(ctx context.Context, email *Msg) error {
 	return nil
 }
 
-func (conn *sender) Close() error {
+func (conn *Sender) Close() error {
 	var err error
 	if conn.smtpClient != nil {
 		err = conn.smtpClient.Quit()
@@ -180,7 +182,7 @@ func (conn *sender) Close() error {
 	return nil
 }
 
-func (sender *sender) smtpAuth() error {
+func (sender *Sender) smtpAuth() error {
 	var err error
 
 	logger.Debug().Msg("smtpAuth.start")

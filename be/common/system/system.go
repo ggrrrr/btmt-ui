@@ -40,6 +40,8 @@ type (
 		// group waiter for shutdown/startup
 		Waiter() waiter.Waiter
 
+		Verifier() token.Verifier
+
 		// GRPC server
 		RPC() *grpc.Server
 	}
@@ -134,4 +136,8 @@ func (s *System) Waiter() waiter.Waiter {
 
 func (s *System) Aws() *session.Session {
 	return s.aws
+}
+
+func (s *System) Verifier() token.Verifier {
+	return s.verifier
 }

@@ -1,21 +1,8 @@
 services:
-  # docker run --rm --name jaeger
-  #   -e COLLECTOR_ZIPKIN_HOST_PORT=:9411
-  #   -p 6831:6831/udp
-  #   -p 6832:6832/udp
-  #   -p 5778:5778
-  #   -p 16686:16686
-  #   -p 4317:4317
-  #   -p 4318:4318
-  #   -p 14250:14250
-  #   -p 14268:14268
-  #   -p 14269:14269
-  #   -p 9411:9411
-  #   jaegertracing/all-in-one:1.61.0
   otel:
     hostname: otel
     container_name: otel
-    image: jaegertracing/all-in-one:1.61.0
+    image: jaegertracing/all-in-one:1.66.0
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
     ports:
@@ -34,7 +21,7 @@ services:
     # networks:
     # - apple
     # The official v2 Traefik docker image
-    image: traefik:v2.10
+    image: traefik:v3.3.3
     # Enables the web UI and tells Traefik to listen to docker
     # --accesslog=true --log.level=DEBUG
     command: --accesslog=true --api.insecure=true --providers.docker --entryPoints.web.address=:8000
@@ -98,7 +85,7 @@ services:
   postgres:
     hostname: postgres
     container_name: postgres
-    image: postgres
+    image: postgres:17.2-alpine3.20
     environment:
       - POSTGRES_PASSWORD=initexample
       - POSTGRES_USER=initexample
@@ -125,7 +112,7 @@ services:
   nats:
     hostname: nats
     container_name: nats
-    image: nats:2.10.22-alpine3.20
+    image: nats:2.10.25-alpine3.21
     ports:
       - "4222:4222"
     command: -js
@@ -157,7 +144,7 @@ services:
   localstack:
     hostname: localstack
     container_name: "localstack"
-    image: localstack/localstack:3.7
+    image: localstack/localstack:4.1
     ports:
       - "4566:4566" # LocalStack Gateway
       - "4510-4559:4510-4559" # external services port range

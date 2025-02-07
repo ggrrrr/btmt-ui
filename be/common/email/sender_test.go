@@ -125,7 +125,7 @@ func TestIntMultipleMsg(t *testing.T) {
 func TestAuth(t *testing.T) {
 	newLine = []byte("\r\n")
 
-	testSender := &sender{
+	testSender := &Sender{
 		cfg:        Config{},
 		tcpConn:    nil,
 		smtpClient: nil,
@@ -318,7 +318,7 @@ c2VjcmV0
 		t.Run(tc.name, func(t *testing.T) {
 			smtpClientMock := newSmtpClientMock()
 
-			testSender := &sender{
+			testSender := &Sender{
 				cfg: Config{
 					SMTPHost: "",
 					SMTPAddr: "",
@@ -371,9 +371,9 @@ func TestCreateSender(t *testing.T) {
 	smtp, err := cfg.Connect(ctx)
 	require.NoError(t, err)
 
-	err = smtp.smtpClient.Quit()
+	// err = smtp.smtpClient.Quit()
+	err = smtp.Close()
 	require.NoError(t, err)
-	smtp.Close()
 
 }
 

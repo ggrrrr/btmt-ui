@@ -37,7 +37,9 @@ func (s *server) handlerSendEmail(ctx context.Context, topic string, md msgbus.M
 	}()
 
 	err = s.app.SendEmail(ctx, sendEmail.Message)
-
+	if err != nil {
+		logger.ErrorCtx(ctx, err).Msg("handlerSendEmail")
+	}
 	logger.InfoCtx(ctx).Str("topic", topic).Msg("handler")
 	return nil
 }

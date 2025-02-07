@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	msgbusv1 "github.com/ggrrrr/btmt-ui/be/common/msgbus/v1"
 )
@@ -75,4 +76,9 @@ func (c *ProtoConsumer[T]) Consumer(ctx context.Context, handler msgbus.MessageH
 		handler(ctx, subject, md, payload)
 		return nil
 	})
+}
+
+func (c *ProtoConsumer[T]) Shutdown() {
+	logger.Info().Msg("Shutdown")
+	c.consumer.Shutdown()
 }

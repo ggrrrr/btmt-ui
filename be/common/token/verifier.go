@@ -58,6 +58,7 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &verifier{
 		signMethod: "RS256",
 		verifyKey:  verifyKey,

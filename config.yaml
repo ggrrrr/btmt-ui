@@ -19,7 +19,7 @@ jwt:
   ttl:
     accessToken: 1m
     refreshToken: 360h
-  # useMock: mock
+  useMock: mock
 
 rest:
   address: 0.0.0.0:8010

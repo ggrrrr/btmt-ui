@@ -14,12 +14,12 @@ type (
 	}
 )
 
-var _ (SmtpConnector) = (*MockSmtpConnector)(nil)
+var _ (EmailConnector) = (*MockSmtpConnector)(nil)
 
-var _ (SmtpSender) = (*MockSmtpSender)(nil)
+var _ (EmailSender) = (*MockSmtpSender)(nil)
 
 // Connect implements Connector.
-func (m *MockSmtpConnector) Connect(ctx context.Context) (SmtpSender, error) {
+func (m *MockSmtpConnector) Connect(ctx context.Context) (EmailSender, error) {
 	if m.ForErr != nil {
 		return nil, m.ForErr
 	}

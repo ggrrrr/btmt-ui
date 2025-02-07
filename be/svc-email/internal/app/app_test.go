@@ -36,7 +36,9 @@ func TestSend(t *testing.T) {
 		Sender: &email.MockSmtpSender{},
 	}
 	testApp := &Application{
-		connector:   mockSender,
+		connectors: map[string]email.EmailConnector{
+			"localhost": mockSender,
+		},
 		tmplFetcher: tmplFetcher,
 	}
 
@@ -102,6 +104,33 @@ func TestSend(t *testing.T) {
 					Data: &templv1.Data{},
 				}
 			},
+		},
+		{
+			name:     "err unknown realm",
+			expected: "to:to@email.com\nfrom:from@email.com\nheader:From:from@email.com\nheader:To:to@email.com\nheader:Subject:subject\nbody",
+			from: func(t *testing.T) *emailpbv1.EmailMessage {
+				return &emailpbv1.EmailMessage{
+					FromAccount: &emailpbv1.SenderAccount{
+						Realm: "localhost111",
+						Name:  "",
+						Email: "from@email.com",
+					},
+					ToAddresses: &emailpbv1.ToAddresses{
+						ToEmail: []*emailpbv1.EmailAddr{
+							{Name: "", Email: "to@email.com"},
+						},
+					},
+					Body: &emailpbv1.EmailMessage_RawBody{
+						RawBody: &emailpbv1.RawBody{
+							ContentType: "",
+							Subject:     "subject",
+							Body:        "body",
+						},
+					},
+					Data: &templv1.Data{},
+				}
+			},
+			expErr: fmt.Errorf("asdasd"),
 		},
 		{
 			name:     "err from templ",
