@@ -6,18 +6,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/postgres"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/postgres"
+	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
 func cfg() postgres.Config {
 	return postgres.Config{
 		Host:     "localhost",
 		Port:     5432,
-		Username: "initexample",
-		Password: "initexample",
+		Username: "test",
+		Password: "test",
 		Database: "test",
 		Prefix:   "dev",
 	}

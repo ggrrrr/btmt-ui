@@ -16,7 +16,7 @@ import (
 type (
 	tmplValidator struct {
 		ctx     context.Context
-		app     *App
+		app     *Application
 		realm   string
 		errors  TmplError
 		resized bool
@@ -49,7 +49,7 @@ func (v *tmplValidator) RenderImg(imageName string) htmltemplate.HTML {
 	return htmltemplate.HTML(fmt.Sprintf(`<img src="http://localhost:8010/tmpl/image/%s%s" ></img>`, imageName, suffixUrl))
 }
 
-func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *tmplpb.TemplateUpdate) (*tmplValidator, error) {
+func (a *Application) validate(ctx context.Context, authInfo roles.AuthInfo, template *tmplpb.TemplateUpdate) (*tmplValidator, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "validate", template)
 	defer func() {
@@ -73,7 +73,7 @@ func (a *App) validate(ctx context.Context, authInfo roles.AuthInfo, template *t
 
 }
 
-func validator(ctx context.Context, realm string, app *App) *tmplValidator {
+func validator(ctx context.Context, realm string, app *Application) *tmplValidator {
 	return &tmplValidator{
 		ctx:     ctx,
 		app:     app,

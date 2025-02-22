@@ -9,6 +9,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
@@ -18,7 +19,7 @@ const (
 )
 
 type (
-	OptionsFunc func(a *App) error
+	OptionsFunc func(a *Application) error
 
 	tmplRepo interface {
 		Save(ctx context.Context, template *tmplpb.Template) error
@@ -27,22 +28,37 @@ type (
 		GetById(ctx context.Context, fromId string) (*tmplpb.Template, error)
 	}
 
-	App struct {
+	Application struct {
 		appPolices   roles.AppPolices
 		blobStore    blob.Store
 		imagesFolder blob.BlobId
 		stateStore   state.StateStore
 		repo         tmplRepo
 	}
+
+	App interface {
+		SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error)
+		ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error)
+		GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error)
+		RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (string, error)
+
+		// images
+		GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error)
+		PutImage(ctx context.Context, tempFile blob.TempFile) error
+		ListImages(ctx context.Context) ([]ddd.ImageInfo, error)
+		GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error)
+	}
 )
 
-func New(opts ...OptionsFunc) (*App, error) {
+var _ (App) = (*Application)(nil)
+
+func New(opts ...OptionsFunc) (*Application, error) {
 	imagesFolder, err := blob.ParseBlobDir(tmplBlobFolder)
 	if err != nil {
 		return nil, err
 	}
 
-	a := &App{
+	a := &Application{
 		imagesFolder: imagesFolder,
 	}
 	for _, optFunc := range opts {
@@ -79,21 +95,21 @@ func New(opts ...OptionsFunc) (*App, error) {
 }
 
 func WithBlobStore(blobStore blob.Store) OptionsFunc {
-	return func(a *App) error {
+	return func(a *Application) error {
 		a.blobStore = blobStore
 		return nil
 	}
 }
 
 func WithTmplRepo(repo tmplRepo) OptionsFunc {
-	return func(a *App) error {
+	return func(a *Application) error {
 		a.repo = repo
 		return nil
 	}
 }
 
 func WithStateStore(store state.StateStore) OptionsFunc {
-	return func(a *App) error {
+	return func(a *Application) error {
 		a.stateStore = store
 		return nil
 	}

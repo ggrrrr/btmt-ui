@@ -15,14 +15,14 @@ import (
 
 type (
 	Config struct {
-		TTL        time.Duration
-		Collection string
-		User       string
-		Password   string
-		Database   string
-		Uri        string
-		Host       string
-		Debug      string
+		TTL        time.Duration `env:"MGO_TTL" envDefault:"1s"`
+		Collection string        `env:"MGO_COLLECTION"`
+		User       string        `env:"MGO_USER"`
+		Password   string        `env:"MGO_PASSWORD"`
+		Database   string        `env:"MGO_DATABASE"`
+		Uri        string        `env:"MGO_URI"`
+		Host       string        `env:"MGO_HOST"`
+		Debug      string        `env:"MGO_DEBUG"`
 	}
 
 	Repo interface {
@@ -47,6 +47,10 @@ type (
 var _ (Repo) = (*repo)(nil)
 
 func New(ctx context.Context, cfg Config) (*repo, error) {
+	if cfg.TTL == 0 {
+		cfg.TTL = time.Second
+	}
+
 	logger.Info().
 		Str("user", cfg.User).
 		Str("database", cfg.Database).
@@ -80,6 +84,7 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 	opts := options.Client()
 	opts.Monitor = otelmongo.NewMonitor()
 	opts.ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	opts.SetTimeout(cfg.TTL)
 
 	if len(credential.Username) > 0 {
 		opts.SetAuth(credential)

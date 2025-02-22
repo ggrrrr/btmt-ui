@@ -2,11 +2,12 @@ package repo
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/stackus/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/mgo.v2/bson"
@@ -185,7 +186,7 @@ func (r *repo) GetById(ctx context.Context, fromId string) (result *peoplepbv1.P
 	res := r.db.FindOne(ctx, r.collection, bson.M{"_id": id})
 
 	if res.Err() != nil {
-		if errors.As(res.Err(), &mongo.ErrNoDocuments) {
+		if errors.Is(res.Err(), mongo.ErrNoDocuments) {
 			return nil, nil
 		}
 		err = res.Err()
@@ -203,23 +204,23 @@ func (r *repo) list(ctx context.Context, filter any) ([]*peoplepbv1.Person, erro
 
 	cur, err := r.db.Find(ctx, r.collection, filter)
 	if err != nil {
-		return nil, errors.Wrap(err, "collection.Find")
+		return nil, fmt.Errorf("collect.Find %w", err)
 	}
 	defer cur.Close(ctx)
 	if cur.Err() != nil {
-		return nil, errors.Wrap(err, "cursor")
+		return nil, fmt.Errorf("collect.Find.cursor %w", err)
 	}
 
 	var out = make([]*peoplepbv1.Person, 0)
 	for cur.Next(context.Background()) {
 		if cur.Err() != nil {
-			return nil, errors.Wrap(err, "cursor.Error")
+			return nil, fmt.Errorf("collect.Find.cursor.Next %w", err)
 		}
 		var result *person
 		err := cur.Decode(&result)
 		if err != nil {
 			log.Println(err)
-			return nil, errors.Wrap(err, "Decode")
+			return nil, fmt.Errorf("collect.Find decode %w", err)
 		}
 		out = append(out, result.toProto())
 	}

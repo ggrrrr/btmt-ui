@@ -64,7 +64,7 @@ end.
 
 	rootCtx := roles.CtxWithAuthInfo(context.Background(), roles.CreateSystemAdminUser("localhost", "admin", app.Device{}))
 
-	testApp := &App{
+	testApp := &Application{
 		blobStore:    &mockBlobStore{},
 		appPolices:   roles.NewAppPolices(),
 		imagesFolder: blob.BlobId{},

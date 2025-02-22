@@ -52,11 +52,11 @@ async function getRequest(id) {
         method: "GET",
     };
 
-    const url = config.BASE_URL + "/tmpl/manage/" + id;
+    const url = config.BASE_URL + "/v1/tmpl/manage/" + id;
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
-            console.log("get /tmpl/manage:", result)
+            console.log("get /v1/tmpl/manage:", result)
             refs.value.tmpl = new Template(result.result)
         }).finally(() => {
             refs.value.loading = false;
@@ -74,7 +74,7 @@ async function renderRequest() {
         body: JSON.stringify(reqest)
     };
 
-    const url = config.BASE_URL + "/tmpl/manage/render";
+    const url = config.BASE_URL + "/v1/tmpl/manage/render";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
@@ -103,7 +103,7 @@ async function saveRequest() {
     };
     console.log("save request:", request)
 
-    const url = config.BASE_URL + "/tmpl/manage/save";
+    const url = config.BASE_URL + "/v1/tmpl/manage/save";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {

@@ -247,7 +247,7 @@ async function loadData() {
         body: JSON.stringify(filter),
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/people/list";
+    const url = config.BASE_URL + "/v1/people/list";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {

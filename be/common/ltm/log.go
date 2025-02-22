@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracedata"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
@@ -22,8 +22,8 @@ type (
 		logger zerolog.Logger
 	}
 	LogCfg struct {
-		Level  string `envconfig:"LOG_LEVEL"`
-		Format string `envconfig:"LOG_FORMAT"`
+		Level  string `env:"LOG_LEVEL"`
+		Format string `env:"LOG_FORMAT"`
 	}
 )
 
@@ -67,12 +67,7 @@ func addTrace(event *zerolog.Event, ctx context.Context) *zerolog.Event {
 
 func newLogger(moduleName string, writer io.WriteCloser) *AppLogger {
 	var cfg LogCfg
-	err := envconfig.Process(moduleName, &cfg)
-	if err != nil {
-		fmt.Printf("error parsing cfg for:%s", moduleName)
-		cfg.Level = defaultCfg.Format
-		cfg.Format = defaultCfg.Format
-	}
+	config.MustParse(&cfg)
 	fmt.Printf("cfg %+v\n", cfg)
 
 	return configureLog(cfg, writer)
@@ -81,11 +76,7 @@ func newLogger(moduleName string, writer io.WriteCloser) *AppLogger {
 var defaultCfg LogCfg
 
 func defaultLog() {
-	err := envconfig.Process("", &defaultCfg)
-	if err != nil {
-		fmt.Printf("unable to parse log config")
-		panic(err)
-	}
+	config.MustParse(&defaultCfg)
 }
 
 func configureLog(cfg LogCfg, writer io.WriteCloser) *AppLogger {

@@ -66,9 +66,9 @@ func Test_Save(t *testing.T) {
 	stateStore, err := jetstream.NewStateStore(ctx, natsCfg, state.MustParseEntityType("templates"))
 	require.NoError(t, err)
 
-	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.AwsConfig{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:4566",
+	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.Config{
+		Region:      "us-east-1",
+		EndpointURL: "http://localhost:4566",
 	})
 	require.NoError(t, err)
 

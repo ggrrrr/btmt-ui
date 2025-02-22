@@ -68,7 +68,7 @@ func TestPubSubNats(t *testing.T) {
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
 
-	err = logger.ConfigureOtel(rootCtx)
+	err = logger.ConfigureOtel(rootCtx, "testapp", logger.DevConfig)
 	require.NoError(t, err)
 	defer func() {
 		logger.Shutdown()

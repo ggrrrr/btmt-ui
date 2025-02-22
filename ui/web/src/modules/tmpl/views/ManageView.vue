@@ -90,7 +90,7 @@ async function listRequest() {
         body: JSON.stringify(reqest)
     };
 
-    const url = config.BASE_URL + "/tmpl/manage/list";
+    const url = config.BASE_URL + "/v1/tmpl/manage/list";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {

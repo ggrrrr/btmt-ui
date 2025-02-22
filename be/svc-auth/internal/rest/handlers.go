@@ -11,17 +11,7 @@ import (
 	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 )
 
-func noJson400(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(400)
-	// nolint: errcheck
-	w.Write([]byte("noJson400"))
-}
-
-func json500(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(500)
-	// nolint: errcheck
-	w.Write([]byte(`{"me":"json500"}`))
-}
+var _ (AppHandler) = (*server)(nil)
 
 func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -32,7 +22,7 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 
 	list, err := s.app.UserList(ctx)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("UserList")
+		logger.ErrorCtx(ctx, err).Msg("UserList")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -58,7 +48,7 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 		out = append(out, line)
 	}
 	logger.InfoCtx(r.Context()).Msg("UserList")
-	web.SendPayload(r.Context(), w, "ok", out)
+	web.SendJSONPayload(r.Context(), w, "ok", out)
 }
 
 func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +99,7 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 	// 	Expires:  time.Now().Add(365 * 24 * time.Hour),
 	// }
 	// http.SetCookie(w, &cookie)
-	web.SendPayload(ctx, w, "ok", &out)
+	web.SendJSONPayload(ctx, w, "ok", &out)
 }
 
 func (s *server) TokenValidate(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +116,7 @@ func (s *server) TokenValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.InfoCtx(r.Context()).Msg("Validate")
-	web.SendPayload(ctx, w, "ok", nil)
+	web.SendJSONPayload(ctx, w, "ok", nil)
 }
 
 func (s *server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
@@ -152,5 +142,5 @@ func (s *server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.InfoCtx(r.Context()).Msg("TokenRefresh")
-	web.SendPayload(ctx, w, "ok", &out)
+	web.SendJSONPayload(ctx, w, "ok", &out)
 }

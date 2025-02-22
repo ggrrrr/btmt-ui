@@ -1,4 +1,4 @@
-package msgbus
+package bus
 
 import (
 	"context"

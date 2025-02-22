@@ -55,7 +55,7 @@ func (s *server) UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// time.Sleep(5 * time.Second)
-	web.SendPayload(ctx, w, "ok", nil)
+	web.SendJSONPayload(ctx, w, "ok", nil)
 
 }
 
@@ -163,5 +163,5 @@ func (s *server) ListImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.List = append(response.List, images...)
-	web.SendPayload(ctx, w, "ok", response)
+	web.SendJSONPayload(ctx, w, "ok", response)
 }

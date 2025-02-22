@@ -1,66 +1,40 @@
 package config
 
 import (
-	"strings"
-	"time"
+	"fmt"
+	"os"
+	"sort"
 
-	"github.com/spf13/viper"
-
-	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
-	"github.com/ggrrrr/btmt-ui/be/common/cmd"
-	"github.com/ggrrrr/btmt-ui/be/common/mgo"
-	"github.com/ggrrrr/btmt-ui/be/common/postgres"
+	"github.com/caarlos0/env/v11"
 )
 
-type (
-	Otel struct {
-		Enabled bool
+func Parse(cfg any) error {
+	opts := env.Options{
+		// DefaultValueTagName: "default",
+		// PrefixTagName: "envPrefix",
 	}
-	GrpcConfig struct {
-		Address string
-	}
+	// DefaultValueTagName
+	// if prefix != "" {
+	// 	opts.Prefix = fmt.Sprintf("%s_", prefix)
+	// }
 
-	RestConfig struct {
-		Address string
-	}
+	return env.ParseWithOptions(cfg, opts)
+}
 
-	JwtConfig struct {
-		CrtFile string
-		KeyFile string
-		UseMock string
-		Ttl     struct {
-			AccessToken  time.Duration
-			RefreshToken time.Duration
-		}
+func MustParse(cfg any) {
+	if err := Parse(cfg); err != nil {
+		panic(err)
 	}
+}
 
-	AppConfig struct {
-		Otel            Otel
-		Postgres        postgres.Config
-		Aws             awsclient.AwsConfig
-		Dynamodb        awsclient.DynamodbConfig
-		Grpc            GrpcConfig
-		Jwt             JwtConfig
-		Rest            RestConfig
-		Mgo             mgo.Config
-		ShutdownTimeout time.Duration `default:"20s"`
-	}
-)
+func DumpEnv() {
+	l := os.Environ()
 
-func InitConfig(cfg any) (err error) {
-	for _, p := range cmd.GlobalFlags.ConfigPaths {
-		viper.AddConfigPath(p)
-	}
-	viper.SetConfigName(cmd.GlobalFlags.ConfigName)
-	viper.SetConfigType("yaml")
-	viper.AutomaticEnv()
-	err = viper.ReadInConfig()
-	if err != nil {
-		return
-	}
-	replacer := strings.NewReplacer(".", "_")
-	viper.SetEnvKeyReplacer(replacer)
+	sort.Slice(l, func(i, j int) bool {
+		return l[i] < l[j]
+	})
 
-	err = viper.Unmarshal(&cfg)
-	return err
+	for v := range l {
+		fmt.Printf("\t %v \n", l[v])
+	}
 }

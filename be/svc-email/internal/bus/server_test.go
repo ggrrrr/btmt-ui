@@ -1,4 +1,4 @@
-package msgbus
+package bus
 
 import (
 	"context"
@@ -24,7 +24,7 @@ type mockApp struct {
 
 // SendEmail implements senderApp.
 func (m *mockApp) SendEmail(ctx context.Context, msg *emailpbv1.EmailMessage) error {
-	fmt.Printf("\t\tmock.SendEmail %+v\n", msg)
+	fmt.Printf("\t\tmock.SendEmail88 %+v\n", msg)
 	m.wg.Done()
 	return m.err
 }
@@ -41,7 +41,7 @@ func TestPublish(t *testing.T) {
 
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
-	err = logger.ConfigureOtel(ctx)
+	err = logger.ConfigureOtel(ctx, "devapp", logger.DevConfig)
 	require.NoError(t, err)
 	defer func() {
 		logger.Shutdown()
@@ -96,7 +96,7 @@ func TestServer(t *testing.T) {
 
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
-	err = logger.ConfigureOtel(ctx)
+	err = logger.ConfigureOtel(ctx, "devapp", logger.DevConfig)
 	require.NoError(t, err)
 	defer func() {
 		logger.Shutdown()

@@ -3,6 +3,8 @@
 ```mermaid
 
 architecture-beta
+    
+
     group external(mdi:cloud)[external]
     group k8s(mdi:kubernetes)[Cluster]
     group pubsub(mdi:apache-kafka)[nats jetstream]

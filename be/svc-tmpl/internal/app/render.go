@@ -11,7 +11,7 @@ import (
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-func (a *App) RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (string, error) {
+func (a *Application) RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (string, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "RenderHtml", nil)
 	defer func() {

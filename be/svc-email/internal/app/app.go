@@ -21,6 +21,10 @@ type (
 		blobStore    blob.Store
 		imagesFolder blob.BlobId
 	}
+
+	App interface {
+		SendEmail(ctx context.Context, emailMsg *emailpbv1.EmailMessage) error
+	}
 )
 
 func New(connectors map[string]email.EmailConnector, fetcher state.StateFetcher) (*Application, error) {

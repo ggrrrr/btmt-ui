@@ -13,7 +13,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
-func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error) {
+func (a *Application) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "GetResizedImage", nil, logger.TraceKVString("fileId", fileId))
 	defer func() {
@@ -66,7 +66,7 @@ func (a *App) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWrit
 
 }
 
-func (a *App) GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error) {
+func (a *Application) GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "GetImage", nil, logger.TraceKVString("fileId", fileId))
 	defer func() {
@@ -110,7 +110,7 @@ func (a *App) GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.F
 		nil
 }
 
-func (a *App) ListImages(ctx context.Context) ([]ddd.ImageInfo, error) {
+func (a *Application) ListImages(ctx context.Context) ([]ddd.ImageInfo, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "ListImages", nil)
 	defer func() {
@@ -160,7 +160,7 @@ func (a *App) ListImages(ctx context.Context) ([]ddd.ImageInfo, error) {
 	return out, nil
 }
 
-func (a *App) PutImage(ctx context.Context, tempFile blob.TempFile) error {
+func (a *Application) PutImage(ctx context.Context, tempFile blob.TempFile) error {
 	defer func() {
 		tempFile.Delete(ctx)
 	}()

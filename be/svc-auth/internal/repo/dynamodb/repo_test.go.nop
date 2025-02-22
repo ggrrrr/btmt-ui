@@ -16,10 +16,10 @@ var (
 	email1 string = "ggrrrr1@gmail.com"
 )
 
-func cfg() (awsclient.AwsConfig, awsclient.DynamodbConfig) {
-	return awsclient.AwsConfig{
-			Region:   "us-east-1",
-			Endpoint: "http://localhost:4566",
+func cfg() (awsclient.Config, awsclient.DynamodbConfig) {
+	return awsclient.Config{
+			Region:      "us-east-1",
+			EndpointURL: "http://localhost:4566",
 		},
 		awsclient.DynamodbConfig{
 			Database: "testdb",

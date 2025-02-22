@@ -2,12 +2,11 @@ package tmpl
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob/awss3"
+	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
@@ -17,49 +16,56 @@ import (
 	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-type Module struct{}
+type (
+	Config struct {
+		MGO       mgo.Config `prefix:"TMPL_"`
+		Broker    jetstream.Config
+		BlobStore struct {
+			BucketName string `env:"TMPL_STATE_BUCKET_NAME"`
+			awsclient.Config
+		}
+	}
+
+	Module struct {
+		app    app.App
+		cfg    Config
+		system system.Service
+	}
+)
 
 var _ (system.Module) = (*Module)(nil)
 
 func (*Module) Name() string {
 	return "svc-tmpl"
 }
-
-func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
-	return Root(ctx, s)
-}
-
-func Root(ctx context.Context, s system.Service) error {
-	logger.Info().Msg("Root")
-
-	db, err := mgo.New(ctx, s.Config().Mgo)
+func (m *Module) Configure(ctx context.Context, s system.Service) (err error) {
+	config.MustParse(&m.cfg)
+	m.system = s
+	db, err := mgo.New(ctx, m.cfg.MGO)
 	if err != nil {
-		logger.Error(err).Msg("db")
 		return err
 	}
-	fn := func() {
-		db.Close(ctx)
+
+	s.Waiter().AddCleanup(func() {
+		db.Close(context.Background())
+	})
+
+	stateStore, err := jetstream.NewStateStore(ctx, m.cfg.Broker, state.EntityTypeFromProto(&tmplpbv1.TemplateData{}))
+	if err != nil {
+		return err
 	}
-	s.Waiter().Cleanup(fn)
 
 	appRepo := repo.New("tmpl", db)
 
-	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.AwsConfig{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:4566",
+	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.Config{
+		Region:      "us-east-1",
+		EndpointURL: "http://localhost:4566",
 	})
 	if err != nil {
 		return err
 	}
 
-	stateStore, err := jetstream.NewStateStore(ctx, jetstream.Config{
-		URL: "localhost:4222",
-	}, state.EntityTypeFromProto(&tmplpbv1.TemplateData{}))
-	if err != nil {
-		return err
-	}
-
-	a, err := app.New(
+	m.app, err = app.New(
 		app.WithBlobStore(blobClient),
 		app.WithTmplRepo(appRepo),
 		app.WithStateStore(stateStore),
@@ -67,14 +73,11 @@ func Root(ctx context.Context, s system.Service) error {
 	if err != nil {
 		return err
 	}
+	m.system.MountHandler("/v1/tmpl", rest.Router(rest.Handler(m.app)))
+	return nil
+}
 
-	if s.Mux() == nil {
-		return fmt.Errorf("system.Mux is nil")
-	}
-
-	restApp := rest.New(a)
-	s.Mux().Mount("/tmpl", restApp.Router())
+func (m *Module) Startup(ctx context.Context) (err error) {
 
 	return nil
-
 }

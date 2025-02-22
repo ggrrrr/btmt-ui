@@ -89,7 +89,7 @@ func TestOtel(t *testing.T) {
 
 	ctx := roles.CtxWithAuthInfo(rootCtx, authInfo)
 
-	err = ConfigureOtel(rootCtx)
+	err = ConfigureOtel(rootCtx, "test-tapp", Config{})
 	require.NoError(t, err)
 
 	ctx, span := Span(ctx, "main.Method", nil)

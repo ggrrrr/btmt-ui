@@ -42,7 +42,7 @@ func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	template.Id = id
-	web.SendPayload(ctx, w, "ok", template)
+	web.SendJSONPayload(ctx, w, "ok", template)
 }
 
 func (s *server) ListTmpl(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func (s *server) ListTmpl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.List = append(response.List, list...)
-	web.SendPayload(ctx, w, "ok", response)
+	web.SendJSONPayload(ctx, w, "ok", response)
 }
 
 func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	web.SendPayload(ctx, w, "ok", tmpl)
+	web.SendJSONPayload(ctx, w, "ok", tmpl)
 }
 
 func (s *server) Render(w http.ResponseWriter, r *http.Request) {
@@ -111,5 +111,5 @@ func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 		Payload: result,
 	}
 
-	web.SendPayload(ctx, w, "ok", out)
+	web.SendJSONPayload(ctx, w, "ok", out)
 }

@@ -73,7 +73,7 @@ async function loadImages() {
         method: "GET",
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/tmpl/images";
+    const url = config.BASE_URL + "/v1/tmpl/images";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
@@ -93,7 +93,7 @@ async function loadImages() {
                             height: row['Height'],
                             width: row['Width'],
                             created_at: row['CreatedAt'],
-                            src: `http://localhost:8010/tmpl/image/${id}/resized`
+                            src: `http://localhost:8010/v1/tmpl/image/${id}/resized`
                         }
                         refs.value.data.push(fileInfo)
                         refs.value.totalItems++

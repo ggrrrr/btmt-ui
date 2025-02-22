@@ -26,7 +26,7 @@ func Test(t *testing.T) {
 
 	mockTokenGenerotar := token.NewTokenGenerator("test-publisher", token.NewSignerMock())
 
-	err = logger.ConfigureOtel(ctx)
+	err = logger.ConfigureOtel(ctx, "testapp", logger.DevConfig)
 	require.NoError(t, err)
 	defer func() {
 		logger.Shutdown()

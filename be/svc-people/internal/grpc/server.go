@@ -11,11 +11,11 @@ import (
 )
 
 type server struct {
-	app *app.App
+	app *app.Application
 	peoplepb.UnimplementedPeopleSvcServer
 }
 
-func RegisterServer(app *app.App, registrar grpc.ServiceRegistrar) {
+func RegisterServer(app *app.Application, registrar grpc.ServiceRegistrar) {
 	logger.Info().Msg("grpc.RegisterServer")
 	peoplepb.RegisterPeopleSvcServer(registrar, &server{
 		app: app,

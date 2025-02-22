@@ -92,6 +92,12 @@ func ErrorCtx(ctx context.Context, err error) *zerolog.Event {
 	return addTrace(l, ctx)
 }
 
+// TODO fix this
+func StackCtx(ctx context.Context, err error) *zerolog.Event {
+	l := log.Error().Stack().Str("TODO", "stack trace logging").Err(err)
+	return addTrace(l, ctx)
+}
+
 func IsDebug() bool {
 	switch log.GetLevel() {
 	case zerolog.DebugLevel:

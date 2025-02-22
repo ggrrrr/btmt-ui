@@ -5,6 +5,7 @@ import (
 )
 
 type Module interface {
-	Startup(context.Context, Service) error
+	Configure(context.Context, Service) error
+	Startup(context.Context) error
 	Name() string
 }

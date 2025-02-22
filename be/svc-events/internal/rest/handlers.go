@@ -29,5 +29,5 @@ func (s *server) Router() chi.Router {
 }
 
 func (s *server) Tmpl(w http.ResponseWriter, r *http.Request) {
-	web.SendPayload(r.Context(), w, "ok", "tmpl")
+	web.SendJSONPayload(r.Context(), w, "ok", "tmpl")
 }

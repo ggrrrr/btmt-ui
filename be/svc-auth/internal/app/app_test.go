@@ -121,7 +121,7 @@ func TestLogin(t *testing.T) {
 			test: "wrong pass",
 			prep: func(t *testing.T) {
 				_, err = testApp.LoginPasswd(ctx, authItem.Subject, "authItem.Passwd")
-				assert.ErrorIs(t, err, ErrAuthBadPassword)
+				assert.ErrorIs(t, err, ErrAuthUserPassword)
 			},
 		},
 		{
@@ -273,7 +273,7 @@ func TestUpdate(t *testing.T) {
 	)
 
 	err = testApp.UserChangePasswd(ctx, authItem.Subject, "authItem.Passwd", "newpass")
-	assert.ErrorIs(t, err, ErrAuthBadPassword)
+	assert.ErrorIs(t, err, ErrAuthUserPassword)
 
 	err = testApp.UserChangePasswd(ctx, authItem.Subject, authItem.Passwd, "newpass")
 	assert.NoError(t, err)

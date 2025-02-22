@@ -10,14 +10,14 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
-func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (ddd.LoginToken, error) {
+func (ap *Application) LoginPasswd(ctx context.Context, username, passwd string) (ddd.LoginToken, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "LoginPasswd", nil, logger.TraceKVString("email", email))
+	ctx, span := logger.SpanWithAttributes(ctx, "LoginPasswd", nil, logger.TraceKVString("username", username))
 	defer func() {
 		span.End(err)
 	}()
 
-	if email == "" {
+	if username == "" {
 		err = ErrAuthEmailEmpty
 		return ddd.LoginToken{}, err
 	}
@@ -26,10 +26,11 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 		return ddd.LoginToken{}, err
 	}
 
-	authPasswd, err := ap.findEmail(ctx, email)
+	authPasswd, err := ap.findEmail(ctx, username)
 	if err != nil {
-		logger.Error(err).Msg("ap.findEmail")
-		return ddd.LoginToken{}, err
+		logger.ErrorCtx(ctx, err).
+			Msg("ap.findEmail")
+		return ddd.LoginToken{}, ErrAuthUserPassword
 	}
 
 	if authPasswd == nil {
@@ -43,7 +44,7 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 	}
 
 	if !checkPasswordHash(passwd, string(authPasswd.Passwd)) {
-		err = ErrAuthBadPassword
+		err = ErrAuthUserPassword
 		return ddd.LoginToken{}, err
 	}
 
@@ -80,7 +81,7 @@ func (ap *Application) LoginPasswd(ctx context.Context, email, passwd string) (d
 
 	return ddd.LoginToken{
 		ID:           authInfo.ID,
-		Subject:      email,
+		Subject:      username,
 		AdminSubject: "",
 		AccessToken: ddd.AuthToken{
 			Value:     accessToken,

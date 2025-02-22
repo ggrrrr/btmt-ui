@@ -13,7 +13,7 @@ type (
 	ConnOptionFunc func(a *NatsConnection) error
 
 	Config struct {
-		URL string
+		URL string `env:"NATS_URL"`
 	}
 
 	NatsConnection struct {

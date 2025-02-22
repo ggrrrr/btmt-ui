@@ -8,7 +8,6 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/cmd"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/cmd/admin"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/cmd/client"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/cmd/server"
 )
 
@@ -53,6 +52,5 @@ func main() {
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(admin.AdminCmd)
 	rootCmd.AddCommand(admin.ListCmd)
-	rootCmd.AddCommand(client.ClientCmd)
 	Execute()
 }

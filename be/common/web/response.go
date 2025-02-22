@@ -1,16 +1,13 @@
 package web
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
+	"strconv"
 
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/grpc/codes"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -26,81 +23,51 @@ type AppResponse struct {
 
 func SendError(ctx context.Context, w http.ResponseWriter, e error) {
 	var httpCode int = 500
-	var msg string
+	var msg string = ""
 	var err error = e
 	appError, ok := e.(*app.AppError)
 	if ok {
 		msg = appError.Msg()
 		err = appError.Cause()
-		switch appError.Code() {
-		case codes.Internal:
-			httpCode = 500
-		case codes.InvalidArgument:
-			httpCode = 400
-		case codes.Unauthenticated:
-			httpCode = 401
-		case codes.PermissionDenied:
-			httpCode = 403
-		case codes.NotFound:
-			httpCode = 404
-		default:
-			httpCode = 500
-		}
+		httpCode = appError.Code()
 	}
-	send(ctx, w, httpCode, msg, err, nil)
+	sendJSON(ctx, w, httpCode, msg, err, nil)
 }
 
-func MethodNotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	send(r.Context(), w, http.StatusNotFound, fmt.Sprintf("MethodNotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
+func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	sendJSON(r.Context(), w, http.StatusNotFound, fmt.Sprintf("NotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
-func MethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
-	send(r.Context(), w, http.StatusMethodNotAllowed, fmt.Sprintf("MethodNotAllowed: [%s] %s", r.Method, r.URL.Path), nil, nil)
+func methodNotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	sendJSON(r.Context(), w, http.StatusMethodNotAllowed, fmt.Sprintf("NotFound: [%s] %s", r.Method, r.URL.Path), nil, nil)
 }
 
 // HTTP CODE 200
-func SendPayload(ctx context.Context, w http.ResponseWriter, msg string, payload any) {
-	send(ctx, w, http.StatusOK, msg, nil, payload)
+func SendJSONPayload(ctx context.Context, w http.ResponseWriter, msg string, payload any) {
+	sendJSON(ctx, w, http.StatusOK, msg, nil, payload)
 }
 
 // HTTP CODE 500
-func SendSystemError(ctx context.Context, w http.ResponseWriter, msg string, err error, payload any) {
-	send(ctx, w, http.StatusInternalServerError, msg, err, nil)
+func SendJSONSystemError(ctx context.Context, w http.ResponseWriter, msg string, err error, payload any) {
+	sendJSON(ctx, w, http.StatusInternalServerError, msg, err, nil)
 }
 
 // HTTP CODE 400
-func SendErrorBadRequest(ctx context.Context, w http.ResponseWriter, msg string, err error) {
-	send(ctx, w, http.StatusBadRequest, msg, err, nil)
+func SendJSONErrorBadRequest(ctx context.Context, w http.ResponseWriter, msg string, err error) {
+	sendJSON(ctx, w, http.StatusBadRequest, msg, err, nil)
 }
 
 // HTTP CODE 400
-func SendErrorBadRequestWithBody(ctx context.Context, w http.ResponseWriter, msg string, err error, body any) {
-	send(ctx, w, http.StatusBadRequest, msg, err, body)
+func SendJSONErrorBadRequestWithBody(ctx context.Context, w http.ResponseWriter, msg string, err error, body any) {
+	sendJSON(ctx, w, http.StatusBadRequest, msg, err, body)
 }
 
-// return system error on ReadAll
-// return BadRequestError on Decode
-func DecodeJsonRequest(r *http.Request, payload any) error {
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		return app.SystemError("unable to load http body", err)
-	}
-	defer r.Body.Close()
-
-	err = json.NewDecoder(bytes.NewReader(b)).Decode(&payload)
-	if err != nil {
-		logger.Error(err).Str("body", string(b)).Send()
-		return app.BadRequestError("bad json", err)
-	}
-	return nil
-}
-
-func send(ctx context.Context, w http.ResponseWriter, code int, msg string, err1 error, payload any) {
+func sendJSON(ctx context.Context, w http.ResponseWriter, code int, msg string, err1 error, payload any) {
 	traceID := ""
 	span := trace.SpanContextFromContext(ctx)
 	if span.HasTraceID() {
 		traceID = span.TraceID().String()
-		// w.Header().Add("X-Trace-ID", traceID)
+		w.Header().Add("X-Trace-ID", traceID)
 	}
 
 	errStr := ""
@@ -108,7 +75,7 @@ func send(ctx context.Context, w http.ResponseWriter, code int, msg string, err1
 		errStr = err1.Error()
 	}
 	body := AppResponse{
-		Code:    fmt.Sprintf("%d", code),
+		Code:    strconv.Itoa(code),
 		Message: msg,
 		Error:   errStr,
 		Payload: payload,
@@ -117,12 +84,22 @@ func send(ctx context.Context, w http.ResponseWriter, code int, msg string, err1
 
 	b, err := json.Marshal(body)
 	if err != nil {
-		log.Printf("unable to write response body(%v) error: %v", body, err)
+		logger.ErrorCtx(ctx, err).Msg("unable to marshal response body")
 	}
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_, err = w.Write(b)
 	if err != nil {
-		logger.Error(err).Msg("unable to write response")
+		logger.ErrorCtx(ctx, err).Msg("unable to write response")
+	}
+}
+
+func sendText(ctx context.Context, w http.ResponseWriter, code int, text string) {
+	w.Header().Add("Content-Type", "plain/text")
+	w.WriteHeader(code)
+	_, err := w.Write([]byte(text))
+	if err != nil {
+		logger.ErrorCtx(ctx, err).Msg("unable to write response")
 	}
 }

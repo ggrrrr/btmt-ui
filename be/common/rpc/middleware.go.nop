@@ -2,11 +2,8 @@ package system
 
 import (
 	"context"
-	"fmt"
-	"net"
 	"time"
 
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -18,63 +15,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
-func (s *System) WaitForGRPC(ctx context.Context) error {
-	if s.cfg.Grpc.Address == "" {
-		logger.Info().Msg("Address is empty, initGRPC skip")
-		return nil
-	}
-
-	addr := s.cfg.Grpc.Address
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		logger.Error(err).Str("address", addr).Msg("Failed to listen")
-		return err
-	}
-
-	group, gCtx := errgroup.WithContext(ctx)
-	group.Go(func() error {
-		logger.Info().Str("address", addr).Msg("grpc started")
-		defer fmt.Println("rpc server shutdown")
-		err := s.RPC().Serve(listener)
-		if err != nil && err != grpc.ErrServerStopped {
-			return err
-		}
-		return nil
-	})
-	group.Go(func() error {
-		<-gCtx.Done()
-		logger.Info().Str("address", addr).Msg("grpc server to be shutdown")
-		stopped := make(chan struct{})
-		go func() {
-			s.RPC().GracefulStop()
-			close(stopped)
-		}()
-		timeout := time.NewTimer(time.Duration(s.cfg.ShutdownTimeout))
-		select {
-		case <-timeout.C:
-			// Force it to stop
-			logger.Info().Str("address", addr).Msg("timeout")
-			s.RPC().Stop()
-			return fmt.Errorf("grpc server failed to stop gracefully")
-		case <-stopped:
-			return nil
-		}
-	})
-
-	return group.Wait()
-}
-
-func (s *System) initGRPC() {
-	if s.cfg.Grpc.Address == "" {
-		logger.Debug().Msg("initGRPC skip")
-		return
-	}
-	s.grpc = grpc.NewServer(
-		grpc.UnaryInterceptor(s.unaryInterceptor),
-	)
-}
-
-func (s *System) unaryInterceptor(
+func (s Server) unaryInterceptor(
 	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
@@ -89,8 +30,15 @@ func (s *System) unaryInterceptor(
 
 	peerInfo, _ = peer.FromContext(ctx)
 
+	if s.verifier == nil {
+		logger.WarnCtx(ctx).
+			Str("rpc.server", s.name).
+			Msg("verifier is nil")
+		return handler(ctx, req)
+	}
+
 	startTs := time.Now()
-	infoLog := logger.Info()
+	infoLog := logger.Info().Str("rpc.server", s.name)
 	defer func() {
 		infoLog.TimeDiff("ts", time.Now(), startTs).Msg("unaryInterceptor")
 	}()

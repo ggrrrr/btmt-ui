@@ -44,11 +44,11 @@ func (r *repo) SaveHistory(ctx context.Context, info roles.AuthInfo, method stri
 	return app.ErrTeapot
 }
 
-func New(cfg awsclient.AwsConfig, dbCfg awsclient.DynamodbConfig) (*repo, error) {
+func New(cfg awsclient.Config, dbCfg awsclient.DynamodbConfig) (*repo, error) {
 	// sess * session.Session,
 	sess, err := session.NewSession(&aws.Config{
 		Region:   aws.String(cfg.Region),
-		Endpoint: aws.String(cfg.Endpoint),
+		Endpoint: aws.String(cfg.EndpointURL),
 	})
 	if err != nil {
 		return nil, err

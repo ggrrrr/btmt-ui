@@ -364,10 +364,10 @@ func TestInLocal(t *testing.T) {
 	}
 }
 
-func cfg() (awsclient.AwsConfig, awsclient.S3Client) {
-	return awsclient.AwsConfig{
-			Region:   "us-east-1",
-			Endpoint: "http://localhost:4566",
+func cfg() (awsclient.Config, awsclient.S3Client) {
+	return awsclient.Config{
+			Region:      "us-east-1",
+			EndpointURL: "http://localhost:4566",
 		},
 		awsclient.S3Client{
 			Region:     "us-east-1",

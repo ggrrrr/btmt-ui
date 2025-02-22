@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 type traceDataCtxKey struct{}
@@ -13,6 +14,7 @@ type traceDataCtxKey struct{}
 func init() {
 	initLog()
 	initNoopOtel()
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 }
 
 func console(level zerolog.Level) zerolog.Logger {

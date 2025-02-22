@@ -3,7 +3,6 @@ package logger
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -19,6 +18,12 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
+type (
+	Config struct {
+		Collector string `env:"OTEL_COLLECTOR"`
+	}
+)
+
 var (
 	rootCtx context.Context
 
@@ -30,6 +35,10 @@ var (
 	tracer trace.Tracer
 
 	shutdownFunc func(context.Context) error
+
+	DevConfig = Config{
+		Collector: "localhost:4222",
+	}
 )
 
 func initNoopOtel() {
@@ -42,25 +51,22 @@ func initNoopOtel() {
 	tracer = tracerProvider.Tracer(otelScopeName)
 }
 
-func ConfigureOtel(ctx context.Context) error {
+func ConfigureOtel(ctx context.Context, appName string, cfg Config) error {
 
 	rootCtx = ctx
 
-	serviceNameKey := semconv.ServiceNameKey.String("local-service")
-
-	collectorAddr := os.Getenv("OTEL_COLLECTOR")
-	if collectorAddr == "" {
+	if cfg.Collector == "" {
 		initNoopOtel()
 		return fmt.Errorf("OTEL_COLLECTOR not set")
 	}
 
-	serviceName := os.Getenv("SERVICE_NAME")
-	if serviceName != "" {
-		serviceNameKey = semconv.ServiceNameKey.String(serviceName)
+	if appName == "" {
+		appName = "undefined-app-name"
 	}
 
+	serviceNameKey := semconv.ServiceNameKey.String(appName)
 	// traceProvider = trace.NewNoopTracerProvider()
-	conn, err := grpc.NewClient(collectorAddr,
+	conn, err := grpc.NewClient(cfg.Collector,
 		// Note the use of insecure transport here. TLS is recommended in production.
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
@@ -91,7 +97,7 @@ func ConfigureOtel(ctx context.Context) error {
 		return err
 	}
 
-	Info().Str("addr", collectorAddr).Msg("otel.grpc.")
+	Info().Str("addr", cfg.Collector).Msg("otel.grpc.")
 
 	batchProcessor := sdktrace.NewBatchSpanProcessor(exporter)
 	sdkTracerProvider := sdktrace.NewTracerProvider(

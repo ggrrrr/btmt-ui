@@ -13,7 +13,7 @@ import (
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-func (a *App) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error) {
+func (a *Application) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "SaveTmpl", tmplUpdate)
 	defer func() {
@@ -48,7 +48,7 @@ func (a *App) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (
 	return tmpl.Id, nil
 }
 
-func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error) {
+func (a *Application) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error) {
 	var err error
 	ctx, span := logger.Span(ctx, "ListTmpl", nil)
 	defer func() {
@@ -70,7 +70,7 @@ func (a *App) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb
 	return result, nil
 }
 
-func (a *App) GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error) {
+func (a *Application) GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "GetTmpl", nil, logger.TraceKVString("id", id))
 	defer func() {
@@ -91,7 +91,7 @@ func (a *App) GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error) 
 	return result, nil
 }
 
-func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) (string, error) {
+func (a *Application) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) (string, error) {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
 	defer func() {
@@ -111,7 +111,7 @@ func (a *App) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplp
 	return tmpl.Id, nil
 }
 
-func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
+func (a *Application) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
 	var err error
 	ctx, span := logger.SpanWithAttributes(ctx, "updateTmpl", tmpl)
 	defer func() {
@@ -145,7 +145,7 @@ func (a *App) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmp
 }
 
 // TODO use authInfo.realm to push into state store
-func (a *App) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
+func (a *Application) uploadTmplBody(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
 	var err error
 
 	value, err := proto.Marshal(tmpl)

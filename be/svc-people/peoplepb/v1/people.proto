@@ -6,7 +6,6 @@ package peoplepb.v1;
 
 option go_package = "svc-people/peoplepb/v1;peoplepbv1";
 
-import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
@@ -35,7 +34,7 @@ service PeopleSvc {
       body: "*";
     };
   };
-  rpc PinParse(PinParseRequest) returns (PinParseResponse) {
+  rpc IDParse(IDParseRequest) returns (IDParseResponse) {
     option (google.api.http) = {
       post: "/v1/people/pin";
       body: "*";
@@ -43,17 +42,17 @@ service PeopleSvc {
   };
 }
 
-message PinParseRequest {
-  string pin = 1;
+message IDParseRequest {
+  string number = 1;
 }
 
-message PinParsePayload {
+message IDPayload {
   Dob dob = 1;
   string gender = 2;
 }
 
-message PinParseResponse {
-  PinParsePayload payload = 1;
+message IDParseResponse {
+  IDPayload payload = 1;
 }
 
 message SaveRequest{
@@ -99,10 +98,6 @@ message Dob {
   uint32 year  = 1;
   uint32 month  = 2;
   uint32 day  = 3;
-}
-
-message IdNumberReponse {
-  google.protobuf.Struct  payload = 1; 
 }
 
 message Person{

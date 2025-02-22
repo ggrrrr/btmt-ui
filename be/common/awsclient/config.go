@@ -1,9 +1,9 @@
 package awsclient
 
 type (
-	AwsConfig struct {
-		Region   string
-		Endpoint string
+	Config struct {
+		Region      string `env:"AWS_REGION"`
+		EndpointURL string `env:"AWS_ENDPOINT_URL"`
 	}
 
 	DynamodbConfig struct {

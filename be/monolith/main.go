@@ -7,11 +7,16 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
+	"github.com/ggrrrr/btmt-ui/be/common/web"
 	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
 	people "github.com/ggrrrr/btmt-ui/be/svc-people"
 	tmpl "github.com/ggrrrr/btmt-ui/be/svc-tmpl"
 )
 
+type appCfg struct {
+	System system.Config
+	WEB    web.Config
+}
 type monolith struct {
 	*system.System
 	modules []system.Module
@@ -26,16 +31,18 @@ func main() {
 
 func run() error {
 	var err error
-	var cfg config.AppConfig
-	err = config.InitConfig(&cfg)
+	var cfg appCfg
+	config.MustParse(&cfg)
+
+	s, err := system.NewSystem(
+		cfg.System,
+		system.WithWebServer(cfg.WEB),
+	)
 	if err != nil {
 		return err
 	}
-	s, err := system.NewSystem(cfg)
-	if err != nil {
-		return err
-	}
-	m := monolith{
+
+	m := &monolith{
 		System: s,
 		modules: []system.Module{
 			&auth.Module{},
@@ -44,26 +51,37 @@ func run() error {
 		},
 	}
 
-	if err = m.startupModules(); err != nil {
+	if err = m.configure(); err != nil {
 		return err
 	}
-
-	m.Waiter().Add(
-		m.WaitForWeb,
-		m.WaitForGRPC,
-	)
+	if err = m.startup(); err != nil {
+		return err
+	}
 
 	return m.Waiter().Wait()
 }
 
-func (m *monolith) startupModules() error {
-	for _, module := range m.modules {
+func (m *monolith) configure() error {
+	for i := range m.modules {
 		ctx := m.Waiter().Context()
-		if err := module.Startup(ctx, m); err != nil {
-			logger.Error(err).Str("module", module.Name()).Msg("failed")
+		if err := m.modules[i].Configure(ctx, m.System); err != nil {
+			logger.Error(err).Str("module", m.modules[i].Name()).Msg("failed")
 			return err
 		}
-		logger.Info().Str("module", module.Name()).Msg("added")
+		logger.Info().Str("module", m.modules[i].Name()).Msg("configure")
+	}
+
+	return nil
+}
+
+func (m *monolith) startup() error {
+	for i := range m.modules {
+		ctx := m.Waiter().Context()
+		if err := m.modules[i].Startup(ctx); err != nil {
+			logger.Error(err).Str("module", m.modules[i].Name()).Msg("failed")
+			return err
+		}
+		logger.Info().Str("module", m.modules[i].Name()).Msg("startup")
 	}
 
 	return nil

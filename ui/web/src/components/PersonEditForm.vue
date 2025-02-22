@@ -141,7 +141,7 @@ async function addPerson(person) {
         body: JSON.stringify(data),
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/people/save";
+    const url = config.BASE_URL + "/v1/people/save";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
@@ -163,7 +163,7 @@ async function updatePerson(person) {
         method: "POST",
         body: JSON.stringify(data),
     };
-    const url = config.BASE_URL + "/people/update";
+    const url = config.BASE_URL + "/v1/people/update";
     console.log("url", url)
     refs.value.loading = true;
     await fetchAPI(url, request)

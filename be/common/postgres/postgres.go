@@ -5,19 +5,21 @@ import (
 	"fmt"
 
 	"github.com/XSAM/otelsql"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 type (
 	Config struct {
-		Host     string
-		Port     int
-		Username string
-		Password string
-		Database string
-		SSLMode  string
-		Prefix   string
+		Host     string `env:"HOST"`
+		Port     int    `env:"PORT" envDefault:"5432"`
+		Username string `env:"USERNAME"`
+		Password string `env:"PASSWORD"`
+		Database string `env:"DATABASE"`
+		SSLMode  string `env:"SSL_MODE"`
+		Prefix   string `env:"PREFIX"`
+		Schema   string `env:"SCHEMA"`
 	}
 )
 
@@ -39,7 +41,10 @@ func Connect(cfg Config) (*sql.DB, error) {
 	}
 	err = db.Ping()
 	if err != nil {
-		logger.Error(err).Msg("Ping")
+		logger.Error(err).
+			Str("host", cfg.Host).
+			Str("database", cfg.Database).
+			Msg("Ping")
 		return nil, err
 	}
 	if cfg.Prefix == "" {

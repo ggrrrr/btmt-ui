@@ -35,7 +35,7 @@ type s3Client struct {
 var _ (blob.Fetcher) = (*Client)(nil)
 var _ (blob.Pusher) = (*Client)(nil)
 
-func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
+func NewClient(bucketName string, appCfg awsclient.Config) (*Client, error) {
 	//nolint:staticcheck
 	cfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion("us-east-1"),
@@ -47,7 +47,7 @@ func NewClient(bucketName string, appCfg awsclient.AwsConfig) (*Client, error) {
 			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					PartitionID:       "aws",
-					URL:               appCfg.Endpoint,
+					URL:               appCfg.EndpointURL,
 					SigningRegion:     appCfg.Region,
 					HostnameImmutable: true,
 				}, nil
@@ -297,7 +297,7 @@ func (c *Client) getClient(realm string) (s3Client, error) {
 	return s3C, nil
 }
 
-func createS3Client(awsCfg awsclient.AwsConfig, appCfg awsclient.S3Client) (s3Client, error) {
+func createS3Client(awsCfg awsclient.Config, appCfg awsclient.S3Client) (s3Client, error) {
 	clientCfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(appCfg.Region),
 		config.WithHTTPClient(
@@ -308,7 +308,7 @@ func createS3Client(awsCfg awsclient.AwsConfig, appCfg awsclient.S3Client) (s3Cl
 			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					PartitionID:       "aws",
-					URL:               awsCfg.Endpoint,
+					URL:               awsCfg.EndpointURL,
 					SigningRegion:     appCfg.Region,
 					HostnameImmutable: true,
 				}, nil

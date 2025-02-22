@@ -4,7 +4,20 @@ GIT_HASH ?= $(shell git log --format="%h" -n 1)
 PROTO_DEPS = "./"
 PROTO_DST = "./"
 
+# TODO add tooling to fetch latest version
 PROTO_EXT_DEPS="./proto"
+
+install_protoc_go:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+
+	# github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+    # github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+    # google.golang.org/protobuf/cmd/protoc-gen-go \
+    # google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+
 
 protoc_common:
 	protoc -I ./ -I=${PROTO_EXT_DEPS} \
@@ -90,11 +103,14 @@ clean_docker:
 	docker image prune -a -f
 	docker volume prune -a -f
 
+go_mod_upgrade:
+	cd be; go get -u ./...
+
 go_clean:
-	# go clean -cache
+	go clean -cache
 	go clean -testcache
 	# go clean -fuzzcache
-	# go clean -modcache
+	go clean -modcache
 
 go_run_monolith:
 	docker compose up -d localstack mongo nats otel postgres

@@ -17,24 +17,26 @@ import (
 )
 
 type (
-	AppConfiguration func(a *App) error
+	OptionFn func(a *Application) error
 
 	Filters map[string][]string
 
-	App struct {
+	Application struct {
 		repoPeople ddd.PeopleRepo
 		appPolices roles.AppPolices
 		stateStore state.StateStore
 	}
 
-	// App interface {
-	// 	Save(ctx context.Context, p *peoplepb.Person) error
-	// 	List(ctx context.Context, filters Filters) ([]*peoplepb.Person, error)
-	// 	GetById(ctx context.Context, id string) (*peoplepb.Person, error)
-	// 	Update(ctx context.Context, p *peoplepb.Person) error
-	// 	// PinParse(ctx context.Context, pin string) (*peoplepb.PinValidation, error)
-	// }
+	App interface {
+		Save(ctx context.Context, p *peoplepb.Person) error
+		List(ctx context.Context, filters Filters) ([]*peoplepb.Person, error)
+		GetById(ctx context.Context, id string) (*peoplepb.Person, error)
+		Update(ctx context.Context, p *peoplepb.Person) error
+		IDParse(ctx context.Context, pin *peoplepb.IDParseRequest) (*peoplepb.IDParseResponse, error)
+	}
 )
+
+var _ (App) = (*Application)(nil)
 
 var (
 	FilterTexts  string = "texts"
@@ -46,8 +48,8 @@ var (
 
 // var _ (App) = (*App)(nil)
 
-func New(cfgs ...AppConfiguration) (*App, error) {
-	a := &App{}
+func New(cfgs ...OptionFn) (*Application, error) {
+	a := &Application{}
 	for _, c := range cfgs {
 		err := c(a)
 		if err != nil {
@@ -66,28 +68,28 @@ func New(cfgs ...AppConfiguration) (*App, error) {
 	return a, nil
 }
 
-func WithPeopleRepo(repo ddd.PeopleRepo) AppConfiguration {
-	return func(a *App) error {
+func WithPeopleRepo(repo ddd.PeopleRepo) OptionFn {
+	return func(a *Application) error {
 		a.repoPeople = repo
 		return nil
 	}
 }
 
-func WithAppPolicies(appPolices roles.AppPolices) AppConfiguration {
-	return func(a *App) error {
+func WithAppPolicies(appPolices roles.AppPolices) OptionFn {
+	return func(a *Application) error {
 		a.appPolices = appPolices
 		return nil
 	}
 }
 
-func WithStateStore(store state.StateStore) AppConfiguration {
-	return func(a *App) error {
+func WithStateStore(store state.StateStore) OptionFn {
+	return func(a *Application) error {
 		a.stateStore = store
 		return nil
 	}
 }
 
-func (a *App) Save(ctx context.Context, p *peoplepb.Person) (err error) {
+func (a *Application) Save(ctx context.Context, p *peoplepb.Person) (err error) {
 	ctx, span := logger.Span(ctx, "Save", p)
 	defer func() {
 		span.End(err)
@@ -128,7 +130,7 @@ func (a *App) Save(ctx context.Context, p *peoplepb.Person) (err error) {
 	return nil
 }
 
-func (a *App) GetById(ctx context.Context, id string) (person *peoplepb.Person, err error) {
+func (a *Application) GetById(ctx context.Context, id string) (person *peoplepb.Person, err error) {
 	ctx, span := logger.SpanWithAttributes(ctx, "Save", nil, logger.TraceKVString("person.id", id))
 	defer func() {
 		span.End(err)
@@ -152,7 +154,7 @@ func (a *App) GetById(ctx context.Context, id string) (person *peoplepb.Person, 
 	return person, nil
 }
 
-func (a *App) List(ctx context.Context, filters Filters) (result []*peoplepb.Person, err error) {
+func (a *Application) List(ctx context.Context, filters Filters) (result []*peoplepb.Person, err error) {
 	ctx, span := logger.Span(ctx, "List", nil)
 	defer func() {
 		span.End(err)
@@ -193,7 +195,7 @@ func (a *App) List(ctx context.Context, filters Filters) (result []*peoplepb.Per
 	return out, nil
 }
 
-func (a *App) Update(ctx context.Context, p *peoplepb.Person) (err error) {
+func (a *Application) Update(ctx context.Context, p *peoplepb.Person) (err error) {
 	ctx, span := logger.Span(ctx, "Update", p)
 	defer func() {
 		span.End(err)
@@ -215,17 +217,26 @@ func (a *App) Update(ctx context.Context, p *peoplepb.Person) (err error) {
 	return err
 }
 
-func (*App) PinParse(ctx context.Context, number string) (result ddd.PinValidation, err error) {
+func (*Application) IDParse(ctx context.Context, request *peoplepb.IDParseRequest) (result *peoplepb.IDParseResponse, err error) {
 	_, span := logger.Span(ctx, "PinParse", nil)
 	defer func() {
 		span.End(err)
 	}()
 
-	info, err := pin.Parse(number)
+	info, err := pin.Parse(request.Number)
 	if err != nil {
 		return
 	}
-	return info, nil
+	return &peoplepb.IDParseResponse{
+		Payload: &peoplepb.IDPayload{
+			Dob: &peoplepb.Dob{
+				Year:  uint32(info.DOB.Year),
+				Month: uint32(info.DOB.Month),
+				Day:   uint32(info.DOB.Day),
+			},
+			Gender: info.Gender,
+		},
+	}, nil
 }
 
 func parseEGN(person *peoplepb.Person) {
@@ -252,7 +263,7 @@ func parseEGN(person *peoplepb.Person) {
 	logger.Debug().Any("pin", person)
 }
 
-func (a *App) updateStore(ctx context.Context, person *peoplepb.Person) error {
+func (a *Application) updateStore(ctx context.Context, person *peoplepb.Person) error {
 	value, err := proto.Marshal(person)
 	if err != nil {
 		return fmt.Errorf("updateStore.Marshal: %w", err)

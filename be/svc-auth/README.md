@@ -1,5 +1,21 @@
 # Authentication service
 
+## Settings:
+
+```bash
+
+JWT_CRT_FILE=jwt.crt
+JWT_KEY_FILE=jwt.key
+
+AUTH_PG_USERNAME=
+AUTH_PG_PASSWORD=
+AUTH_PG_HOST=
+AUTH_PG_DATABASE=
+AUTH_ACCESS_DURATION=15m
+AUTH_REFRESH_DURATION=48h
+
+```
+
 ## Diagram
 
 ```mermaid

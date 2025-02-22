@@ -1,41 +1,38 @@
 package rest
 
 import (
-	"context"
+	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/blob"
-	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
-	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
+	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
 )
 
 type (
-	tmplApp interface {
-		SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error)
-		ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error)
-		GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error)
-		RenderHtml(ctx context.Context, render *tmplpb.RenderRequest) (string, error)
-
+	appHandler interface {
+		SaveTmpl(w http.ResponseWriter, r *http.Request)
+		ListTmpl(w http.ResponseWriter, r *http.Request)
+		GetTmpl(w http.ResponseWriter, r *http.Request)
+		Render(w http.ResponseWriter, r *http.Request)
 		// images
-		GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error)
-		PutImage(ctx context.Context, tempFile blob.TempFile) error
-		ListImages(ctx context.Context) ([]ddd.ImageInfo, error)
-		GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error)
+		UploadImage(w http.ResponseWriter, r *http.Request)
+		GetImage(w http.ResponseWriter, r *http.Request)
+		GetResizedImage(w http.ResponseWriter, r *http.Request)
+		ListImages(w http.ResponseWriter, r *http.Request)
 	}
+
 	server struct {
-		app tmplApp
+		app app.App
 	}
 )
 
-func New(a tmplApp) *server {
+func Handler(a app.App) *server {
 	return &server{
 		app: a,
 	}
 }
 
-func (s *server) Router() chi.Router {
+func Router(s appHandler) chi.Router {
 	router := chi.NewRouter()
 	router.Get("/image/{id}", s.GetImage)
 	// router.Get("/image/some/*", s.GetImage)

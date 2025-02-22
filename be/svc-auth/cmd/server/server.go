@@ -1,36 +1,47 @@
 package server
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
+	"github.com/ggrrrr/btmt-ui/be/common/web"
 	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
 )
 
+type appCfg struct {
+	System system.Config
+	WEB    web.Config
+	OTEL   logger.Config
+}
+
 func Server() error {
-	// var cfg auth.Cfg
-	var cfg config.AppConfig
+	cfg := appCfg{}
+	config.MustParse(&cfg)
 
-	err := config.InitConfig(&cfg)
-	if err != nil {
-		return err
-	}
-	s, err := system.NewSystem(cfg)
-	if err != nil {
-		return err
-	}
-	err = auth.Root(s.Waiter().Context(), s)
-	if err != nil {
-		return err
-	}
-
-	defer fmt.Println("auth module shutdown")
-
-	s.Waiter().Add(
-		s.WaitForWeb,
-		s.WaitForGRPC,
+	s, err := system.NewSystem(
+		cfg.System,
+		system.WithWebServer(cfg.WEB),
 	)
+	if err != nil {
+		return err
+	}
+
+	m := auth.Module{}
+
+	err = m.Configure(context.Background(), s)
+	if err != nil {
+		return err
+	}
+
+	err = m.Startup(context.Background())
+	if err != nil {
+		return err
+	}
+
+	defer fmt.Println("module shutdown")
 
 	return s.Waiter().Wait()
 }

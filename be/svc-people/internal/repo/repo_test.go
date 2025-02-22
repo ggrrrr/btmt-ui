@@ -27,7 +27,7 @@ func TestSave(t *testing.T) {
 	expectedDuration := time.Duration(400 * time.Millisecond)
 
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg("test_people")
+	cfg := mgo.MgoTestCfg("unit_test_people")
 	testDb, err := mgo.New(ctx, cfg)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)

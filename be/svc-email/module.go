@@ -2,66 +2,82 @@ package email
 
 import (
 	"context"
+	"os"
 
+	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/email"
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
 	"github.com/ggrrrr/btmt-ui/be/svc-email/internal/app"
-	"github.com/ggrrrr/btmt-ui/be/svc-email/internal/msgbus"
-	// "github.com/ggrrrr/btmt-ui/be/svc-auth/internal/grpc"
-	// "github.com/ggrrrr/btmt-ui/be/svc-auth/internal/rest"
+	"github.com/ggrrrr/btmt-ui/be/svc-email/internal/bus"
 )
 
-type Module struct{}
+type (
+	Config struct {
+		// Web web.Config
+		BrokerCfg jetstream.Config `envPrefix:"EMAIL_"`
+	}
 
-func (Module) Startup(ctx context.Context, s *system.System) (err error) {
-	return Root(ctx, s)
+	Module struct {
+		cfg      Config
+		app      app.App
+		system   system.Service
+		consumer msgbus.MessageConsumer[*emailpbv1.SendEmail]
+	}
+)
+
+var _ (system.Module) = (*Module)(nil)
+
+func (*Module) Name() string {
+	return "svc-email"
 }
 
-func Root(ctx context.Context, s *system.System) error {
-	logger.Info().Msg("Root")
-
-	var emailApp *app.Application
+func (m *Module) Configure(ctx context.Context, s system.Service) error {
 	var err error
+	config.MustParse(&m.cfg)
+	m.system = s
 
 	senderCfgs := map[string]email.EmailConnector{
-		// "localhost": email.Config{
-		// 	SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
-		// 	SMTPAddr: os.Getenv("EMAIL_SMTP_ADDR"),
-		// 	Username: os.Getenv("EMAIL_USERNAME"),
-		// 	Password: os.Getenv("EMAIL_PASSWORD"),
-		// 	AuthType: email.AuthTypePlain,
-		// },
+		"localhost": &email.Config{
+			SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
+			SMTPAddr: os.Getenv("EMAIL_SMTP_ADDR"),
+			Username: os.Getenv("EMAIL_USERNAME"),
+			Password: os.Getenv("EMAIL_PASSWORD"),
+			AuthType: email.AuthTypePlain,
+		},
 	}
 
-	emailApp, err = app.New(senderCfgs, nil)
+	m.app, err = app.New(senderCfgs, nil)
 	if err != nil {
 		return err
 	}
 
-	cfg := jetstream.Config{
-		URL: "localhost:4222",
-	}
-
-	conn, err := jetstream.Connect(cfg, jetstream.WithVerifier(s.Verifier()))
+	conn, err := jetstream.Connect(m.cfg.BrokerCfg, jetstream.WithVerifier(s.Verifier()))
 	if err != nil {
 		return err
 	}
 
-	consumer, err := jetstream.NewCommandConsumer(ctx, "svc-email", conn, &emailpbv1.SendEmail{},
+	m.consumer, err = jetstream.NewCommandConsumer(ctx, "svc-email", conn, &emailpbv1.SendEmail{},
 		func(_ string) *emailpbv1.SendEmail { return new(emailpbv1.SendEmail) },
 	)
 	if err != nil {
 		return err
 	}
-	// add shutdown func
-	s.Waiter().Cleanup(func() {
-		consumer.Shutdown()
+
+	return nil
+}
+
+func (m *Module) Startup(ctx context.Context) (err error) {
+
+	m.system.Waiter().Add(func(ctx context.Context) error {
+		return bus.Start(ctx, m.app, m.consumer)
 	})
 
-	msgbus.Start(ctx, emailApp, consumer)
+	m.system.Waiter().AddCleanup(func() {
+		m.consumer.Shutdown()
+	})
 
 	return nil
 }

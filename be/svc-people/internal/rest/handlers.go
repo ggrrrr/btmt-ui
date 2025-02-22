@@ -30,7 +30,7 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	web.SendPayload(ctx, w, "ok", out)
+	web.SendJSONPayload(ctx, w, "ok", out)
 }
 
 func (s *server) Get(w http.ResponseWriter, r *http.Request) {
@@ -50,17 +50,17 @@ func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Id == "" {
 		logger.ErrorCtx(ctx, err).Str("error", "empty id").Msg("Get")
-		web.SendErrorBadRequest(ctx, w, "empty id", nil)
+		web.SendJSONErrorBadRequest(ctx, w, "empty id", nil)
 		return
 	}
 	logger.InfoCtx(r.Context()).Any("id", &req.Id).Msg("Get")
 	p, err := s.app.GetById(ctx, req.Id)
 	if err != nil {
 		logger.ErrorCtx(ctx, err).Msg("Get")
-		web.SendSystemError(ctx, w, "system error, please try again later", err, nil)
+		web.SendJSONSystemError(ctx, w, "system error, please try again later", err, nil)
 		return
 	}
-	web.SendPayload(ctx, w, "ok", p)
+	web.SendJSONPayload(ctx, w, "ok", p)
 }
 
 func (s *server) Save(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +84,7 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	web.SendPayload(ctx, w, "ok", peoplepb.SavePayload{Id: req.Data.Id})
+	web.SendJSONPayload(ctx, w, "ok", peoplepb.SavePayload{Id: req.Data.Id})
 }
 
 func (s *server) Update(w http.ResponseWriter, r *http.Request) {
@@ -109,5 +109,5 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 		web.SendError(ctx, w, err)
 		return
 	}
-	web.SendPayload(ctx, w, "ok", nil)
+	web.SendJSONPayload(ctx, w, "ok", nil)
 }

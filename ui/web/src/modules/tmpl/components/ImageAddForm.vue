@@ -80,7 +80,7 @@ async function inputFileUpload() {
         method: 'POST',
         body: formData,
     };
-    const url = config.BASE_URL + "/tmpl/image";
+    const url = config.BASE_URL + "/v1/tmpl/image";
     await fetchAPI(url, request)
         .then((result) => {
             console.log("file.result", result)

@@ -3,7 +3,6 @@ package token
 import (
 	"crypto/rsa"
 	"encoding/base64"
-	"errors"
 	"os"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -14,31 +13,10 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
-var (
-	ErrJwtBadScheme         = errors.New("JWT authorization scheme is invalid")
-	ErrJwtBadAlg            = errors.New("JWT Inconsistent Algorithm")
-	ErrJwtInvalid           = errors.New("JWT is invalid")
-	ErrJwtNotFoundRealm     = errors.New("JWT tenant not set")
-	ErrJwtInvalidSubject    = errors.New("JWT subject is invalid")
-	ErrJwtNotFoundMapClaims = errors.New("JWT MapClaims not found")
-)
-
-const (
-	realmKey string = "realm"
-	idKey    string = "jti"
-	subKey   string = "sub"
-	rolesKey string = "roles"
-	algKey   string = "alg"
-)
-
 type (
 	verifier struct {
 		signMethod string
 		verifyKey  *rsa.PublicKey
-	}
-
-	Verifier interface {
-		Verify(inputToken app.AuthData) (roles.AuthInfo, error)
 	}
 )
 
@@ -60,7 +38,7 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	}
 
 	return &verifier{
-		signMethod: "RS256",
+		signMethod: SignMethod_RS254,
 		verifyKey:  verifyKey,
 	}, nil
 
@@ -84,7 +62,7 @@ func (c *verifier) Verify(inputToken app.AuthData) (roles.AuthInfo, error) {
 		return roles.AuthInfo{}, err
 	}
 
-	jwtAlg := jwtToken.Header[algKey]
+	jwtAlg := jwtToken.Header[jwtAlgorithmKey]
 	if c.signMethod != jwtAlg {
 		return roles.AuthInfo{}, ErrJwtBadAlg
 	}
@@ -98,21 +76,21 @@ func (c *verifier) Verify(inputToken app.AuthData) (roles.AuthInfo, error) {
 		return roles.AuthInfo{}, ErrJwtInvalid
 	}
 
-	subject, ok := (claims[subKey]).(string)
+	subject, ok := (claims[jwtSubjectKey]).(string)
 	if !ok {
 		return roles.AuthInfo{}, ErrJwtInvalidSubject
 	}
 
-	id, _ := (claims[idKey]).(string)
+	id, _ := (claims[jwtIDKey]).(string)
 
 	var realm string
 	var listRoles []string
-	tmp, ok := (claims[rolesKey]).([]interface{})
+	tmp, ok := (claims[jwtRolesKey]).([]interface{})
 	if ok {
 		listRoles = listToRoles(tmp)
 	}
 
-	realm, ok = (claims[realmKey]).(string)
+	realm, ok = (claims[jwtRealmKey]).(string)
 	if !ok {
 		return roles.AuthInfo{}, ErrJwtNotFoundRealm
 	}

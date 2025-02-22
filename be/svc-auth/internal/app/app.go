@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/stackus/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type (
@@ -56,9 +57,16 @@ func New(cfgs ...AppCfgFunc) (*Application, error) {
 		logger.Warn().Msg("use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
+	if a.accessTokenTTL == 0 {
+		return nil, fmt.Errorf("ttl.token is 0")
+	}
+	if a.refreshTokenTTL == 0 {
+		return nil, fmt.Errorf("ttl.refresh is 0")
+	}
+
 	logger.Info().
-		Int("ttl.refresh.days", int(a.refreshTokenTTL.Hours()/24)).
-		Int("ttl.token.minutes", int(a.accessTokenTTL.Minutes())).
+		Int("refresh.token.ttl.days", int(a.refreshTokenTTL.Hours()/24)).
+		Int("access.token.ttl.minutes", int(a.accessTokenTTL.Minutes())).
 		Msg("app.New")
 	return a, nil
 }
@@ -90,16 +98,10 @@ func WithTokenSigner(s token.Signer) AppCfgFunc {
 	}
 }
 
-func WithTokenTTL(tokenTTL time.Duration, refreshTTL time.Duration) AppCfgFunc {
+func WithTokenTTL(accessTokenTTL time.Duration, refreshTokenTTL time.Duration) AppCfgFunc {
 	return func(a *Application) error {
-		if tokenTTL == 0 {
-			return fmt.Errorf("ttl.token is 0")
-		}
-		if refreshTTL == 0 {
-			return fmt.Errorf("ttl.refresh is 0")
-		}
-		a.accessTokenTTL = tokenTTL
-		a.refreshTokenTTL = refreshTTL
+		a.accessTokenTTL = accessTokenTTL
+		a.refreshTokenTTL = refreshTokenTTL
 		return nil
 	}
 }
@@ -127,7 +129,7 @@ func checkPasswordHash(password, hash string) bool {
 func (ap *Application) findEmail(ctx context.Context, email string) (*ddd.AuthPasswd, error) {
 	auths, err := ap.authRepo.GetPasswd(ctx, email)
 	if err != nil {
-		return nil, errors.Wrap(errors.ErrInternalServerError, err.Error())
+		return nil, app.SystemError("please try again later", err)
 	}
 	if len(auths) == 0 {
 		return nil, nil

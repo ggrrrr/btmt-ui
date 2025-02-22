@@ -109,23 +109,20 @@ func prepCli() (context.Context, app.App, error) {
 		},
 	))
 
-	var cfg config.AppConfig
+	var cfg system.Config
 
-	err := config.InitConfig(&cfg)
-	if err != nil {
-		return nil, nil, err
-	}
+	config.MustParse(&cfg)
 	system, err := system.NewSystem(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// InitApp/
-	app, err := auth.InitApp(ctx, system)
+	module := &auth.Module{}
+	err = module.Configure(ctx, system)
 	if err != nil {
 		return nil, nil, err
 	}
-	return ctx, app, nil
+	return ctx, module.Module(), nil
 }
 
 func runListEmail() error {

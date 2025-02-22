@@ -88,7 +88,7 @@ export const useLoginStore = defineStore({
       }
     },
     async loginRequest(username, passwd) {
-      const url = config.BASE_URL + "/auth/login/passwd";
+      const url = config.BASE_URL + "/v1/auth/login/passwd";
       const requestOptions = {
         // withCredentials: true,
         // mode: "no-cors",
@@ -149,7 +149,7 @@ export const fetchAPI = async function (url, opts = {}) {
     const delta = now - store.access_token.expires_at.getTime();
     if (delta > 0) {
       console.log("The token has expired", delta);
-      const url = config.BASE_URL + "/auth/token/refresh";
+      const url = config.BASE_URL + "/v1/auth/token/refresh";
 
       await refreshAPI(url, store);
     }

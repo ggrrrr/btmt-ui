@@ -1,3 +1,15 @@
+# Email sender service
+
+## Config
+
+```bash
+
+EMAIL_NATS_URL=
+
+## TODO add multiple email client configs
+
+```
+
 ## Info from https://stackoverflow.com/questions/34790771/how-do-i-insert-an-image-into-email-body
 
 ## https://github.com/go-gomail/gomail

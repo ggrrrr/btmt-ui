@@ -24,27 +24,7 @@ type (
 		Realm string   `json:"realm"`
 		jwt.RegisteredClaims
 	}
-
-	Signer interface {
-		Sign(ctx context.Context, ttl time.Duration, claims roles.AuthInfo) (string, time.Time, error)
-	}
 )
-
-func fromAuthInfo(from roles.AuthInfo) *appJwt {
-	out := appJwt{
-		Roles: []string{},
-		Realm: string(from.Realm),
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: from.Subject,
-			ID:      from.ID.String(),
-		},
-	}
-	for _, v := range from.Roles {
-		out.Roles = append(out.Roles, string(v))
-	}
-
-	return &out
-}
 
 var _ (Signer) = (*signer)(nil)
 
@@ -64,7 +44,7 @@ func NewSigner(keyFile string) (*signer, error) {
 	}
 
 	return &signer{
-		signMethod: "RS256",
+		signMethod: SignMethod_RS254,
 		signKey:    signKey,
 	}, nil
 }
@@ -85,4 +65,20 @@ func (c *signer) Sign(ctx context.Context, ttl time.Duration, authInfo roles.Aut
 	}
 	encoded := base64.StdEncoding.EncodeToString([]byte(tokenString))
 	return encoded, expiresAt, nil
+}
+
+func fromAuthInfo(from roles.AuthInfo) *appJwt {
+	out := appJwt{
+		Roles: []string{},
+		Realm: string(from.Realm),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: from.Subject,
+			ID:      from.ID.String(),
+		},
+	}
+	for _, v := range from.Roles {
+		out.Roles = append(out.Roles, string(v))
+	}
+
+	return &out
 }

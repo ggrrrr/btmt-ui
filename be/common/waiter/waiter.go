@@ -7,6 +7,8 @@ import (
 	"syscall"
 
 	"golang.org/x/sync/errgroup"
+
+	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 type (
@@ -18,7 +20,7 @@ type (
 		Wait() error
 		Context() context.Context
 		CancelFunc() context.CancelFunc
-		Cleanup(fns ...CleanupFunc)
+		AddCleanup(fns ...CleanupFunc)
 	}
 
 	waiter struct {
@@ -66,7 +68,12 @@ func (w waiter) Wait() (err error) {
 	// Here we wait for OS signal or for root ctx cancel call
 	g.Go(func() error {
 		<-ctx.Done()
+		logger.Info().Msg("got kill signal")
 		w.cancel()
+		for _, fn := range w.cleanupFuncs {
+			cleanupFunc := fn
+			cleanupFunc()
+		}
 		return nil
 	})
 
@@ -76,10 +83,7 @@ func (w waiter) Wait() (err error) {
 		g.Go(func() error { return waitFn(ctx) })
 	}
 
-	for _, fn := range w.cleanupFuncs {
-		cleanupFunc := fn
-		defer cleanupFunc()
-	}
+	logger.Info().Msg("started")
 	return g.Wait()
 }
 
@@ -91,6 +95,6 @@ func (w waiter) CancelFunc() context.CancelFunc {
 	return w.cancel
 }
 
-func (w *waiter) Cleanup(fns ...CleanupFunc) {
+func (w *waiter) AddCleanup(fns ...CleanupFunc) {
 	w.cleanupFuncs = append(w.cleanupFuncs, fns...)
 }

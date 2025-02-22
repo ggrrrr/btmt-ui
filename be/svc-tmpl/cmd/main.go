@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
+	"github.com/ggrrrr/btmt-ui/be/common/web"
 	tmpl "github.com/ggrrrr/btmt-ui/be/svc-tmpl"
 )
+
+type appCfg struct {
+	System system.Config
+	WEB    web.Config
+}
 
 func main() {
 	err := run()
@@ -16,28 +23,30 @@ func main() {
 }
 
 func run() error {
-	var cfg config.AppConfig
+	cfg := appCfg{}
+	config.MustParse(&cfg)
 
-	err := config.InitConfig(&cfg)
-	if err != nil {
-		return err
-	}
-	s, err := system.NewSystem(cfg)
+	s, err := system.NewSystem(
+		cfg.System,
+		system.WithWebServer(cfg.WEB),
+	)
 	if err != nil {
 		return err
 	}
 
-	err = tmpl.Root(s.Waiter().Context(), s)
+	m := &tmpl.Module{}
+
+	err = m.Configure(context.Background(), s)
 	if err != nil {
 		return err
 	}
+
+	err = m.Startup(context.Background())
+	if err != nil {
+		return err
+	}
+
 	defer fmt.Println("module shutdown")
 
-	s.Waiter().Add(
-		s.WaitForWeb,
-		s.WaitForGRPC,
-	)
-
 	return s.Waiter().Wait()
-
 }

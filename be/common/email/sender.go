@@ -57,11 +57,11 @@ type (
 	}
 )
 
-// var _ (EmailConnector) = (*Config)(nil)
+var _ (EmailConnector) = (*Config)(nil)
 
 var _ (EmailSender) = (*Sender)(nil)
 
-func (cfg *Config) Connect(ctx context.Context) (*Sender, error) {
+func (cfg *Config) Connect(ctx context.Context) (EmailSender, error) {
 	var err error
 	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.TraceKVString("smtp.host.addr", cfg.SMTPAddr))
 	defer func() {

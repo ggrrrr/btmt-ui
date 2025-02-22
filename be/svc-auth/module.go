@@ -2,163 +2,95 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
-	"github.com/ggrrrr/btmt-ui/be/common/token"
-	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/dynamodb"
-	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/mem"
-	repoPg "github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/postgres"
+	repoPG "github.com/ggrrrr/btmt-ui/be/svc-auth/internal/repo/postgres"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/rest"
 )
 
-type Module struct{}
+type (
+	Config struct {
+		DB       postgres.Config `envPrefix:"AUTH_PG_"`
+		TokenTTL struct {
+			AccessDuration  time.Duration `env:"ACCESS_DURATION" envDefault:"1m"`
+			RefreshDuration time.Duration `env:"REFRESH_DURATION" envDefault:"30m"`
+		} `envPrefix:"AUTH_"`
+	}
+
+	Module struct {
+		cfg    Config
+		app    app.App
+		system system.Service
+	}
+)
 
 var _ (system.Module) = (*Module)(nil)
+
+func (m *Module) Module() app.App {
+	return m.app
+}
 
 func (m *Module) Name() string {
 	return "svc-auth"
 }
 
-func (*Module) Startup(ctx context.Context, s system.Service) (err error) {
-	return Root(ctx, s)
-}
-
-// Config arr sub services needed for the auth
-func InitApp(ctx context.Context, s system.Service) (*app.Application, error) {
+func (m *Module) Configure(ctx context.Context, s system.Service) error {
 	var err error
-	var repo ddd.AuthRepo
-	awsCfg := false
-	pgCfg := false
-	logger.Info().
-		Str("Aws.Region", s.Config().Aws.Region).
-		Str("Postgres.Host", s.Config().Postgres.Host).
-		Str("Postgres.User", s.Config().Postgres.Username).
-		Send()
+	cfg := Config{}
+	config.MustParse(&cfg)
 
-	if s.Config().Dynamodb.Database != "" {
-		awsCfg = true
-	}
+	m.cfg = cfg
+	m.system = s
 
-	if s.Config().Postgres.Host != "" {
-		pgCfg = true
-	}
-
-	if awsCfg == pgCfg {
-		logger.Warn().Msg("in memory repo")
-		pass, _ := app.HashPassword("asdasd")
-		repo, _ = mem.New()
-		asdUser := ddd.AuthPasswd{
-			Subject:     "asd@asd",
-			Status:      ddd.StatusEnabled,
-			SystemRoles: []string{"admin"},
-			Passwd:      pass,
-		}
-		err = repo.SavePasswd(ctx, asdUser)
-		if err != nil {
-			logger.Error(err).Msg("InitApp.save")
-		}
-	}
-	if awsCfg {
-		repo, err = initAwsRepo(ctx, s.Waiter(), s.Config())
-		if err != nil {
-			return nil, err
-		}
-	}
-	if pgCfg {
-		repo, err = initPgRepo(s)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if repo == nil {
-		logger.Error(err).Msg("repo init")
-		return nil, errors.New("no repo")
-	}
-
-	tokenSigner, err := token.NewSigner(s.Config().Jwt.KeyFile)
-	if err != nil {
-		logger.Error(err).Msg("NewSigner")
-		return nil, err
-	}
-
-	a, err := app.New(
-		app.WithAuthRepo(repo),
-		app.WithHistoryRepo(repo),
-		app.WithTokenSigner(tokenSigner),
-		app.WithTokenTTL(s.Config().Jwt.Ttl.AccessToken, s.Config().Jwt.Ttl.RefreshToken),
-	)
-	if err != nil {
-		logger.Error(err).Msg("app error")
-		return nil, err
-	}
-
-	return a, nil
-}
-
-func initAwsRepo(_ context.Context, _ waiter.Waiter, cfg config.AppConfig) (ddd.AuthRepo, error) {
-	repo, err := dynamodb.New(cfg.Aws, cfg.Dynamodb)
-	if err != nil {
-		logger.Error(err).Msg("initAwsRepo error")
-		return nil, err
-	}
-	// s.Waiter().Cleanup(func() {
-	// 	repoDb.Close(ctx)
-	// })
-	return repo, nil
-}
-
-func initPgRepo(s system.Service) (ddd.AuthRepo, error) {
-
-	db, err := postgres.Connect(s.Config().Postgres)
+	db, err := postgres.Connect(cfg.DB)
 	if err != nil {
 		logger.Error(err).Msg("cant connect to pg")
-		return nil, err
+		return err
 	}
-
-	s.Waiter().Cleanup(func() {
-		err := db.Close()
-		if err != nil {
-			logger.Error(err).Msg("postgres.Cleanup")
-		}
+	s.Waiter().AddCleanup(func() {
+		db.Close()
 	})
 
-	repo, err := repoPg.Init(db)
-	if err != nil {
-		logger.Error(err).Msg("initPgRepo error")
-		return nil, err
-	}
-
-	return repo, nil
-}
-
-func Root(ctx context.Context, s system.Service) error {
-	logger.Info().Msg("Root")
-	a, err := InitApp(ctx, s)
+	pg, err := repoPG.Init(db)
 	if err != nil {
 		return err
 	}
 
-	if s.Mux() == nil {
-		return fmt.Errorf("system.Mux is nil")
+	m.app, err = app.New(
+		app.WithAuthRepo(pg),
+		app.WithHistoryRepo(pg),
+		app.WithTokenSigner(s.Signer()),
+		app.WithTokenTTL(m.cfg.TokenTTL.AccessDuration, m.cfg.TokenTTL.RefreshDuration),
+	)
+	if err != nil {
+		return err
 	}
-	restApp := rest.New(a)
-	s.Mux().Mount("/auth", restApp.Router())
 
-	// if s.Config().Grpc.Address != "" {
-	// 	grpc.RegisterServer(a, s.RPC())
-	// 	if err = rest.RegisterGateway(ctx, s.Gateway(), "localhost:8011"); err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// logger.Info().Msg("started")
 	return nil
 }
+
+func (m *Module) Startup(ctx context.Context) (err error) {
+	if m.app == nil {
+		logger.Error(fmt.Errorf("asdasd"))
+		panic("m.app is nil")
+	}
+	return m.system.MountHandler("/v1/auth", rest.Router(rest.Handler(m.app)))
+}
+
+// func initAwsRepo(_ context.Context, _ waiter.Waiter, cfg config.AppConfig) (ddd.AuthRepo, error) {
+// 	repo, err := dynamodb.New(cfg.Aws, cfg.Dynamodb)
+// 	if err != nil {
+// 		logger.Error(err).Msg("initAwsRepo error")
+// 		return nil, err
+// 	}
+// 	// s.Waiter().Cleanup(func() {
+// 	// 	repoDb.Close(ctx)
+// 	// })
+// 	return repo, nil
+// }

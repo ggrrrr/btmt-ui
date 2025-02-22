@@ -147,7 +147,7 @@ func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, ne
 	}
 
 	if !checkPasswordHash(oldPasswd, string(rec.Passwd)) {
-		err = ErrAuthBadPassword
+		err = ErrAuthUserPassword
 		return
 	}
 
