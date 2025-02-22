@@ -24,18 +24,8 @@ const (
 )
 
 type (
-	httpPanicResponse struct {
-		Code    int    `json:"code,omitempty"`
-		Message string `json:"message,omitempty"`
-		Error   string `json:"error,omitempty"`
-	}
-
 	httpVersionReponse struct {
 		BuildVersion string `json:"build_version"`
-	}
-
-	httpReadyResponse struct {
-		Status string `json:"status"`
 	}
 )
 
