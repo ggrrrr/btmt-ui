@@ -1,6 +1,6 @@
 # Authentication service
 
-## Settings:
+## Settings
 
 ```bash
 
