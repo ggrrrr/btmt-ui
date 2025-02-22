@@ -3,11 +3,12 @@ package web
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/ggrrrr/btmt-ui/be/common/buildversion"
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
@@ -29,12 +30,14 @@ type (
 	}
 
 	Server struct {
+		listenReady  sync.WaitGroup
 		name         string
 		cfg          Config
 		verifier     token.Verifier
 		mux          *chi.Mux
 		buildVersion string
 		server       *http.Server
+		listener     net.Listener
 		readyFunc    func() bool
 	}
 )
@@ -44,15 +47,12 @@ func NewServer(name string, cfg Config, opts ...ServerOptionFn) (*Server, error)
 		name = "newServer"
 	}
 
-	// if cfg.EndpointREST == "" {
-	// cfg.EndpointREST = "rest"
-	// }
-
 	if cfg.ListenAddr == "" {
 		return nil, fmt.Errorf("empty ListenAddr")
 	}
 
 	s := &Server{
+		listenReady:  sync.WaitGroup{},
 		name:         name,
 		cfg:          cfg,
 		buildVersion: buildversion.BuildVersion(),
@@ -76,7 +76,7 @@ func NewServer(name string, cfg Config, opts ...ServerOptionFn) (*Server, error)
 		Addr:    s.cfg.ListenAddr,
 		Handler: s.mux,
 	}
-
+	s.listenReady.Add(1)
 	return s, nil
 }
 
@@ -98,6 +98,7 @@ func (s *Server) MountHandler(pattern string, router http.Handler) {
 }
 
 func (s *Server) Startup() error {
+	var err error
 	logger.Info().
 		Str("web.server", s.name).
 		Str("ListenAddr", s.cfg.ListenAddr).
@@ -105,39 +106,17 @@ func (s *Server) Startup() error {
 	defer logger.Info().
 		Str("web.server", s.name).
 		Msg("exit")
-	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		fmt.Printf("ListenAndServe: %#v \n", err)
+	s.listener, err = net.Listen("tcp", s.cfg.ListenAddr)
+	s.listenReady.Done()
+	if err != nil {
+		return err
+	}
+
+	err = s.server.Serve(s.listener)
+	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
 	return nil
-}
-
-func (s *Server) WaitForWeb1(ctx context.Context) error {
-	// s.mux.Mount("/v1", s.gateway)
-	ctx, _ = context.WithTimeout(ctx, s.cfg.ShutdownTimeout)
-	group, gCtx := errgroup.WithContext(ctx)
-	group.Go(func() error {
-		return s.Startup()
-	})
-
-	group.Go(func() error {
-		logger.Info().
-			Str("web.server", s.name).
-			Str("ListenAddr", s.cfg.ListenAddr).
-			Msg("waiting...")
-		<-gCtx.Done()
-		logger.Info().
-			Str("web.server", s.name).
-			Str("ListenAddr", s.cfg.ListenAddr).
-			Msg("rest server to be shutdown")
-		ctx, cancel := context.WithTimeout(context.Background(), s.cfg.ShutdownTimeout)
-		defer cancel()
-		if err := s.server.Shutdown(ctx); err != nil {
-			return err
-		}
-		return nil
-	})
-	return group.Wait()
 }
 
 func WithVerifier(v token.Verifier) ServerOptionFn {

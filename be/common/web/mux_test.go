@@ -12,6 +12,9 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ggrrrr/btmt-ui/be/common/roles"
+	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 func testAppRouter() http.Handler {
@@ -20,20 +23,33 @@ func testAppRouter() http.Handler {
 		sendJSON(r.Context(), w, 200, "", nil, "test val")
 	})
 	return r
+}
 
+func testAuthAppRouter(t *testing.T, expected string) http.Handler {
+	r := chi.NewRouter()
+	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+		user := roles.AuthInfoFromCtx(r.Context())
+		if user.Subject == "" {
+			SendJSONForbidden(r.Context(), w, "forbidden")
+			return
+		}
+		assert.Equal(t, expected, user.Subject)
+		sendJSON(r.Context(), w, 200, "", nil, "test val")
+	})
+	return r
 }
 
 func Test_Server(t *testing.T) {
 
 	tests := []struct {
-		name     string
-		method   string
-		endpoint string
-		prepFn   func(t *testing.T) *Server
-		code     int
-		jsonBody string
-		textBody string
-		headers  string
+		name       string
+		method     string
+		endpoint   string
+		reqHeaders http.Header
+		prepFn     func(t *testing.T) *Server
+		code       int
+		jsonBody   string
+		textBody   string
 	}{
 		{
 			name:     "ok",
@@ -46,7 +62,7 @@ func Test_Server(t *testing.T) {
 				testServer, err := NewServer(
 					"server",
 					Config{
-						ListenAddr: ":8081",
+						ListenAddr: ":0",
 					})
 				require.NoError(t, err)
 
@@ -71,7 +87,7 @@ func Test_Server(t *testing.T) {
 				testServer, err := NewServer(
 					"",
 					Config{
-						ListenAddr: ":8081",
+						ListenAddr: ":0",
 						CORS: CORS{
 							Origin:  "*",
 							Headers: "HeaderName",
@@ -102,7 +118,7 @@ func Test_Server(t *testing.T) {
 				testServer, err := NewServer(
 					"",
 					Config{
-						ListenAddr: ":8081",
+						ListenAddr: ":0",
 						CORS: CORS{
 							Origin:  "*",
 							Headers: "HeaderName",
@@ -127,13 +143,13 @@ func Test_Server(t *testing.T) {
 			method:   http.MethodGet,
 			endpoint: "/panic",
 			code:     500,
-			textBody: `.`,
+			textBody: `{"code":"500","message":"internal panic"}`,
 			prepFn: func(t *testing.T) *Server {
 				var err error
 				testServer, err := NewServer(
 					"",
 					Config{
-						ListenAddr: ":8081",
+						ListenAddr: ":0",
 					})
 				require.NoError(t, err)
 				zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
@@ -151,15 +167,104 @@ func Test_Server(t *testing.T) {
 				return testServer
 			},
 		},
+		{
+			name:     "auth 403",
+			method:   http.MethodGet,
+			endpoint: "/testApp/test",
+			code:     403,
+			textBody: `{"code":"403","message":"forbidden"}`,
+			prepFn: func(t *testing.T) *Server {
+				var err error
+				testServer, err := NewServer(
+					"",
+					Config{
+						ListenAddr: ":0",
+					},
+					WithVerifier(token.NewVerifierMock()),
+				)
+				require.NoError(t, err)
+				zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
+				testServer.MountHandler("/testApp", testAuthAppRouter(t, "asd"))
+
+				go func() {
+					err = testServer.Startup()
+					require.NoError(t, err)
+				}()
+
+				return testServer
+			},
+		},
+		{
+			name:       "auth 200",
+			method:     http.MethodGet,
+			reqHeaders: http.Header{"Authorization": []string{"Bearer username"}},
+			endpoint:   "/testApp/test",
+			code:       200,
+			textBody:   `{"code":"200","payload":"test val"}`,
+			prepFn: func(t *testing.T) *Server {
+				var err error
+				testServer, err := NewServer(
+					"",
+					Config{
+						ListenAddr: ":0",
+					},
+					WithVerifier(token.NewVerifierMock()),
+				)
+				require.NoError(t, err)
+				zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
+				testServer.MountHandler("/testApp", testAuthAppRouter(t, "username"))
+
+				go func() {
+					err = testServer.Startup()
+					require.NoError(t, err)
+				}()
+
+				return testServer
+			},
+		},
+		{
+			name:       "auth 401",
+			method:     http.MethodGet,
+			reqHeaders: http.Header{"Authorization": []string{"Shit username"}},
+			endpoint:   "/testApp/test",
+			code:       401,
+			textBody:   `{"code":"401","message":"Unauthenticated"}`,
+			prepFn: func(t *testing.T) *Server {
+				var err error
+				testServer, err := NewServer(
+					"",
+					Config{
+						ListenAddr: ":0",
+					},
+					WithVerifier(token.NewVerifierMock()),
+				)
+				require.NoError(t, err)
+				zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
+				testServer.MountHandler("/testApp", testAuthAppRouter(t, "username"))
+
+				go func() {
+					err = testServer.Startup()
+					require.NoError(t, err)
+				}()
+
+				return testServer
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			testServer := tc.prepFn(t)
 			defer testServer.Shutdown(context.Background())
+			testServer.listenReady.Wait()
 
-			httpReq, err := http.NewRequest(tc.method, "http://localhost:8081"+tc.endpoint, nil)
+			httpReq, err := http.NewRequest(tc.method, getTestUrl(testServer)+tc.endpoint, nil)
 			require.NoError(t, err)
+
+			httpReq.Header = tc.reqHeaders
 
 			resp, err := http.DefaultClient.Do(httpReq)
 			require.NoError(t, err)
@@ -170,6 +275,8 @@ func Test_Server(t *testing.T) {
 
 			fmt.Printf("body %s \n", string(body))
 			fmt.Printf("headers %d %#v \n", resp.StatusCode, resp.Header)
+
+			assert.Equal(t, tc.code, resp.StatusCode)
 
 			if tc.jsonBody != "" {
 				assert.JSONEq(t, tc.jsonBody, string(body))

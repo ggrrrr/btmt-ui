@@ -87,7 +87,6 @@ func (s *Server) handlerAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if s.verifier == nil {
-			logger.Warn().Msg("verifier is nil")
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -205,10 +204,4 @@ func (s *Server) initMux() {
 	s.mux.Use(s.handlerRecoverer)
 	// s.mux.Use(s.requestLogger)
 	s.mux.Use(s.handlerAuth)
-
-	// s.mux.MethodNotAllowed(MethodNotAllowedHandler)
-
-	// or use https://github.com/Ecostack/otelchi/blob/master/middleware.go
-	// s.mux.Use(otelchi.Middleware(s.cfg.EndpointREST))
-
 }

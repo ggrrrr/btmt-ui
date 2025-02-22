@@ -57,10 +57,20 @@ func SendJSONErrorBadRequest(ctx context.Context, w http.ResponseWriter, msg str
 	sendJSON(ctx, w, http.StatusBadRequest, msg, err, nil)
 }
 
-// HTTP CODE 400
-func SendJSONErrorBadRequestWithBody(ctx context.Context, w http.ResponseWriter, msg string, err error, body any) {
-	sendJSON(ctx, w, http.StatusBadRequest, msg, err, body)
+// HTTP CODE 401
+func SendJSONUnauthorized(ctx context.Context, w http.ResponseWriter, msg string) {
+	sendJSON(ctx, w, http.StatusUnauthorized, msg, nil, nil)
 }
+
+// HTTP CODE 403
+func SendJSONForbidden(ctx context.Context, w http.ResponseWriter, msg string) {
+	sendJSON(ctx, w, http.StatusForbidden, msg, nil, nil)
+}
+
+// // HTTP CODE 400
+// func SendJSONErrorBadRequestWithBody(ctx context.Context, w http.ResponseWriter, msg string, err error, body any) {
+// 	sendJSON(ctx, w, http.StatusBadRequest, msg, err, body)
+// }
 
 func sendJSON(ctx context.Context, w http.ResponseWriter, code int, msg string, err1 error, payload any) {
 	traceID := ""
