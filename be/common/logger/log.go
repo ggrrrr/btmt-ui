@@ -22,7 +22,9 @@ func initLog() {
 	case "json":
 		log = json(level)
 	case "console":
-		log = console(level)
+		log = console(level, false)
+	case "console_color":
+		log = console(level, true)
 	default:
 		out := zerolog.NewConsoleWriter()
 		out.NoColor = true

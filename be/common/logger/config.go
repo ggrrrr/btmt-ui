@@ -17,14 +17,16 @@ func init() {
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 }
 
-func console(level zerolog.Level) zerolog.Logger {
+func console(level zerolog.Level, withColor bool) zerolog.Logger {
 	logger := zerolog.New(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
 		TimeFormat: time.RFC3339,
-		NoColor:    true,
+		// ErrorStackMarshaler: pkgerrors.MarshalStack,
+		NoColor: !withColor,
 	}).
 		Level(level).
 		With().
+		Stack().
 		Timestamp().
 		Caller().
 		// Int("pid", os.Getpid()).

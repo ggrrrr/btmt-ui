@@ -108,11 +108,12 @@ func Test_Server(t *testing.T) {
 			},
 		},
 		{
-			name:     "options",
-			method:   http.MethodOptions,
-			endpoint: "/test",
-			code:     200,
-			textBody: `.`,
+			name:       "options",
+			method:     http.MethodOptions,
+			reqHeaders: http.Header{"Access-Control-Request-Method": []string{"some"}},
+			endpoint:   "/test/random",
+			code:       200,
+			textBody:   ``,
 			prepFn: func(t *testing.T) *Server {
 				var err error
 				testServer, err := NewServer(
@@ -120,8 +121,7 @@ func Test_Server(t *testing.T) {
 					Config{
 						ListenAddr: ":0",
 						CORS: CORS{
-							Origin:  "*",
-							Headers: "HeaderName",
+							Origin: "*",
 						},
 					})
 				require.NoError(t, err)
