@@ -13,7 +13,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
-type AppResponse struct {
+type webResponse struct {
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
@@ -84,7 +84,7 @@ func sendJSON(ctx context.Context, w http.ResponseWriter, code int, msg string, 
 	if err1 != nil {
 		errStr = err1.Error()
 	}
-	body := AppResponse{
+	body := webResponse{
 		Code:    strconv.Itoa(code),
 		Message: msg,
 		Error:   errStr,

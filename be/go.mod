@@ -59,6 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.77.1
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/go-chi/cors v1.2.1
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.1

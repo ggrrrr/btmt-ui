@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/riandyrn/otelchi"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -159,24 +159,6 @@ func (s *Server) handlerReady(next http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) requestLogger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
-		l := logger.Info().Ctx(r.Context())
-
-		next.ServeHTTP(w, r)
-
-		l.
-			Str("method", r.Method).
-			Str("url", r.URL.RequestURI()).
-			Str("user_agent", r.UserAgent()).
-			Str("RemoteAddr", r.RemoteAddr).
-			Dur("elapsed_ms", time.Since(start)).
-			Msg("incoming request")
-	})
-}
-
 func (s *Server) initMux() {
 	s.mux = chi.NewRouter()
 	s.mux.NotFound(notFoundHandler)
@@ -188,8 +170,17 @@ func (s *Server) initMux() {
 	s.mux.Use(s.handlerReady)
 	s.mux.Use(middleware.URLFormat)
 	s.mux.Use(middleware.RealIP)
-	s.mux.Use(otelchi.Middleware(s.name))
+	s.mux.Use(cors.Handler(cors.Options{
+		// AllowOriginFunc:  ,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		AllowedOrigins:   []string{"*"},
+	}))
 	s.mux.Use(s.handlerCORS)
+	s.mux.Use(otelchi.Middleware(s.name))
 	// s.mux.Use(middleware.Recoverer)
 	s.mux.Use(s.handlerRecoverer)
 	// s.mux.Use(s.requestLogger)

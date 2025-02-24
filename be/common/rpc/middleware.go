@@ -15,7 +15,7 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
-func (s Server) unaryInterceptor(
+func (s *Server) unaryInterceptor(
 	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,

@@ -18,14 +18,14 @@ import (
 type (
 	ServerOptionFn func(s *Server) error
 	CORS           struct {
-		Origin  string `env:"CORS_ORIGIN" envDefault:"*"`
-		Headers string `env:"CORS_HEADERS" envDefault:"Content-Type, Authorization, X-Authorization"`
+		Origin  string `env:"WEB_CORS_ORIGIN" envDefault:"*"`
+		Headers string `env:"WEB_CORS_HEADERS" envDefault:"Content-Type, Authorization, X-Authorization"`
 	}
 
 	Config struct {
 		// EndpointREST    string        `env:"ENDPOINT_REST" default:"rest"`
-		ListenAddr      string        `env:"LISTEN_ADDR" envDefault:":8080"`
-		ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"1s"`
+		ListenAddr      string        `env:"WEB_LISTEN_ADDR" envDefault:":8080"`
+		ShutdownTimeout time.Duration `env:"WEB_SHUTDOWN_TIMEOUT" envDefault:"1s"`
 		CORS            CORS
 	}
 

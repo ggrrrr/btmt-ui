@@ -139,7 +139,7 @@ async function loadData() {
         method: "GET",
     };
     refs.value.loading = true;
-    const url = config.BASE_URL + "/auth/user/list";
+    const url = config.BASE_URL + "/v1/auth/login/list";
     console.log("url", url)
     await fetchAPI(url, request)
         .then((result) => {
