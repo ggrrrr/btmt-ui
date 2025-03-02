@@ -116,6 +116,7 @@ func TestCallsListPushFetchHead(t *testing.T) {
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				testClient := &Client{
+					otelTracer: s3c.otelTracer,
 					s3Clients: map[realmKey]s3Client{
 						"localhost": s3c,
 					},
@@ -162,7 +163,8 @@ func TestCallsListPushFetchHead(t *testing.T) {
 			name: "ok tenent not found",
 			testFunc: func(t *testing.T) {
 				testClient := &Client{
-					s3Clients: map[realmKey]s3Client{},
+					otelTracer: tracer.Tracer(otelScope),
+					s3Clients:  map[realmKey]s3Client{},
 				}
 
 				folder1v1, _ = blob.ParseBlobId("asdasdasd/asd")
@@ -188,6 +190,7 @@ func TestCallsListPushFetchHead(t *testing.T) {
 				s3c.bucketName = testBucket
 
 				testClient := &Client{
+					otelTracer: s3c.otelTracer,
 					s3Clients: map[realmKey]s3Client{
 						"localhost": s3c,
 					},
