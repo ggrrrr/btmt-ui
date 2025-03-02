@@ -17,7 +17,7 @@ import (
 
 type (
 	moduleCfg struct {
-		MGO    mgo.Config `prefix:"PEOPLE_"`
+		MGO    mgo.Config `envPrefix:"PEOPLE_"`
 		Broker jetstream.Config
 	}
 	Module struct {
@@ -34,8 +34,9 @@ func (*Module) Name() string {
 }
 
 func (m *Module) Configure(ctx context.Context, s system.Service) (err error) {
-	// m.service = s
-	config.MustParse(&m.cfg)
+	cfg := moduleCfg{}
+	config.MustParse(&cfg)
+	m.cfg = cfg
 
 	db, err := mgo.New(ctx, m.cfg.MGO)
 	if err != nil {

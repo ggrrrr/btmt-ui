@@ -18,7 +18,7 @@ import (
 
 type (
 	Config struct {
-		MGO       mgo.Config `prefix:"TMPL_"`
+		MGO       mgo.Config `envPrefix:"TMPL_"`
 		Broker    jetstream.Config
 		BlobStore struct {
 			BucketName string `env:"TMPL_STATE_BUCKET_NAME"`
