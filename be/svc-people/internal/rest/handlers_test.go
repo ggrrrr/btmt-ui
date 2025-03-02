@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	commonApp "github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
@@ -44,7 +45,7 @@ func Test_Save(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	testServer := server{app: app}
+	testServer := server{tracer: tracer.Tracer(otelScope), app: app}
 	w := httptest.NewRecorder()
 	reqStr := `{"data":{"email":"asd@asd123","name":"vesko","phones":{"mobile":"0889430425"}}}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
@@ -91,7 +92,7 @@ func Test_List(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	testServer := server{app: app}
+	testServer := server{tracer: tracer.Tracer(otelScope), app: app}
 	w := httptest.NewRecorder()
 	reqStr := `{}`
 	httpReq := httptest.NewRequest(http.MethodPost, "/greet?name=john", strings.NewReader(reqStr))
