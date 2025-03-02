@@ -44,11 +44,11 @@ func (r *Repo) Save(ctx context.Context, template *tmplpb.Template) (err error) 
 
 	newTmpl, err := fromTemplate(template)
 	if err != nil {
-		return
+		return fmt.Errorf("fromTemplate %w", err)
 	}
 	_, err = r.db.InsertOne(ctx, r.collection, newTmpl)
 	if err != nil {
-		return
+		return fmt.Errorf("InsertOne %w", err)
 	}
 	template.Id = newTmpl.Id.Hex()
 

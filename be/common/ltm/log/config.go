@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -10,8 +11,9 @@ import (
 
 type (
 	Config struct {
-		Level  string `env:"LOG_LEVEL"`
-		Format string `env:"LOG_FORMAT"`
+		Level     string `env:"LOG_LEVEL"`
+		Format    string `env:"LOG_FORMAT"`
+		AddSource int    `env:"LOG_ADD_SOURCE"`
 	}
 )
 
@@ -48,6 +50,7 @@ func Configure(cfg Config) error {
 	cfgLock.Lock()
 	defer cfgLock.Unlock()
 
+	fmt.Printf("ltm.log: %+v\n", cfg)
 	appLogger = configureWithWriter(cfg, os.Stdout)
 
 	return nil
@@ -55,7 +58,8 @@ func Configure(cfg Config) error {
 
 func configureWithWriter(cfg Config, writer io.Writer) *AppLog {
 	out := &AppLog{
-		level: parseLogLevel(cfg.Level),
+		callerPathLevel: cfg.AddSource,
+		level:           parseLogLevel(cfg.Level),
 	}
 
 	opts := &slog.HandlerOptions{

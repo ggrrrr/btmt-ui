@@ -2,6 +2,7 @@ package tracer
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 
@@ -20,12 +21,15 @@ import (
 )
 
 type (
-	Client struct {
-		Target string `env:"TARGET"`
+	CfgTarget struct {
+		Addr string `env:"ADDR"`
+	}
+	CfgClient struct {
+		Target CfgTarget `envPrefix:"TARGET_"`
 	}
 
 	Config struct {
-		Client Client `envPrefix:"OTEL_"`
+		Client CfgClient `envPrefix:"OTEL_"`
 	}
 
 	OTelTracer interface {
@@ -52,6 +56,8 @@ func Configure(ctx context.Context, serviceName string, cfg Config) error {
 	cfgLock.Lock()
 	defer cfgLock.Unlock()
 
+	fmt.Printf("ltm.tracer: %+v\n", cfg)
+
 	serviceNameAttr := semconv.ServiceNameKey.String(serviceName)
 	serviceVersionAttr := semconv.ServiceVersionKey.String(buildversion.BuildVersion())
 
@@ -75,7 +81,7 @@ func Configure(ctx context.Context, serviceName string, cfg Config) error {
 func connect(cfg Config) error {
 	ctx := context.Background()
 
-	conn, err := grpc.NewClient(cfg.Client.Target,
+	conn, err := grpc.NewClient(cfg.Client.Target.Addr,
 		// Note the use of insecure transport here. TLS is recommended in production.
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)

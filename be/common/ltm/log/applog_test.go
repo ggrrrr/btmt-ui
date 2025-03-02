@@ -38,8 +38,9 @@ func TestLog(t *testing.T) {
 	ctx := context.Background()
 	var buf bytes.Buffer
 	cfg := Config{
-		Level:  "info",
-		Format: "json",
+		AddSource: 2,
+		Level:     "info",
+		Format:    "json",
 	}
 	sd1 := someData1{}
 	ctx = td.Inject(ctx, sd1)
@@ -48,6 +49,7 @@ func TestLog(t *testing.T) {
 	testLogger := configureWithWriter(cfg, &buf)
 
 	testLogger.logCtx(ctx, slog.LevelInfo, fmt.Errorf("err1"), "asd", slog.String("add", "val1"))
+	testLogger.Info("asd", slog.String("add", "val1"))
 
 	fmt.Printf("%v \n", buf.String())
 }

@@ -2,14 +2,18 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"runtime"
+	"strings"
 
 	"github.com/ggrrrr/btmt-ui/be/common/ltm/td"
 )
 
 type AppLog struct {
-	logger *slog.Logger
-	level  slog.Level
+	callerPathLevel int
+	logger          *slog.Logger
+	level           slog.Level
 }
 
 func (l *AppLog) IsTrace() bool {
@@ -48,9 +52,29 @@ func (l *AppLog) Debug(msg string, a ...slog.Attr) {
 	appLogger.log(slog.LevelDebug, nil, msg, a...)
 }
 
+func findCaller(pathLevel int) string {
+	_, file, line, ok := runtime.Caller(3)
+	if !ok {
+		return "unknown_error"
+	}
+	fileParts := strings.Split(file, "/")
+	fromI := len(fileParts) - pathLevel
+	toI := len(fileParts)
+	outFile := strings.Join(fileParts[fromI:toI], "/")
+
+	return fmt.Sprintf("%s:%d", outFile, line)
+}
+
 func (l *AppLog) logCtx(ctx context.Context, level slog.Level, err error, msg string, a ...slog.Attr) {
+	addLen := 2
+
 	td := td.Extract(ctx)
-	attr := make([]slog.Attr, 0, len(a)+td.Len()+1)
+	attr := make([]slog.Attr, 0, len(a)+td.Len()+addLen)
+
+	if l.callerPathLevel > 0 {
+		attr = append(attr, slog.String("go.source.file", findCaller(l.callerPathLevel)))
+	}
+
 	attr = append(attr, td.Attr()...)
 	attr = append(attr, a...)
 	if err != nil {
@@ -63,7 +87,10 @@ func (l *AppLog) log(level slog.Level, err error, msg string, a ...slog.Attr) {
 	if err == nil {
 		l.logger.LogAttrs(context.Background(), level, msg, a...)
 	}
-	attr := make([]slog.Attr, 0, len(a)+1)
+	attr := make([]slog.Attr, 0, len(a)+2)
+	if l.callerPathLevel > 0 {
+		attr = append(attr, slog.String("go.source.file", findCaller(l.callerPathLevel)))
+	}
 	attr = append(attr, slog.Any("error", err))
 	l.logger.LogAttrs(context.Background(), level, msg, attr...)
 }

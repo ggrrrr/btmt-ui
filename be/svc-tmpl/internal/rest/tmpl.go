@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
@@ -37,6 +38,7 @@ func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 		// 	web.SendErrorBadRequestWithBody(ctx, w, "validation error", err, tmplErrors)
 		// 	return
 		// }
+		log.Log().ErrorCtx(ctx, err, "SaveTmpl")
 		web.SendError(ctx, w, err)
 		return
 	}

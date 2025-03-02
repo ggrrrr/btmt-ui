@@ -52,11 +52,14 @@ func NewSystem(cfg Config, opts ...SystemOptions) (*System, error) {
 	s := &System{
 		cfg: cfg,
 	}
+
+	log.Configure(cfg.LOG)
+
 	log.Log().Info("build.version",
 		slog.String("version", buildversion.BuildVersion()),
 		slog.Int("max.procs", runtime.GOMAXPROCS(0)),
 	)
-	if cfg.OTEL.Client.Target != "" {
+	if cfg.OTEL.Client.Target.Addr != "" {
 		err := tracer.Configure(context.Background(), cfg.AppName, cfg.OTEL)
 		if err != nil {
 			return nil, err

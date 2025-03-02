@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
@@ -97,11 +98,13 @@ func (a *Application) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmp
 
 	err = a.repo.Save(ctx, tmpl)
 	if err != nil {
+		log.Log().ErrorCtx(ctx, err, "repo.Save")
 		return "", err
 	}
 
 	err = a.uploadTmplBody(ctx, authInfo, tmpl)
 	if err != nil {
+		log.Log().ErrorCtx(ctx, err, "uploadTmplBody")
 		return "", err
 	}
 
