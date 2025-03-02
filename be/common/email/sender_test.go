@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/help"
 )
 
@@ -126,6 +127,7 @@ func TestAuth(t *testing.T) {
 	newLine = []byte("\r\n")
 
 	testSender := &Sender{
+		otelTracer: tracer.Tracer(otelScope),
 		cfg:        Config{},
 		tcpConn:    nil,
 		smtpClient: nil,
@@ -319,6 +321,7 @@ c2VjcmV0
 			smtpClientMock := newSmtpClientMock()
 
 			testSender := &Sender{
+				otelTracer: tracer.Tracer(otelScope),
 				cfg: Config{
 					SMTPHost: "",
 					SMTPAddr: "",
