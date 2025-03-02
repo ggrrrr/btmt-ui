@@ -40,7 +40,7 @@ func TestLog(t *testing.T) {
 	cfg := Config{
 		AddSource: 2,
 		Level:     "info",
-		Format:    "json",
+		Format:    "color",
 	}
 	sd1 := someData1{}
 	ctx = td.Inject(ctx, sd1)

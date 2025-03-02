@@ -84,13 +84,16 @@ func (l *AppLog) logCtx(ctx context.Context, level slog.Level, err error, msg st
 }
 
 func (l *AppLog) log(level slog.Level, err error, msg string, a ...slog.Attr) {
-	if err == nil {
-		l.logger.LogAttrs(context.Background(), level, msg, a...)
-	}
 	attr := make([]slog.Attr, 0, len(a)+2)
+	attr = append(attr, a...)
+
 	if l.callerPathLevel > 0 {
 		attr = append(attr, slog.String("go.source.file", findCaller(l.callerPathLevel)))
 	}
-	attr = append(attr, slog.Any("error", err))
+
+	if err != nil {
+		attr = append(attr, slog.Any("error", err))
+	}
+
 	l.logger.LogAttrs(context.Background(), level, msg, attr...)
 }
