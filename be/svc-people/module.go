@@ -5,7 +5,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
@@ -39,7 +39,7 @@ func (m *Module) Configure(ctx context.Context, s system.Service) (err error) {
 
 	db, err := mgo.New(ctx, m.cfg.MGO)
 	if err != nil {
-		logger.Error(err).Msg("db")
+		log.Log().Error(err, "mgo")
 		return err
 	}
 

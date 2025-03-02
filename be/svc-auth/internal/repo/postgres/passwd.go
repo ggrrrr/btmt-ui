@@ -3,16 +3,18 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lib/pq"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
 func (r *authRepo) GetPasswd(ctx context.Context, subject string) (result []ddd.AuthPasswd, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Get", nil, logger.TraceKVString("subject", subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.GetPasswd",
+		slog.String("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -21,9 +23,6 @@ func (r *authRepo) GetPasswd(ctx context.Context, subject string) (result []ddd.
 	select "subject", "passwd", "status", "tenant_roles", "system_roles", created_at from %s
 	where subject = $1
 	`, r.passwdTable)
-	logger.DebugCtx(ctx).
-		Str("subject", subject).
-		Str("sql", sql).Msg("Get")
 	rows, err := r.db.QueryContext(ctx, sql, subject)
 	if err != nil {
 		return
@@ -61,15 +60,13 @@ func (r *authRepo) GetPasswd(ctx context.Context, subject string) (result []ddd.
 }
 
 func (r *authRepo) ListPasswd(ctx context.Context, filter app.FilterFactory) (result []ddd.AuthPasswd, err error) {
-	ctx, span := logger.Span(ctx, "repo.List", nil)
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.ListPasswd")
 	defer func() {
 		span.End(err)
 	}()
 
 	sql := r.table(`select "subject", "passwd", "status", "tenant_roles", "system_roles", created_at from %s`, r.passwdTable)
-	logger.DebugCtx(ctx).
-		Str("sql", sql).Msg("List")
-	// rows, err := r.db.Query(sql)
 	rows, err := r.db.QueryContext(ctx, sql)
 	if err != nil {
 		return
@@ -107,7 +104,9 @@ func (r *authRepo) ListPasswd(ctx context.Context, filter app.FilterFactory) (re
 }
 
 func (r *authRepo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Update", nil, logger.TraceKVString("email", auth.Subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.Update",
+		slog.String("Subject", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -116,9 +115,6 @@ func (r *authRepo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) 
 	update %s set  "status" = $2, "system_roles" = $3, "tenant_roles" = $4
 	where subject = $1
 	`, r.passwdTable)
-	logger.DebugCtx(ctx).
-		Str("subject", auth.Subject).
-		Str("sql", sql).Msg("Update")
 	_, err = r.db.ExecContext(ctx, sql,
 		auth.Subject,
 		auth.Status,
@@ -132,7 +128,9 @@ func (r *authRepo) Update(ctx context.Context, auth ddd.AuthPasswd) (err error) 
 }
 
 func (r *authRepo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.TraceKVString("subject", auth.Subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.Update",
+		slog.String("subject", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -141,9 +139,6 @@ func (r *authRepo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err err
 	insert into %s ("subject", "passwd", "status", "tenant_roles", "system_roles")
 	values($1, $2, $3, $4, $5)
 	`, r.passwdTable)
-	logger.DebugCtx(ctx).
-		Str("subject", auth.Subject).
-		Str("sql", sql).Msg("Save")
 	_, err = r.db.ExecContext(ctx, sql,
 		auth.Subject,
 		auth.Passwd,
@@ -158,7 +153,9 @@ func (r *authRepo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) (err err
 }
 
 func (r *authRepo) UpdatePassword(ctx context.Context, subject string, password string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdatePassword", nil, logger.TraceKVString("subject", subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.UpdatePassword",
+		slog.String("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -167,9 +164,6 @@ func (r *authRepo) UpdatePassword(ctx context.Context, subject string, password 
 	update  %s set "passwd" = $1
 	where subject = $2
 	`, r.passwdTable)
-	logger.DebugCtx(ctx).
-		Str("subject", subject).
-		Str("sql", sql).Msg("UpdatePassword")
 	_, err = r.db.ExecContext(ctx, sql,
 		password,
 		subject,
@@ -181,7 +175,11 @@ func (r *authRepo) UpdatePassword(ctx context.Context, subject string, password 
 }
 
 func (r *authRepo) UpdateStatus(ctx context.Context, subject string, status ddd.StatusType) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.UpdateStatus", nil, logger.TraceKVString("subject", subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.UpdateStatus",
+		slog.String("subject", subject),
+		slog.String("subject", string(status)),
+	)
 	defer func() {
 		span.End(err)
 	}()
@@ -190,9 +188,6 @@ func (r *authRepo) UpdateStatus(ctx context.Context, subject string, status ddd.
 	update  %s set "status" = $1
 	where subject = $2
 	`, r.passwdTable)
-	logger.DebugCtx(ctx).
-		Str("subject", subject).
-		Str("sql", sql).Msg("UpdateStatus")
 
 	_, err = r.db.ExecContext(ctx, sql,
 		status,

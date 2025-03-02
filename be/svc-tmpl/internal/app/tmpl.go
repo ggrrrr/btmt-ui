@@ -3,11 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
@@ -15,7 +15,7 @@ import (
 
 func (a *Application) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateUpdate) (string, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "SaveTmpl", tmplUpdate)
+	ctx, span := a.tracer.SpanWithData(ctx, "SaveTmpl", tmplUpdate)
 	defer func() {
 		span.End(err)
 	}()
@@ -31,7 +31,6 @@ func (a *Application) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateU
 		return "", app.BadRequestError("validate", err)
 	}
 	if len(render.errors) > 0 {
-		logger.ErrorCtx(ctx, &render.errors)
 		err = fmt.Errorf("validator error(s)")
 		return "", render.errors
 		// , app.BadRequestError("validate", err)
@@ -50,7 +49,7 @@ func (a *Application) SaveTmpl(ctx context.Context, tmplUpdate *tmplpb.TemplateU
 
 func (a *Application) ListTmpl(ctx context.Context, filter app.FilterFactory) ([]*tmplpb.Template, error) {
 	var err error
-	ctx, span := logger.Span(ctx, "ListTmpl", nil)
+	ctx, span := a.tracer.Span(ctx, "ListTmpl")
 	defer func() {
 		span.End(err)
 	}()
@@ -61,8 +60,6 @@ func (a *Application) ListTmpl(ctx context.Context, filter app.FilterFactory) ([
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).Msg("ListTmpl")
-
 	result, err := a.repo.List(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -72,7 +69,7 @@ func (a *Application) ListTmpl(ctx context.Context, filter app.FilterFactory) ([
 
 func (a *Application) GetTmpl(ctx context.Context, id string) (*tmplpb.Template, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetTmpl", nil, logger.TraceKVString("id", id))
+	ctx, span := a.tracer.SpanWithAttributes(ctx, "GetTmpl", slog.String("id", id))
 	defer func() {
 		span.End(err)
 	}()
@@ -93,7 +90,7 @@ func (a *Application) GetTmpl(ctx context.Context, id string) (*tmplpb.Template,
 
 func (a *Application) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) (string, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "saveTmpl", tmpl)
+	ctx, span := a.tracer.SpanWithData(ctx, "saveTmpl", tmpl)
 	defer func() {
 		span.End(err)
 	}()
@@ -113,7 +110,7 @@ func (a *Application) saveTmpl(ctx context.Context, authInfo roles.AuthInfo, tmp
 
 func (a *Application) updateTmpl(ctx context.Context, authInfo roles.AuthInfo, tmpl *tmplpb.Template) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "updateTmpl", tmpl)
+	ctx, span := a.tracer.SpanWithData(ctx, "updateTmpl", tmpl)
 	defer func() {
 		span.End(err)
 	}()

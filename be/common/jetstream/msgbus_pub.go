@@ -3,13 +3,14 @@ package jetstream
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	msgbusv1 "github.com/ggrrrr/btmt-ui/be/common/msgbus/v1"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -73,8 +74,9 @@ func (p *ProtoPublisher[T]) Publish(ctx context.Context, md msgbus.Metadata, msg
 }
 
 func (p *ProtoPublisher[T]) Shutdown() {
-	logger.Info().
-		Str("Subject", p.msgMD.publishSubject()).
-		Msg("Shutdown")
+	log.Log().Info("Shutdown",
+		slog.String("Subject", p.msgMD.publishSubject()),
+	)
+
 	p.publisher.Shutdown()
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 )
 
 var testBucket string = "test-bucket-1"
@@ -39,6 +40,7 @@ func TestList2(t *testing.T) {
 				require.NoError(t, err)
 				s3c.bucketName = testBucket
 				testClient := &Client{
+					otelTracer: tracer.Tracer(""),
 					s3Clients: map[realmKey]s3Client{
 						"localhost": s3c,
 					},

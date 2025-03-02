@@ -3,14 +3,15 @@ package jetstream
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
@@ -25,6 +26,7 @@ type (
 	DataHandlerFunc func(ctx context.Context, subject string, md msgbus.Metadata, data []byte) error
 
 	NatsConsumer struct {
+		tracer     tracer.OTelTracer
 		consumerId uuid.UUID
 		conn       *NatsConnection
 		stream     jetstream.Stream
@@ -63,6 +65,7 @@ func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, g
 	}
 
 	return &NatsConsumer{
+		tracer:     tracer.Tracer(otelScope),
 		consumerId: consumerId,
 		conn:       conn,
 		stream:     stream,
@@ -71,37 +74,39 @@ func NewConsumer(ctx context.Context, conn *NatsConnection, streamName string, g
 }
 
 func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandlerFunc) error {
-	logger.Info().
-		Str("consumer.id", c.consumerId.String()).
-		Msg("ConsumerLoop.started")
-	// TODO use ctx for shutdown
+	log.Log().Info("ConsumerLoop.started",
+		slog.String("consumer.id", c.consumerId.String()),
+	)
 
 	// c.consumer.Qon
 	consLoop, err := c.consumer.Consume(
 		func(msg jetstream.Msg) {
-			var err error
+			var (
+				err      error
+				span     tracer.OTelSpan
+				authInfo roles.AuthInfo
+			)
 
 			intMsg := &jsMsg{
 				msg: msg,
 			}
 
 			ctx := otel.GetTextMapPropagator().Extract(ctx, intMsg)
-			ctx, span := c.consumerSpan(ctx, msg)
+			ctx, span = c.consumerSpan(ctx, msg)
 			defer func() {
-				if err != nil {
-					span.RecordError(err)
-					span.SetStatus(codes.Error, err.Error())
-				}
-				span.End()
+				span.End(err)
 			}()
 
-			authInfo, err := c.conn.verifier.Verify(app.AuthData{
+			authInfo, err = c.conn.verifier.Verify(app.AuthData{
 				// We don`t set Auth Schema in our publisher since this is internal svc only channel
 				AuthScheme: roles.AuthSchemeBearer,
 				AuthToken:  intMsg.Get(authHeaderName),
 			})
 			if err != nil {
-				logger.ErrorCtx(ctx, err).Msg("verifier.Verify")
+				log.Log().ErrorCtx(ctx, err, "verifier.Verify",
+					slog.String("consumer.id", c.consumerId.String()),
+				)
+
 				return
 			}
 			ctx = roles.CtxWithAuthInfo(ctx, authInfo)
@@ -110,18 +115,25 @@ func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandlerFunc) err
 
 			err = msg.Ack()
 			if err != nil {
-				logger.ErrorCtx(ctx, err).Msg("msg.Ack failed")
+				log.Log().ErrorCtx(ctx, err, "msg.Ack failed",
+					slog.String("consumer.id", c.consumerId.String()),
+				)
 			}
 
 			err = handler(ctx, msg.Subject(), md, msg.Data())
 			if err != nil {
 				// TODO now what!?
 				// write to DLQ (Dead Letter Queue)
-				logger.ErrorCtx(ctx, err).Msg("handler")
+				log.Log().ErrorCtx(ctx, err, "handler",
+					slog.String("consumer.id", c.consumerId.String()),
+				)
+
 			}
 		},
 		jetstream.ConsumeErrHandler(func(consumeCtx jetstream.ConsumeContext, err error) {
-			fmt.Printf("some error, %+v %+v \n\n", consumeCtx, err)
+			log.Log().ErrorCtx(ctx, err, "handler.ConsumeErrHandler",
+				slog.String("consumer.id", c.consumerId.String()),
+			)
 		}),
 	)
 	if err != nil {
@@ -133,9 +145,8 @@ func (c *NatsConsumer) Consume(ctx context.Context, handler DataHandlerFunc) err
 
 func (c *NatsConsumer) Shutdown() error {
 	if c.shutdown != nil {
-		logger.Info().
-			Str("consumerId", c.consumerId.String()).
-			Msg("Shutdown")
+		log.Log().Info("Shutdown",
+			slog.String("consumerId", c.consumerId.String()))
 		c.shutdown()
 	}
 

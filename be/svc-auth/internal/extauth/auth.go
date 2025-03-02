@@ -4,9 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"golang.org/x/oauth2"
-
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 type Auth2Profile struct {
@@ -62,7 +61,7 @@ func (a *auth2) CodeExchange(ctx context.Context, req LoginRequest) (*http.Clien
 
 	token, err := conf.Exchange(ctx, req.Code)
 	if err != nil {
-		logger.Error(err).Msg("conf.Exchange")
+		log.Log().Error(err, "conf.Exchange")
 		return nil, err
 	}
 

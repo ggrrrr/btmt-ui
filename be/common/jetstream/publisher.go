@@ -3,20 +3,22 @@ package jetstream
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
 type (
 	NatsPublisher struct {
+		tracer         tracer.OTelTracer
 		conn           *NatsConnection
 		topic          string
 		tokenGenerator token.ServiceTokenGenerator
@@ -24,10 +26,11 @@ type (
 )
 
 func NewPublisher(conn *NatsConnection, topic string, tokenGenerator token.ServiceTokenGenerator) (*NatsPublisher, error) {
-	logger.Info().
-		Str("topic", topic).
-		Msg("NewPublisher")
+	log.Log().Info("NewPublisher",
+		slog.String("topic", topic),
+	)
 	return &NatsPublisher{
+		tracer:         tracer.Tracer(otelScope),
 		conn:           conn,
 		topic:          topic,
 		tokenGenerator: tokenGenerator,
@@ -74,16 +77,16 @@ func (c *NatsPublisher) Shutdown() error {
 }
 
 func (c *NatsPublisher) publish(ctx context.Context, uniqId string, msg *nats.Msg) error {
-	logger.InfoCtx(ctx).Str("subject", msg.Subject).Msg("publish")
+
+	log.Log().Info("publish",
+		slog.String("subject", msg.Subject),
+	)
+
 	var err error
 
 	ctx, span := c.producerSpan(ctx, msg)
 	defer func() {
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-		}
-		span.End()
+		span.End(err)
 	}()
 
 	ack, err := c.conn.js.PublishMsg(ctx, msg, jetstream.WithMsgID(uniqId))

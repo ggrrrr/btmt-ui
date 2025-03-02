@@ -1,16 +1,18 @@
 package rest
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
 func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.List", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.List")
 	defer func() {
 		span.End(err)
 	}()
@@ -18,15 +20,14 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.ListRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("List")
+		log.Log().ErrorCtx(ctx, err, "List")
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	logger.InfoCtx(ctx).Any("filter", req.String()).Msg("List")
 	out, err := s.app.List(ctx, req.ToFilter())
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("List")
+		log.Log().ErrorCtx(ctx, err, "List")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -35,7 +36,7 @@ func (s *server) List(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.Get", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.Get")
 	defer func() {
 		span.End(err)
 	}()
@@ -43,20 +44,19 @@ func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.GetRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("Get")
+		log.Log().ErrorCtx(r.Context(), err, "Get")
 		web.SendError(ctx, w, err)
 		return
 
 	}
 	if req.Id == "" {
-		logger.ErrorCtx(ctx, err).Str("error", "empty id").Msg("Get")
+		log.Log().ErrorCtx(ctx, fmt.Errorf("empty id"), "Get")
 		web.SendJSONErrorBadRequest(ctx, w, "empty id", nil)
 		return
 	}
-	logger.InfoCtx(r.Context()).Any("id", &req.Id).Msg("Get")
 	p, err := s.app.GetById(ctx, req.Id)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Get")
+		log.Log().ErrorCtx(ctx, err, "Get")
 		web.SendJSONSystemError(ctx, w, "system error, please try again later", err, nil)
 		return
 	}
@@ -65,7 +65,7 @@ func (s *server) Get(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.Save", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.Save")
 	defer func() {
 		span.End(err)
 	}()
@@ -73,14 +73,14 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.SaveRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Save")
+		log.Log().ErrorCtx(ctx, err, "Save")
 		web.SendError(ctx, w, err)
 		return
 	}
-	logger.InfoCtx(ctx).Any("person", &req).Msg("Save")
+	log.Log().InfoCtx(ctx, "save", slog.Any("person", &req))
 	err = s.app.Save(r.Context(), req.Data)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Save")
+		log.Log().ErrorCtx(ctx, err, "Save")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -89,7 +89,7 @@ func (s *server) Save(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.Update", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.Update")
 	defer func() {
 		span.End(err)
 	}()
@@ -97,15 +97,15 @@ func (s *server) Update(w http.ResponseWriter, r *http.Request) {
 	var req peoplepb.UpdateRequest
 	err = web.DecodeJsonRequest(r, &req)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Any("person", &req).Msg("Update")
+		log.Log().ErrorCtx(ctx, err, "Update", slog.Any("person", &req))
 		web.SendError(ctx, w, err)
 		return
 	}
 
-	logger.InfoCtx(ctx).Any("person", &req).Msg("Update")
+	log.Log().InfoCtx(ctx, "Update", slog.Any("person", &req))
 	err = s.app.Update(r.Context(), req.Data)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Any("person", &req).Msg("Update")
+		log.Log().ErrorCtx(ctx, err, "Update", slog.Any("person", &req))
 		web.SendError(ctx, w, err)
 		return
 	}

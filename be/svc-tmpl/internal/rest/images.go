@@ -7,11 +7,13 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	appError "github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-tmpl"
 
 /*
 	curl -v -H'Authorization: mock admin' \
@@ -20,7 +22,7 @@ import (
 */
 func (s *server) UploadImage(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.UploadImage", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.UploadImage")
 	defer func() {
 		span.End(err)
 	}()
@@ -31,20 +33,20 @@ func (s *server) UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	tmpFiles, err := web.HandleFileUpload(ctx, r)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("hanlde uploads")
+		log.Log().ErrorCtx(ctx, err, "hanlde uploads")
 		web.SendError(ctx, w, err)
 		return
 	}
 	imageForm, ok := tmpFiles["file"]
 	if !ok {
 		err := appError.BadRequestError("image form[file] empty", nil)
-		logger.ErrorCtx(ctx, err).Send()
+		log.Log().ErrorCtx(ctx, err, "hanlde uploads BadRequestError")
 		web.SendError(ctx, w, err)
 		return
 	}
 	if len(imageForm) == 0 {
 		err := appError.BadRequestError("image form no uploads", nil)
-		logger.ErrorCtx(ctx, err).Send()
+		log.Log().ErrorCtx(ctx, err, "hanlde uploads")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -64,16 +66,12 @@ curl http://localhost:8010/tmpl/images
 */
 func (s *server) GetImage(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.GetFile", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.GetFile")
 	defer func() {
 		span.End(err)
 	}()
 
 	fileId := chi.URLParam(r, "id")
-	logger.DebugCtx(ctx).
-		Str("path", r.URL.Path).
-		Str("fileId", fileId).
-		Msg("rest.GetImage")
 
 	// fileId := chi.URLParam(r, "id")
 	// fileIds := strings.Split(r.URL.Path, "/")
@@ -82,7 +80,7 @@ func (s *server) GetImage(w http.ResponseWriter, r *http.Request) {
 
 	attch, err := s.app.GetImage(ctx, fileId, 0)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("rest.GetImage")
+		log.Log().ErrorCtx(ctx, err, "rest.GetImage")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -97,7 +95,7 @@ func (s *server) GetImage(w http.ResponseWriter, r *http.Request) {
 
 	_, err = attch.WriterTo.WriteTo(w)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("unable to write file")
+		log.Log().ErrorCtx(ctx, err, "unable to write file")
 	}
 }
 
@@ -106,7 +104,7 @@ curl http://localhost:8010/tmpl/image/resized/
 */
 func (s *server) GetResizedImage(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.GetResizedImage", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.GetResizedImage")
 	defer func() {
 		span.End(err)
 	}()
@@ -114,13 +112,10 @@ func (s *server) GetResizedImage(w http.ResponseWriter, r *http.Request) {
 	download := r.URL.Query().Get("download")
 
 	fileId := chi.URLParam(r, "id")
-	logger.DebugCtx(ctx).
-		Str("path", r.URL.Path).
-		Str("fileId", fileId).
-		Msg("rest.GetResizedImage")
 
 	attch, err := s.app.GetResizedImage(ctx, fileId)
 	if err != nil {
+		log.Log().ErrorCtx(ctx, err, "GetResizedImage")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -135,7 +130,7 @@ func (s *server) GetResizedImage(w http.ResponseWriter, r *http.Request) {
 
 	_, err = attch.WriterTo.WriteTo(w)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("unable to write file")
+		log.Log().ErrorCtx(ctx, err, "WriteTo")
 	}
 
 }
@@ -146,7 +141,7 @@ func (s *server) GetResizedImage(w http.ResponseWriter, r *http.Request) {
 */
 func (s *server) ListImages(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.ListImages", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.ListImages")
 	defer func() {
 		span.End(err)
 	}()

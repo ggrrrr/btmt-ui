@@ -1,15 +1,19 @@
 package peoplepbv1
 
 import (
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"log/slog"
+
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/td"
 )
 
 // We need this implemented coz of easy tracing
-var _ (logger.TraceDataExtractor) = (*Person)(nil)
+var _ (td.TraceDataExtractor) = (*Person)(nil)
 
-func (p Person) Extract() logger.TraceData {
-	return logger.TraceData{
-		"person.id": logger.TraceValueString(p.Id),
+func (p *Person) Extract() *td.TraceData {
+	return &td.TraceData{
+		KV: map[string]slog.Value{
+			"person.id": slog.StringValue(p.Id),
+		},
 	}
 }
 

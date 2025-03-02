@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
@@ -50,7 +50,7 @@ func (m *Module) Configure(ctx context.Context, s system.Service) error {
 
 	db, err := postgres.Connect(cfg.DB)
 	if err != nil {
-		logger.Error(err).Msg("cant connect to pg")
+		log.Log().Error(err, "cant connect to pg")
 		return err
 	}
 	s.Waiter().AddCleanup(func() {
@@ -77,7 +77,7 @@ func (m *Module) Configure(ctx context.Context, s system.Service) error {
 
 func (m *Module) Startup(ctx context.Context) (err error) {
 	if m.app == nil {
-		logger.Error(fmt.Errorf("asdasd"))
+		log.Log().Error(fmt.Errorf("app is nil"), "starutup")
 		panic("m.app is nil")
 	}
 	return m.system.MountHandler("/v1/auth", rest.Router(rest.Handler(m.app)))

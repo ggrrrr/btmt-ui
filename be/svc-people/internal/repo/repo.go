@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -13,14 +13,18 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
 	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-people"
+
 type (
 	repo struct {
+		tracer     tracer.OTelTracer
 		collection string
 		db         mgo.Repo
 	}
@@ -35,6 +39,7 @@ var _ (ddd.PeopleRepo) = (*repo)(nil)
 
 func New(collection string, db mgo.Repo) *repo {
 	return &repo{
+		tracer:     tracer.Tracer(otelScope),
 		collection: collection,
 		db:         db,
 	}
@@ -52,12 +57,12 @@ func (r *repo) CreateIndex(ctx context.Context) {
 		Options: nil,
 	}
 	if _, err := c.Indexes().CreateOne(ctx, mod); err != nil {
-		logger.ErrorCtx(ctx, err).Msg("CreateIndex")
+		log.Log().Error(err, "CreateIndex")
 	}
 }
 
 func (r *repo) Save(ctx context.Context, p *peoplepbv1.Person) (err error) {
-	ctx, span := logger.Span(ctx, "repo.Save", p)
+	ctx, span := r.tracer.SpanWithData(ctx, "repo.Save", p)
 	defer func() {
 		span.End(err)
 	}()
@@ -77,7 +82,7 @@ func (r *repo) Save(ctx context.Context, p *peoplepbv1.Person) (err error) {
 }
 
 func (r *repo) Update(ctx context.Context, p *peoplepbv1.Person) (err error) {
-	_, span := logger.Span(ctx, "repo.Update", p)
+	_, span := r.tracer.SpanWithData(ctx, "repo.Update", p)
 	defer func() {
 		span.End(err)
 	}()
@@ -137,22 +142,20 @@ func (r *repo) Update(ctx context.Context, p *peoplepbv1.Person) (err error) {
 	updateReq := bson.M{
 		"$set": setReq,
 	}
-	logger.DebugCtx(ctx).Any("updateReq", updateReq).Msg("UpdateByID")
 	resp, err := r.db.UpdateByID(ctx, r.collection, newPerson.Id, updateReq)
 	if err != nil {
 		return
 	}
 
-	logger.InfoCtx(ctx).
-		Any("id", newPerson.Id).
-		Any("matchedCount", resp.MatchedCount).
-		Msg("update")
+	log.Log().DebugCtx(ctx, "update",
+		slog.Any("id", newPerson.Id),
+		slog.Any("matchedCount", resp.MatchedCount))
 
 	return nil
 }
 
 func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []*peoplepbv1.Person, err error) {
-	_, span := logger.Span(ctx, "repo.List", nil)
+	_, span := r.tracer.Span(ctx, "repo.List")
 	defer func() {
 		span.End(err)
 	}()
@@ -166,7 +169,7 @@ func (r *repo) List(ctx context.Context, filter app.FilterFactory) (result []*pe
 }
 
 func (r *repo) GetById(ctx context.Context, fromId string) (result *peoplepbv1.Person, err error) {
-	_, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.TraceKVString("id", fromId))
+	_, span := r.tracer.SpanWithAttributes(ctx, "repo.GetById", slog.String("id", fromId))
 	defer func() {
 		span.End(err)
 	}()
@@ -176,11 +179,11 @@ func (r *repo) GetById(ctx context.Context, fromId string) (result *peoplepbv1.P
 		return
 	}
 
-	logger.DebugCtx(ctx).
-		Str("fromId", fromId).
-		Str("id.Hex", id.Hex()).
-		Str("id", id.String()).
-		Send()
+	log.Log().DebugCtx(ctx, "GetById",
+		slog.String("fromId", fromId),
+		slog.String("id.Hex", id.Hex()),
+		slog.String("id", id.String()),
+	)
 
 	var out person
 	res := r.db.FindOne(ctx, r.collection, bson.M{"_id": id})
@@ -219,7 +222,6 @@ func (r *repo) list(ctx context.Context, filter any) ([]*peoplepbv1.Person, erro
 		var result *person
 		err := cur.Decode(&result)
 		if err != nil {
-			log.Println(err)
 			return nil, fmt.Errorf("collect.Find decode %w", err)
 		}
 		out = append(out, result.toProto())

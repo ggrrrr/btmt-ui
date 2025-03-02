@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
@@ -14,7 +13,6 @@ import (
 type appCfg struct {
 	System system.Config
 	WEB    web.Config
-	OTEL   logger.Config
 }
 
 func Server() error {

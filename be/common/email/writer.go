@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 type (
@@ -100,7 +100,7 @@ func randomBoundary() string {
 	var buf [30]byte
 	_, err := io.ReadFull(rand.Reader, buf[:])
 	if err != nil {
-		logger.Error(err).Msg("randomBoundary ReadFull(rand.Reader)")
+		log.Log().Error(err, "randomBoundary ReadFull(rand.Reader")
 		panic(err)
 	}
 	return fmt.Sprintf("%x", buf[:])

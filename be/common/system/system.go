@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime"
 
 	"github.com/ggrrrr/btmt-ui/be/common/buildversion"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/common/waiter"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
@@ -19,7 +21,8 @@ type (
 
 	Config struct {
 		AppName string `env:"APP_NAME"`
-		OTEL    logger.Config
+		OTEL    tracer.Config
+		LOG     log.Config
 		JWT     struct {
 			UseMock string `env:"USE_MOCK"`
 			Config  token.Config
@@ -49,13 +52,12 @@ func NewSystem(cfg Config, opts ...SystemOptions) (*System, error) {
 	s := &System{
 		cfg: cfg,
 	}
-	logger.Info().
-		Str("build.version", buildversion.BuildVersion()).
-		Int("max.procs", runtime.GOMAXPROCS(0)).
-		Msg("system.init...")
-
-	if cfg.OTEL.Collector != "" {
-		err := logger.ConfigureOtel(context.Background(), cfg.AppName, cfg.OTEL)
+	log.Log().Info("build.version",
+		slog.String("version", buildversion.BuildVersion()),
+		slog.Int("max.procs", runtime.GOMAXPROCS(0)),
+	)
+	if cfg.OTEL.Client.Target != "" {
+		err := tracer.Configure(context.Background(), cfg.AppName, cfg.OTEL)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +68,9 @@ func NewSystem(cfg Config, opts ...SystemOptions) (*System, error) {
 		return nil, err
 	}
 	s.waiter = waiter.New(waiter.CatchSignals())
-	s.waiter.AddCleanup(logger.Shutdown)
+	s.waiter.AddCleanup(func() {
+		tracer.Shutdown(context.Background())
+	})
 
 	for _, optFn := range opts {
 		err = optFn(s)
@@ -91,7 +95,7 @@ func (s *System) initJWT() error {
 
 	ver, err := token.NewVerifier(s.cfg.JWT.Config.CrtFile)
 	if err != nil {
-		logger.Error(err).Send()
+		log.Log().Error(err, "NewVerifier")
 		return err
 	}
 	s.verifier = ver

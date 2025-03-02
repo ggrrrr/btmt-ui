@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"sync"
@@ -11,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/ggrrrr/btmt-ui/be/common/buildversion"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
@@ -65,10 +66,9 @@ func NewServer(name string, cfg Config, opts ...ServerOptionFn) (*Server, error)
 		}
 	}
 
-	logger.Info().
-		Str("web.server", s.name).
-		Any("cfg", cfg).
-		Send()
+	log.Log().Info("web.server",
+		slog.String("name", s.name),
+		slog.Any("cfg", cfg))
 
 	s.initMux()
 
@@ -81,10 +81,9 @@ func NewServer(name string, cfg Config, opts ...ServerOptionFn) (*Server, error)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	logger.Info().
-		Str("web.server", s.name).
-		Str("ListenAddr", s.cfg.ListenAddr).
-		Msg("Shutdown.")
+	log.Log().Info("web.server.Shutdown",
+		slog.String("name", s.name))
+
 	ctx, cancel := context.WithTimeout(ctx, s.cfg.ShutdownTimeout)
 	defer cancel()
 	if err := s.server.Shutdown(ctx); err != nil {
@@ -99,13 +98,6 @@ func (s *Server) MountHandler(pattern string, router http.Handler) {
 
 func (s *Server) Startup() error {
 	var err error
-	logger.Info().
-		Str("web.server", s.name).
-		Str("ListenAddr", s.cfg.ListenAddr).
-		Msg("startup")
-	defer logger.Info().
-		Str("web.server", s.name).
-		Msg("exit")
 	s.listener, err = net.Listen("tcp", s.cfg.ListenAddr)
 	s.listenReady.Done()
 	if err != nil {

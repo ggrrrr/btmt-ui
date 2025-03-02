@@ -6,10 +6,12 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 )
 
 type StateStore struct {
+	tracer   tracer.OTelTracer
 	natsConn *NatsConnection
 	bucket   string
 	kv       jetstream.KeyValue
@@ -31,6 +33,7 @@ func NewStateStore(ctx context.Context, cfg Config, objectType state.EntityType)
 	}
 
 	setter := &StateStore{
+		tracer:   tracer.Tracer(otelScope),
 		natsConn: conn,
 		bucket:   objectType.String(),
 		kv:       kv,

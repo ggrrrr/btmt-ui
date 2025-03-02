@@ -2,16 +2,17 @@ package app
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
 func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "UserCreate", nil, logger.TraceKVString("email", auth.Subject))
+	ctx, span := a.otelTracer.SpanWithAttributes(ctx, "UserCreate", slog.String("email", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -32,11 +33,11 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 		return err
 	}
 
-	logger.InfoCtx(ctx).Any("email", auth.Subject).Msg("CreateAuth")
+	log.Log().InfoCtx(ctx, "CreateAuth", slog.String("email", auth.Subject))
 	if auth.Passwd != "" {
 		cryptPasswd, err := HashPassword(string(auth.Passwd))
 		if err != nil {
-			logger.ErrorCtx(ctx, err).Msg("UserCreate.HashPassword")
+			log.Log().ErrorCtx(ctx, err, "UserCreate.HashPassword")
 			return app.SystemError("Create password", err)
 		}
 		auth.Passwd = cryptPasswd
@@ -49,7 +50,7 @@ func (a *Application) UserCreate(ctx context.Context, auth ddd.AuthPasswd) (err 
 }
 
 func (ap *Application) Get(ctx context.Context, email string) (result ddd.AuthPasswd, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "Get", nil, logger.TraceKVString("email", email))
+	ctx, span := ap.otelTracer.SpanWithAttributes(ctx, "Get", slog.String("email", email))
 	defer func() {
 		span.End(err)
 	}()
@@ -61,7 +62,7 @@ func (ap *Application) Get(ctx context.Context, email string) (result ddd.AuthPa
 
 	auth, err := ap.findEmail(ctx, email)
 	if err != nil {
-		logger.Error(err).Msg("ap.findEmail")
+		log.Log().ErrorCtx(ctx, err, "findEmail")
 		return ddd.AuthPasswd{}, err
 	}
 
@@ -75,7 +76,7 @@ func (ap *Application) Get(ctx context.Context, email string) (result ddd.AuthPa
 }
 
 func (ap *Application) UserList(ctx context.Context) (result []ddd.AuthPasswd, err error) {
-	ctx, span := logger.Span(ctx, "UserList", nil)
+	ctx, span := ap.otelTracer.SpanWithAttributes(ctx, "UserList")
 	defer func() {
 		span.End(err)
 	}()
@@ -90,15 +91,12 @@ func (ap *Application) UserList(ctx context.Context) (result []ddd.AuthPasswd, e
 		return
 	}
 
-	logger.InfoCtx(ctx).Msg("UserList")
-	logger.DebugCtx(ctx).
-		Any("list", out).
-		Msg("UserList")
+	log.Log().InfoCtx(ctx, "UserList")
 	return out, nil
 }
 
 func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "UserUpdate", nil, logger.TraceKVString("email", auth.Subject))
+	ctx, span := ap.otelTracer.SpanWithAttributes(ctx, "UserUpdate", slog.String("subject", auth.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -111,7 +109,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 
 	list, err := ap.authRepo.GetPasswd(ctx, auth.Subject)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("authRepo.Get")
+		log.Log().ErrorCtx(ctx, err, "authRepo.Get")
 		return
 	}
 	if len(list) == 0 {
@@ -125,7 +123,7 @@ func (ap *Application) UserUpdate(ctx context.Context, auth ddd.AuthPasswd) (err
 }
 
 func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, newPasswd string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "UserChangePasswd", nil, logger.TraceKVString("email", email))
+	ctx, span := a.otelTracer.SpanWithAttributes(ctx, "UserChangePasswd", slog.String("email", email))
 	defer func() {
 		span.End(err)
 	}()
@@ -158,7 +156,7 @@ func (a *Application) UserChangePasswd(ctx context.Context, email, oldPasswd, ne
 			return app.SystemError("HashPassword", err)
 		}
 	}
-	logger.InfoCtx(ctx).Any("email", email).Msg("UpdatePasswd")
+	log.Log().InfoCtx(ctx, "UpdatePasswd")
 	err = a.authRepo.UpdatePassword(ctx, email, cryptPasswd)
 	if err != nil {
 		return

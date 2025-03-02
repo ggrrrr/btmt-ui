@@ -8,7 +8,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	"github.com/ggrrrr/btmt-ui/be/common/email"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
 	tmplpbv1 "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
@@ -86,7 +86,7 @@ func (a *Application) SendEmail(ctx context.Context, emailMsg *emailpbv1.EmailMe
 	defer func() {
 		err = smtpInst.Close()
 		if err != nil {
-			logger.ErrorCtx(ctx, err).Msg("SendEmail.smtp.Close")
+			log.Log().ErrorCtx(ctx, err, "SendEmail.smtp.Close")
 		}
 	}()
 

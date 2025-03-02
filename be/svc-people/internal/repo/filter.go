@@ -3,10 +3,10 @@ package repo
 import (
 	"fmt"
 
-	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/ggrrrr/btmt-ui/be/common/app"
 )
 
 type (
@@ -76,7 +76,6 @@ func (f *filter) Create() any {
 	if len(f.texts) > 0 {
 		filter = append(filter, f.allTexts())
 	}
-	logger.Debug().Any("filters", filter).Msg("Create")
 	if len(filter) > 0 {
 		filter1 := bson.M{
 			"$and": filter,

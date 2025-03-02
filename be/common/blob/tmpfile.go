@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	// "github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
@@ -18,16 +18,14 @@ type TempFile struct {
 func (f TempFile) Delete(ctx context.Context) {
 	err := os.Remove(f.TempFileName)
 	if err != nil {
-		logger.WarnCtx(ctx).
-			Err(err).
-			Str("temp.file", f.TempFileName).
-			Msg("Delete")
+		log.Log().WarnCtx(ctx, err, "Delete",
+			log.WithString("temp.file", f.TempFileName),
+		)
+
 		return
 	}
 
-	if logger.IsTrace() {
-		logger.DebugCtx(ctx).
-			Str("temp.file", f.TempFileName).
-			Msg("Deleted")
+	if log.Log().IsTrace() {
+		log.Log().DebugCtx(ctx, "Deleted", log.WithString("temp.file", f.TempFileName))
 	}
 }

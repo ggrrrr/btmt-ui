@@ -1,11 +1,11 @@
 package rest
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
@@ -17,11 +17,10 @@ type RenderRequest struct {
 
 func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.SaveTmpl", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.SaveTmpl")
 	defer func() {
 		span.End(err)
 	}()
-	logger.InfoCtx(r.Context()).Msg("rest.SaveTmpl")
 
 	var template *tmplpb.TemplateUpdate
 	err = web.DecodeJsonRequest(r, &template)
@@ -47,8 +46,7 @@ func (s *server) SaveTmpl(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) ListTmpl(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.ListTmpl", nil)
-	logger.InfoCtx(ctx).Msg("rest.ListTmpl")
+	ctx, span := s.tracer.Span(r.Context(), "rest.ListTmpl")
 	defer func() {
 		span.End(err)
 	}()
@@ -71,11 +69,10 @@ func (s *server) ListTmpl(w http.ResponseWriter, r *http.Request) {
 func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
 	tmplId := chi.URLParam(r, "id")
 	var err error
-	ctx, span := logger.SpanWithAttributes(r.Context(), "rest.GetTmpl", nil, logger.TraceKVString("id", tmplId))
+	ctx, span := s.tracer.SpanWithAttributes(r.Context(), "rest.GetTmpl", slog.String("id", tmplId))
 	defer func() {
 		span.End(err)
 	}()
-	logger.InfoCtx(r.Context()).Msg("rest.GetTmpl")
 
 	tmpl, err := s.app.GetTmpl(ctx, tmplId)
 	if err != nil {
@@ -88,7 +85,7 @@ func (s *server) GetTmpl(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) Render(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "Render", nil)
+	ctx, span := s.tracer.Span(r.Context(), "Render")
 	defer func() {
 		span.End(err)
 	}()

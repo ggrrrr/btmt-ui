@@ -5,12 +5,16 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/smtp"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.common.email"
 
 const (
 	AuthTypePlain AuthType = "plain"
@@ -42,6 +46,7 @@ type (
 
 	// Implements SenderCloser
 	Sender struct {
+		otelTracer tracer.OTelTracer
 		cfg        Config
 		tcpConn    net.Conn
 		smtpClient extSmtpClient
@@ -63,7 +68,12 @@ var _ (EmailSender) = (*Sender)(nil)
 
 func (cfg *Config) Connect(ctx context.Context) (EmailSender, error) {
 	var err error
-	_, span := logger.SpanWithAttributes(ctx, "email.NewSender", nil, logger.TraceKVString("smtp.host.addr", cfg.SMTPAddr))
+	otelTracer := tracer.Tracer(otelScope)
+
+	_, span := otelTracer.SpanWithAttributes(ctx, "email.NewSender",
+		slog.String("smtp.host.addr", cfg.SMTPAddr),
+	)
+
 	defer func() {
 		span.End(err)
 	}()
@@ -80,7 +90,11 @@ func (cfg *Config) Connect(ctx context.Context) (EmailSender, error) {
 
 	tcpConn, err := net.DialTimeout("tcp", cfg.SMTPAddr, cfg.Timeout)
 	if err != nil {
-		logger.Error(err).Int("timeoutSeconds", int(cfg.Timeout.Seconds())).Str("smtp_addr", cfg.SMTPAddr).Msg("net.Dial")
+		log.Log().ErrorCtx(ctx, err, "net.Dial",
+			log.WithString("smtp.addr", cfg.SMTPAddr),
+			log.WithInt("smtp.timeout.sec", int(cfg.Timeout.Seconds())),
+		)
+
 		return nil, &SmtpConnError{
 			host: cfg.SMTPHost,
 			err:  err,
@@ -89,7 +103,11 @@ func (cfg *Config) Connect(ctx context.Context) (EmailSender, error) {
 	}
 	sender.tcpConn = tcpConn
 
-	logger.Info().Str("smtp_addr", sender.cfg.SMTPAddr).Int("timeoutSeconds", int(sender.cfg.Timeout.Seconds())).Msg("connected")
+	log.Log().InfoCtx(ctx, "net.Dial",
+		log.WithString("smtp.addr", cfg.SMTPAddr),
+		log.WithInt("smtp.timeout.sec", int(cfg.Timeout.Seconds())),
+	)
+
 	smtpClient, err := smtp.NewClient(sender.tcpConn, sender.cfg.SMTPHost)
 	if err != nil {
 		tcpConn.Close()
@@ -104,7 +122,6 @@ func (cfg *Config) Connect(ctx context.Context) (EmailSender, error) {
 
 	sender.smtpClient = smtpClient
 
-	logger.Info().Str("smtpClient", "smtpClient").Msg("smtpClient")
 	err = sender.smtpAuth()
 	if err != nil {
 		e := smtpClient.Quit()
@@ -113,7 +130,9 @@ func (cfg *Config) Connect(ctx context.Context) (EmailSender, error) {
 		sender.smtpClient = nil
 
 		if e != nil {
-			logger.Warn().Err(e).Msg("smtpClient.Quit")
+			log.Log().WarnCtx(ctx, err, "net.Connect",
+				log.WithString("smtp.addr", cfg.SMTPAddr),
+			)
 		}
 		return nil, err
 	}
@@ -129,10 +148,11 @@ func (a *Sender) Send(ctx context.Context, email *Msg) error {
 	}
 
 	var err error
-	_, span := logger.SpanWithAttributes(ctx, "email.Send", nil,
-		logger.TraceKVString("email.from", email.from.addr),
-		logger.TraceKVString("email.to", email.to.AddressList()),
+	_, span := a.otelTracer.SpanWithAttributes(ctx, "email.Send",
+		slog.String("email.from", email.from.addr),
+		slog.String("email.to", email.to.AddressList()),
 	)
+
 	defer func() {
 		span.End(err)
 	}()
@@ -159,7 +179,10 @@ func (a *Sender) Send(ctx context.Context, email *Msg) error {
 		return fmt.Errorf("email.writeTo[%s]: %w", email.to[0].addr, err)
 	}
 
-	logger.Info().Str("to", email.to[0].addr).Msg("Send")
+	log.Log().InfoCtx(ctx, "Send",
+		log.WithString("to", email.to[0].addr),
+	)
+
 	return nil
 }
 
@@ -170,14 +193,14 @@ func (conn *Sender) Close() error {
 		conn.smtpClient = nil
 	}
 	if err != nil {
-		logger.Error(err).Msg("Close")
+		log.Log().Error(err, "Close")
 	}
 	if conn.tcpConn != nil {
 		err = conn.tcpConn.Close()
 		conn.tcpConn = nil
 	}
 	if err != nil {
-		logger.Error(err).Msg("Close")
+		log.Log().Error(err, "Close")
 	}
 	return nil
 }
@@ -185,7 +208,8 @@ func (conn *Sender) Close() error {
 func (sender *Sender) smtpAuth() error {
 	var err error
 
-	logger.Debug().Msg("smtpAuth.start")
+	log.Log().Debug("sender.smtpAuth")
+
 	ok, tlsInfo := sender.smtpClient.Extension("STARTTLS")
 	if ok {
 		err = sender.smtpClient.StartTLS(&tls.Config{ServerName: sender.cfg.SMTPHost})
@@ -197,26 +221,31 @@ func (sender *Sender) smtpAuth() error {
 				msg:  "STARTTLS",
 			}
 		}
-		logger.Debug().Str("tls.info", tlsInfo).Msg("client.StartTLS")
+
+		log.Log().Debug("sender.smtpAuth", log.WithAny("tls.info", tlsInfo))
+
 	} else {
-		logger.Debug().
-			Str("tls.info", tlsInfo).
-			Bool("STARTTLS", ok).
-			Msg("client.StartTLS")
+		log.Log().Debug("sender.client.StartTLS",
+			log.WithAny("tls.info", tlsInfo),
+			log.WithBool("tls.info.STARTTLS", ok),
+		)
 	}
 
 	auth := smtp.PlainAuth("", sender.cfg.Username, sender.cfg.Password, sender.cfg.SMTPHost)
 	err = sender.smtpClient.Auth(auth)
 	if err != nil {
-		logger.Error(err).Str("username", sender.cfg.Username).Msg("PlainAuth")
+
+		log.Log().Debug("sender.client.PlainAuth",
+			log.WithAny("username", sender.cfg.Username),
+		)
 		return &SmtpAuthError{
 			host: sender.cfg.SMTPHost,
 			err:  err,
 			msg:  "Auth",
 		}
 	}
-	logger.Debug().
-		Msg("Auth.ok.")
+
+	log.Log().Debug("Auth.ok.")
 
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	msgbusv1 "github.com/ggrrrr/btmt-ui/be/common/msgbus/v1"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -26,10 +26,10 @@ func Test(t *testing.T) {
 
 	mockTokenGenerotar := token.NewTokenGenerator("test-publisher", token.NewSignerMock())
 
-	err = logger.ConfigureOtel(ctx, "testapp", logger.DevConfig)
+	err = tracer.Configure(ctx, "testapp", tracer.Config{})
 	require.NoError(t, err)
 	defer func() {
-		logger.Shutdown()
+		tracer.Shutdown(ctx)
 		fmt.Println("logger.Shutdown ;)")
 	}()
 

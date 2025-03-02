@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
@@ -46,7 +45,6 @@ var _ (ddd.AuthPasswdRepo) = (*repo)(nil)
 var _ (ddd.AuthHistoryRepo) = (*repo)(nil)
 
 func New() (*repo, error) {
-	logger.Warn().Msg("InMemory auth repo")
 	return &repo{
 		mx: &sync.Mutex{},
 		db: map[string]*ddd.AuthPasswd{},
@@ -81,7 +79,6 @@ func (r *repo) SavePasswd(ctx context.Context, auth ddd.AuthPasswd) error {
 	defer r.mx.Unlock()
 
 	r.db[auth.Subject] = &auth
-	logger.Warn().Str("subject", auth.Subject).Msg("Save")
 	return nil
 }
 
@@ -96,7 +93,6 @@ func (r *repo) Update(ctx context.Context, auth ddd.AuthPasswd) error {
 	old.SystemRoles = auth.SystemRoles
 
 	// r.db[auth.Email] = old
-	logger.Warn().Str("subject", auth.Subject).Msg("Save")
 	return nil
 }
 

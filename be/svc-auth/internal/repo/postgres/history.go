@@ -2,16 +2,19 @@ package postgres
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/google/uuid"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
 func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.SaveHistory", nil, logger.TraceKVString("subject", info.Subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.SaveHistory",
+		slog.String("subject", info.Subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -20,10 +23,10 @@ func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method 
 	insert into %s ("id", "subject", "method", "device" )
 	values($1, $2, $3, $4)
 	`, r.historyTable)
-	logger.DebugCtx(ctx).
-		Str("email", info.Subject).
-		Str("sql", sql).
-		Msg("SaveHistory")
+	log.Log().DebugCtx(ctx, "SaveHistory",
+		slog.String("email", info.Subject),
+		slog.String("sql", sql),
+	)
 
 	_, err = r.db.ExecContext(ctx, sql,
 		info.ID,
@@ -37,7 +40,9 @@ func (r *authRepo) SaveHistory(ctx context.Context, info roles.AuthInfo, method 
 }
 
 func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory []ddd.AuthHistory, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.ListHistory", nil, logger.TraceKVString("subject", subject))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.ListHistory",
+		slog.String("subject", subject))
 	defer func() {
 		span.End(err)
 	}()
@@ -46,9 +51,8 @@ func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory
 	select "id", "subject", "method", "device", "created_at" from  %s 
 	where "subject" = $1
 	`, r.historyTable)
-	logger.DebugCtx(ctx).
-		Str("subject", subject).
-		Str("sql", sql).Msg("ListHistory")
+	log.Log().DebugCtx(ctx, "ListHistory",
+		slog.String("subject", subject))
 
 	rows, err := r.db.QueryContext(ctx, sql, subject)
 	if err != nil {
@@ -77,7 +81,9 @@ func (r *authRepo) ListHistory(ctx context.Context, subject string) (authHistory
 }
 func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHistory, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetHistory", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.GetHistory",
+		slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -86,9 +92,9 @@ func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHisto
 	select "id", "subject", "method", "device", "created_at" from  %s 
 	where "id" = $1
 	`, r.historyTable)
-	logger.DebugCtx(ctx).
-		Str("id", id.String()).
-		Str("sql", sql).Msg("ListHistory")
+	log.Log().DebugCtx(ctx, "ListHistory",
+		slog.String("id", id.String()),
+		slog.String("sql", sql))
 
 	rows, err := r.db.QueryContext(ctx, sql, id)
 	if err != nil {
@@ -116,7 +122,9 @@ func (r *authRepo) GetHistory(ctx context.Context, id uuid.UUID) (*ddd.AuthHisto
 }
 
 func (r *authRepo) DeleteHistory(ctx context.Context, id string) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.DeleteHistory", nil, logger.TraceKVString("id", id))
+	ctx, span := r.otelTracer.SpanWithAttributes(
+		ctx, "repo.DeleteHistory",
+		slog.String("id", id))
 	defer func() {
 		span.End(err)
 	}()
@@ -124,10 +132,6 @@ func (r *authRepo) DeleteHistory(ctx context.Context, id string) (err error) {
 	delete from %s 
 	where id = $1
 	`, r.historyTable)
-	logger.DebugCtx(ctx).
-		Str("id", id).
-		Str("sql", sql).
-		Msg("DeleteHistory")
 
 	_, err = r.db.ExecContext(ctx, sql, id)
 

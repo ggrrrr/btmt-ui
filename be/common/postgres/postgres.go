@@ -3,11 +3,12 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	"github.com/XSAM/otelsql"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 type (
@@ -36,26 +37,24 @@ func Connect(cfg Config) (*sql.DB, error) {
 
 	// db, err := sql.Open("postgres", psqlConn)
 	if err != nil {
-		logger.Error(err).Msg("Connect")
+		log.Log().Error(err, "Connect")
 		return nil, err
 	}
 	err = db.Ping()
 	if err != nil {
-		logger.Error(err).
-			Str("host", cfg.Host).
-			Str("database", cfg.Database).
-			Msg("Ping")
+		log.Log().Error(err, "Ping",
+			slog.String("host", cfg.Host),
+			slog.String("database", cfg.Database))
 		return nil, err
 	}
 	if cfg.Prefix == "" {
 		cfg.Prefix = "dev"
 	}
-	logger.Info().
-		Str("host", cfg.Host).
-		Int("port", cfg.Port).
-		Str("User", cfg.Username).
-		Str("Database", cfg.Database).
-		Msg("Connected")
+	log.Log().Error(err, "Connected",
+		slog.String("host", cfg.Host),
+		slog.Int("port", cfg.Port),
+		slog.String("User", cfg.Username),
+		slog.String("Database", cfg.Database))
 
 	return db, nil
 }

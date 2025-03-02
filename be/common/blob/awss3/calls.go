@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,20 +14,18 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 // result is slice of aws keys
 func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.list", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := c.otelTracer.SpanWithAttributes(ctx, "awss3.list", slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
 
-	logger.DebugCtx(ctx).
-		Str("Key", id.pathId()).
-		Msg("awss3.list")
+	log.Log().DebugCtx(ctx, "awss3.lit", log.WithString("key", id.pathId()))
 
 	result, err := c.s3Client.ListObjects(ctx, &s3.ListObjectsInput{
 		Bucket: aws.String(c.bucketName),
@@ -49,23 +48,12 @@ func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 			createdAt: *v.LastModified,
 		}
 		switch partsLen {
-		case 0:
-			logger.ErrorCtx(ctx, fmt.Errorf("aws key split.len 0")).
-				Str("aws.Key", newKey).
-				Str("id", id.String()).
-				Msg("awss3.key ignored")
-			continue
-		case 1:
-			logger.ErrorCtx(ctx, fmt.Errorf("aws key split.len 1")).
-				Str("aws.Key", newKey).
-				Str("id", id.String()).
-				Msg("awss3.key ignored")
-			continue
-		case 2:
-			logger.ErrorCtx(ctx, fmt.Errorf("aws key split.len 2")).
-				Str("aws.Key", newKey).
-				Str("id", id.String()).
-				Msg("awss3.key ignored")
+		case 0, 1, 2:
+			log.Log().ErrorCtx(ctx, fmt.Errorf("aws key len"), "awss3.lit ignored",
+				log.WithString("key", newKey),
+				log.WithInt("len", partsLen),
+				log.WithString("id", id.String()),
+			)
 			continue
 		default:
 			item.path = strings.Join(idParts[:partsLen-2], "/")
@@ -85,7 +73,7 @@ func list(ctx context.Context, c s3Client, id awsId) ([]awsId, error) {
 
 func head(ctx context.Context, c s3Client, id awsId) (blob.BlobMD, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.head", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := c.otelTracer.SpanWithAttributes(ctx, "awss3.head", slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -94,9 +82,9 @@ func head(ctx context.Context, c s3Client, id awsId) (blob.BlobMD, error) {
 		err = fmt.Errorf("awss3.head: ver is empty")
 		return blob.BlobMD{}, err
 	}
-	logger.DebugCtx(ctx).
-		Str("Key", id.keyVer()).
-		Msg("awss3.head")
+	log.Log().DebugCtx(ctx, "awss3.head",
+		log.WithString("id", id.String()),
+	)
 
 	result, err := c.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(c.bucketName),
@@ -112,7 +100,7 @@ func head(ctx context.Context, c s3Client, id awsId) (blob.BlobMD, error) {
 
 func get(ctx context.Context, c s3Client, id awsId) (blob.BlobReader, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.get", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := c.otelTracer.SpanWithAttributes(ctx, "awss3.get", slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -121,9 +109,9 @@ func get(ctx context.Context, c s3Client, id awsId) (blob.BlobReader, error) {
 		err = fmt.Errorf("awss3.get: ver is empty")
 		return blob.BlobReader{}, err
 	}
-	logger.DebugCtx(ctx).
-		Str("Key", id.keyVer()).
-		Msg("awss3.get")
+	log.Log().DebugCtx(ctx, "awss3.get",
+		log.WithString("id", id.String()),
+	)
 
 	result, err := c.s3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.bucketName),
@@ -162,7 +150,7 @@ func get(ctx context.Context, c s3Client, id awsId) (blob.BlobReader, error) {
 
 func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobMD, reader io.ReadSeeker) (awsId, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.put", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := c.otelTracer.SpanWithAttributes(ctx, "awss3.put", slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -172,9 +160,9 @@ func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobMD, reader
 		return awsId{}, err
 	}
 
-	logger.DebugCtx(ctx).
-		Str("Key", id.keyVer()).
-		Msg("awss3.put")
+	log.Log().DebugCtx(ctx, "awss3.put",
+		log.WithString("id", id.String()),
+	)
 
 	object := fromBlobInfoToAwsObject(c, id, metadata)
 	object.Body = reader
@@ -189,14 +177,14 @@ func put(ctx context.Context, c s3Client, id awsId, metadata blob.BlobMD, reader
 
 func delete(ctx context.Context, c s3Client, id awsId) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.delete", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := c.otelTracer.SpanWithAttributes(ctx, "awss3.delete", slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
 
-	logger.DebugCtx(ctx).
-		Str("key", id.String()).
-		Msg("awss3.delete")
+	log.Log().DebugCtx(ctx, "awss3.delete",
+		log.WithString("id", id.String()),
+	)
 
 	_, err = c.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &c.bucketName,
@@ -207,14 +195,14 @@ func delete(ctx context.Context, c s3Client, id awsId) error {
 
 func deleteAll(ctx context.Context, c s3Client, id awsId) error {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.deleteAll", nil, logger.TraceKVString("id", id.String()))
+	ctx, span := c.otelTracer.SpanWithAttributes(ctx, "awss3.deleteAll", slog.String("id", id.String()))
 	defer func() {
 		span.End(err)
 	}()
 
-	logger.InfoCtx(ctx).
-		Str("key", id.pathId()).
-		Msg("awss3.deleteAll")
+	log.Log().DebugCtx(ctx, "awss3.deleteAll",
+		log.WithString("id", id.String()),
+	)
 
 	result, err := list(ctx, c, id)
 	if err != nil {
@@ -225,7 +213,9 @@ func deleteAll(ctx context.Context, c s3Client, id awsId) error {
 		err = delete(ctx, c, v)
 		if err != nil {
 			lastErr = err
-			logger.WarnCtx(ctx).Err(err).Str("aws.key[]", v.String()).Msg("awss3.deleteAll")
+			log.Log().WarnCtx(ctx, err, "awss3.deleteAll",
+				log.WithString("id.key", v.String()),
+			)
 		}
 
 	}

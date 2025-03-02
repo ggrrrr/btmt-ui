@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -16,7 +16,7 @@ type (
 var _ (Signer) = (*mocker)(nil)
 
 func NewSignerMock() *mocker {
-	logger.Warn().Msg("NewSignerMock")
+	log.Log().Warn(nil, "NewSignerMock")
 	return &mocker{}
 }
 

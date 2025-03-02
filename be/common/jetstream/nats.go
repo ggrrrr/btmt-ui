@@ -4,8 +4,11 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.jetstream"
 
 const authHeaderName string = "authorization"
 
@@ -17,6 +20,7 @@ type (
 	}
 
 	NatsConnection struct {
+		tracer   tracer.OTelTracer
 		conn     *nats.Conn
 		js       jetstream.JetStream
 		verifier token.Verifier
@@ -40,8 +44,9 @@ func Connect(cfg Config, opts ...ConnOptionFunc) (*NatsConnection, error) {
 	}
 
 	n := &NatsConnection{
-		conn: cn,
-		js:   js,
+		tracer: tracer.Tracer(otelScope),
+		conn:   cn,
+		js:     js,
 	}
 
 	for _, f := range opts {

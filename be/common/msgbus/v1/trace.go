@@ -1,20 +1,24 @@
 package msgbusv1
 
 import (
+	"log/slog"
+
 	"github.com/google/uuid"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/td"
 )
 
-var _ (logger.TraceDataExtractor) = (*Message)(nil)
+var _ (td.TraceDataExtractor) = (*Message)(nil)
 
-func (x *Message) Extract() logger.TraceData {
+func (x *Message) Extract() *td.TraceData {
 	id, _ := uuid.ParseBytes(x.Id)
-	return logger.TraceData{
-		"message.id":               logger.TraceValueString(id.String()),
-		"message.domain":           logger.TraceValueString(x.Domain),
-		"message.name":             logger.TraceValueString(x.Name),
-		"message.type":             logger.TraceValueString(x.MessageType.String()),
-		"message.payload.type.url": logger.TraceValueString(x.Payload.TypeUrl),
+	return &td.TraceData{
+		KV: map[string]slog.Value{
+			"message.id":               slog.StringValue(id.String()),
+			"message.domain":           slog.StringValue(x.Domain),
+			"message.name":             slog.StringValue(x.Name),
+			"message.type":             slog.StringValue(x.MessageType.String()),
+			"message.payload.type.url": slog.StringValue(x.Payload.TypeUrl),
+		},
 	}
 }

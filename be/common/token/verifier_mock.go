@@ -1,10 +1,11 @@
 package token
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -16,14 +17,14 @@ type (
 var _ (Verifier) = (*verifier_mock)(nil)
 
 func NewVerifierMock() *verifier_mock {
-	logger.Warn().Msg("NewVerifierMock")
+	log.Log().Warn(nil, "NewVerifierMock")
 	return &verifier_mock{}
 }
 
 func (*verifier_mock) Verify(auth app.AuthData) (roles.AuthInfo, error) {
-	logger.Warn().Any("token", auth).Msg("NewVerifierMock.Verify")
+	log.Log().Warn(nil, "NewVerifierMock", slog.Any("", auth))
 	if auth.AuthScheme != roles.AuthSchemeBearer {
-		logger.Error(ErrJwtBadScheme).Any("token", auth).Str("AuthScheme", auth.AuthScheme).Msg("NewVerifierMock.Verify")
+		log.Log().Error(ErrJwtBadScheme, "NewVerifierMock", slog.Any("", auth))
 		return roles.AuthInfo{}, ErrJwtBadScheme
 	}
 

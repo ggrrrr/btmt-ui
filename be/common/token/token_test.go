@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/help"
 )
@@ -41,7 +40,6 @@ func TestSignTTL(t *testing.T) {
 			AuthScheme: "",
 			AuthToken:  jwt,
 		})
-	logger.Info().Any("err", err).Msg("v")
 	assert.Error(t, err)
 	assert.True(t, !expiresAt.IsZero())
 }
@@ -90,7 +88,6 @@ func TestSignVerify(t *testing.T) {
 		},
 	)
 	assert.NoError(t, err)
-	logger.Info().Any("c", authInfo).Msg("v")
 	assert.Equal(t, expClaims, authInfo)
 	assert.True(t, !expiresAt.IsZero())
 }

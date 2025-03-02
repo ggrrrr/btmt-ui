@@ -6,12 +6,15 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-tmpl"
 
 const (
 	tmplBlobFolder string = "templates/images"
@@ -29,6 +32,7 @@ type (
 	}
 
 	Application struct {
+		tracer       tracer.OTelTracer
 		appPolices   roles.AppPolices
 		blobStore    blob.Store
 		imagesFolder blob.BlobId
@@ -59,6 +63,7 @@ func New(opts ...OptionsFunc) (*Application, error) {
 	}
 
 	a := &Application{
+		tracer:       tracer.Tracer(otelScope),
 		imagesFolder: imagesFolder,
 	}
 	for _, optFunc := range opts {
@@ -68,7 +73,7 @@ func New(opts ...OptionsFunc) (*Application, error) {
 		}
 	}
 	if a.appPolices == nil {
-		logger.Warn().Msg("use mock AppPolices")
+		log.Log().Warn(nil, "use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
 	if a.blobStore == nil {

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/ggrrrr/btmt-ui/be/common/config"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/system"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	auth "github.com/ggrrrr/btmt-ui/be/svc-auth"
@@ -65,10 +66,10 @@ func (m *monolith) configure() error {
 	for i := range m.modules {
 		ctx := m.Waiter().Context()
 		if err := m.modules[i].Configure(ctx, m.System); err != nil {
-			logger.Error(err).Str("module", m.modules[i].Name()).Msg("failed")
+			log.Log().Error(err, "fail", slog.String("module", m.modules[i].Name()))
 			return err
 		}
-		logger.Info().Str("module", m.modules[i].Name()).Msg("configure")
+		log.Log().Info("configure", slog.String("module", m.modules[i].Name()))
 	}
 
 	return nil
@@ -78,10 +79,10 @@ func (m *monolith) startup() error {
 	for i := range m.modules {
 		ctx := m.Waiter().Context()
 		if err := m.modules[i].Startup(ctx); err != nil {
-			logger.Error(err).Str("module", m.modules[i].Name()).Msg("failed")
+			log.Log().Error(err, "fail", slog.String("module", m.modules[i].Name()))
 			return err
 		}
-		logger.Info().Str("module", m.modules[i].Name()).Msg("startup")
+		log.Log().Info("startup", slog.String("module", m.modules[i].Name()))
 	}
 
 	return nil

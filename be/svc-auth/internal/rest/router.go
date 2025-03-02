@@ -5,8 +5,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/app"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-auth"
 
 type (
 	AppHandler interface {
@@ -16,13 +19,15 @@ type (
 		UserList(w http.ResponseWriter, r *http.Request)
 	}
 	server struct {
-		app app.App
+		tracer tracer.OTelTracer
+		app    app.App
 	}
 )
 
 func Handler(a app.App) *server {
 	return &server{
-		app: a,
+		tracer: tracer.Tracer(otelScope),
+		app:    a,
 	}
 }
 

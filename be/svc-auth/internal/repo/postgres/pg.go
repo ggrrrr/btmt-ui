@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
 
@@ -30,10 +30,12 @@ const createHistoryTable string = `CREATE TABLE IF NOT EXISTS %s (
 	"created_at" TIMESTAMP DEFAULT NOW(),
 	UNIQUE(id)
 )`
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-auth"
 
 type (
 	tRoles   map[string][]string
 	authRepo struct {
+		otelTracer   tracer.OTelTracer
 		passwdTable  string
 		historyTable string
 		db           *sql.DB
@@ -49,6 +51,7 @@ func (r *authRepo) table(sql string, tableName string) string {
 
 func Init(db *sql.DB) (*authRepo, error) {
 	r := &authRepo{
+		otelTracer:   tracer.Tracer(otelScope),
 		passwdTable:  "auth_passwd",
 		historyTable: "auth_history",
 		db:           db,
@@ -65,7 +68,6 @@ func Init(db *sql.DB) (*authRepo, error) {
 }
 
 func create(db *sql.DB, sql string) error {
-	logger.Info().Str("sql", sql).Msg("create table")
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

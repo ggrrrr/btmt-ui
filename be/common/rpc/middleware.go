@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"google.golang.org/grpc"
@@ -11,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -31,16 +32,21 @@ func (s *Server) unaryInterceptor(
 	peerInfo, _ = peer.FromContext(ctx)
 
 	if s.verifier == nil {
-		logger.WarnCtx(ctx).
-			Str("rpc.server", s.name).
-			Msg("verifier is nil")
+		log.Log().WarnCtx(ctx, err, "verifier is nil",
+			slog.String("rpc.server", s.name))
+
 		return handler(ctx, req)
 	}
 
 	startTs := time.Now()
-	infoLog := logger.Info().Str("rpc.server", s.name)
+	slogAttr := []slog.Attr{
+		slog.String("rpc.server", s.name),
+	}
 	defer func() {
-		infoLog.TimeDiff("ts", time.Now(), startTs).Msg("unaryInterceptor")
+		slogAttr = append(slogAttr,
+			slog.Duration("ts", time.Now().Sub(startTs)),
+		)
+		log.Log().Info("unaryInterceptor", slogAttr...)
 	}()
 
 	if md, ok = metadata.FromIncomingContext(ctx); ok {
@@ -49,20 +55,24 @@ func (s *Server) unaryInterceptor(
 		if !userRequest.AuthData.IsZero() {
 			authInfo, err = s.verifier.Verify(userRequest.AuthData)
 			if err != nil {
-				infoLog.
-					Any("request", userRequest).
-					Err(err)
+				slogAttr = append(slogAttr,
+					slog.Any("request", userRequest),
+					slog.Any("error", err),
+				)
 				return req, status.Error(codes.Unauthenticated, err.Error())
 			}
-			infoLog.Str("subject", authInfo.Subject)
+			slogAttr = append(slogAttr,
+				slog.String("subject", authInfo.Subject),
+			)
 		}
 	}
 
-	infoLog.
-		Any("peerInfo", peerInfo).
-		Any("device", userRequest.Device).
-		Str("AuthScheme", userRequest.AuthData.AuthScheme).
-		Str("FullMethod", userRequest.FullMethod)
+	slogAttr = append(slogAttr,
+		slog.Any("peerInfo", peerInfo),
+		slog.Any("device", userRequest.Device),
+		slog.String("AuthScheme", userRequest.AuthData.AuthScheme),
+		slog.String("FullMethod", userRequest.FullMethod),
+	)
 
 	authInfo.Device = userRequest.Device
 	ctx = roles.CtxWithAuthInfo(ctx, authInfo)

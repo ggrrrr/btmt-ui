@@ -1,29 +1,36 @@
 package tmplpbv1
 
-import "github.com/ggrrrr/btmt-ui/be/common/logger"
+import (
+	"log/slog"
 
-var _ (logger.TraceDataExtractor) = (*Template)(nil)
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/td"
+)
 
-func (t *Template) Extract() logger.TraceData {
-	out := logger.TraceData{
-		"tmpl.Name":        logger.TraceValueString(t.Name),
-		"tmpl.ContentType": logger.TraceValueString(t.ContentType),
+var _ (td.TraceDataExtractor) = (*Template)(nil)
+
+func (t *Template) Extract() *td.TraceData {
+	out := &td.TraceData{
+		KV: map[string]slog.Value{
+			"tmpl.Name":        slog.StringValue(t.Name),
+			"tmpl.ContentType": slog.StringValue(t.ContentType),
+		},
 	}
 	if t.Id != "" {
-		out["tmpl.Id"] = logger.TraceValueString(t.Id)
+		out.KV["tmpl.Id"] = slog.StringValue(t.Id)
 	}
 	return out
 }
 
-var _ (logger.TraceDataExtractor) = (*TemplateUpdate)(nil)
+var _ (td.TraceDataExtractor) = (*TemplateUpdate)(nil)
 
-func (t *TemplateUpdate) Extract() logger.TraceData {
-	out := logger.TraceData{
-		"tmpl.Name":        logger.TraceValueString(t.Name),
-		"tmpl.ContentType": logger.TraceValueString(t.ContentType),
-	}
+func (t *TemplateUpdate) Extract() *td.TraceData {
+	out := &td.TraceData{
+		KV: map[string]slog.Value{
+			"tmpl.Name":        slog.StringValue(t.Name),
+			"tmpl.ContentType": slog.StringValue(t.ContentType),
+		}}
 	if t.Id != "" {
-		out["tmpl.Id"] = logger.TraceValueString(t.Id)
+		out.KV["tmpl.Id"] = slog.StringValue(t.Id)
 	}
 	return out
 }

@@ -3,17 +3,17 @@ package jetstream
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 )
 
 var _ (state.StateFetcher) = (*StateStore)(nil)
 
 func (s *StateStore) History(ctx context.Context, key string) (states []state.EntityState, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.store.History", nil,
-		logger.TraceKVString("store.entity.id", key),
-		logger.TraceKVString("store.entity.type", s.bucket),
+	ctx, span := s.tracer.SpanWithAttributes(ctx, "jetstream.store.History",
+		slog.String("store.entity.id", key),
+		slog.String("store.entity.type", s.bucket),
 	)
 	defer func() {
 		span.End(err)
@@ -44,9 +44,9 @@ func (s *StateStore) History(ctx context.Context, key string) (states []state.En
 }
 
 func (s *StateStore) Fetch(ctx context.Context, key string) (entity state.EntityState, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "jetstream.store.Fetch", nil,
-		logger.TraceKVString("entity.id", key),
-		logger.TraceKVString("entity.type", s.bucket),
+	ctx, span := s.tracer.SpanWithAttributes(ctx, "jetstream.store.Fetch",
+		slog.String("entity.id", key),
+		slog.String("entity.type", s.bucket),
 	)
 	defer func() {
 		span.End(err)

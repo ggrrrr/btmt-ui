@@ -3,6 +3,7 @@ package mgo
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/event"
@@ -10,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 type (
@@ -51,14 +52,13 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 		cfg.TTL = time.Second
 	}
 
-	logger.Info().
-		Str("user", cfg.User).
-		Str("database", cfg.Database).
-		Str("host", cfg.Host).
-		Str("collection", cfg.Collection).
-		Str("debug", cfg.Debug).
-		Any("ttl", cfg.TTL.Seconds()).
-		Msg("New")
+	log.Log().Info("new",
+		slog.String("user", cfg.User),
+		slog.String("database", cfg.Database),
+		slog.String("host", cfg.Host),
+		slog.String("collection", cfg.Collection),
+		slog.String("debug", cfg.Debug),
+		slog.Int("ttl", int(cfg.TTL.Seconds())))
 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -102,22 +102,21 @@ func New(ctx context.Context, cfg Config) (*repo, error) {
 
 	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).
-			Str("user", cfg.User).
-			Str("database", cfg.Database).
-			Str("uri", cfg.Uri).
-			Str("collection", cfg.Collection).
-			Str("debug", cfg.Debug).
-			Any("ttl", cfg.TTL.Seconds()).
-			Msg("Error")
+		log.Log().ErrorCtx(ctx, err, "Connect",
+			slog.String("user", cfg.User),
+			slog.String("database", cfg.Database),
+			slog.String("uri", cfg.Uri),
+			slog.String("collection", cfg.Collection),
+			slog.String("debug", cfg.Debug),
+			slog.Int("ttl", int(cfg.TTL.Seconds())))
 
 		return nil, err
 	}
-	logger.Info().Msg("Connected")
+	log.Log().Info("Connected")
 
 	db := client.Database(cfg.Database)
 
-	logger.Info().Msg("ok")
+	log.Log().Info("Database.ok.")
 	return &repo{
 		// cfg:    cfg,
 		client: client,
@@ -133,9 +132,9 @@ func (r *repo) Close(ctx context.Context) {
 
 	err := r.db.Client().Disconnect(ctx)
 	if err != nil {
-		logger.Error(err).Msg("db.Close")
+		log.Log().Error(err, "Disconnect")
 	}
-	logger.Info().Msg("db.Closed")
+	log.Log().Info("closed")
 }
 
 func (r *repo) Collection(c string) *mongo.Collection {

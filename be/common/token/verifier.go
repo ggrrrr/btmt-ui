@@ -3,18 +3,20 @@ package token
 import (
 	"crypto/rsa"
 	"encoding/base64"
+	"log/slog"
 	"os"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
 type (
 	verifier struct {
+		// tracer     tracer.OTelTracer
 		signMethod string
 		verifyKey  *rsa.PublicKey
 	}
@@ -23,10 +25,9 @@ type (
 var _ (Verifier) = (*verifier)(nil)
 
 func NewVerifier(crtFile string) (*verifier, error) {
-	logger.Info().
-		Str("crtFile", crtFile).
-		Str("schema", roles.AuthSchemeBearer).
-		Msg("NewVerifier")
+	log.Log().Info("NewVerifier",
+		slog.String("crtFile", crtFile),
+		slog.String("schema", roles.AuthSchemeBearer))
 
 	crtBytes, err := os.ReadFile(crtFile)
 	if err != nil {
@@ -38,6 +39,7 @@ func NewVerifier(crtFile string) (*verifier, error) {
 	}
 
 	return &verifier{
+		// tracer:     tracer.Tracer(otelScope),
 		signMethod: SignMethod_RS254,
 		verifyKey:  verifyKey,
 	}, nil

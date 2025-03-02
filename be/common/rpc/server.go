@@ -3,11 +3,12 @@ package system
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 
 	"google.golang.org/grpc"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 )
 
@@ -50,10 +51,9 @@ func NewServer(name string, cfg Config, opts ...ServerOption) (*Server, error) {
 func (s *Server) Startup(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.cfg.ListenAddress)
 	if err != nil {
-		logger.Error(err).
-			Str("rpc.server", s.name).
-			Str("address", s.cfg.ListenAddress).
-			Msg("Failed to listen")
+		log.Log().Error(err, "Failed to listen",
+			slog.String("rpc.server", s.name),
+			slog.String("address", s.cfg.ListenAddress))
 		return err
 	}
 

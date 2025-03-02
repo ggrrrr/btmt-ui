@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"sort"
 
@@ -15,18 +16,23 @@ import (
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/awsclient"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.common.blob.awss3"
 
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 type (
 	realmKey string
 
 	Client struct {
-		s3Clients map[realmKey]s3Client
+		otelTracer tracer.OTelTracer
+		s3Clients  map[realmKey]s3Client
 	}
 )
 type s3Client struct {
+	otelTracer tracer.OTelTracer
 	s3Client   *s3.Client
 	bucketName string
 	region     string
@@ -65,14 +71,16 @@ func NewClient(bucketName string, appCfg awsclient.Config) (*Client, error) {
 	if err != nil {
 		return nil, app.SystemError("aws bucket not found", err)
 	}
-	logger.Info().
-		Any("bucket", bucketName).
-		Any("info", res).
-		Msg("bucket")
+	log.Log().Info("bucket",
+		log.WithString("bucket", bucketName),
+		log.WithAny("info", res),
+	)
 
 	return &Client{
+		otelTracer: tracer.Tracer(otelScope),
 		s3Clients: map[realmKey]s3Client{
 			realmKey("localhost"): {
+				otelTracer: tracer.Tracer(otelScope),
 				s3Client:   s3client,
 				bucketName: bucketName,
 				region:     cfg.Region,
@@ -83,7 +91,7 @@ func NewClient(bucketName string, appCfg awsclient.Config) (*Client, error) {
 
 func (client *Client) Fetch(ctx context.Context, tenant string, blobId blob.BlobId) (blob.BlobReader, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Fetch", nil, logger.TraceKVString("id", blobId.String()))
+	ctx, span := client.otelTracer.SpanWithAttributes(ctx, "awss3.Fetch", slog.String("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -95,9 +103,9 @@ func (client *Client) Fetch(ctx context.Context, tenant string, blobId blob.Blob
 
 	id := awsIdFromString(blobId)
 
-	logger.InfoCtx(ctx).
-		Str("id", id.String()).
-		Msg("awss3.Fetch")
+	log.Log().InfoCtx(ctx, "awss3.Fetch",
+		log.WithString("id", id.String()),
+	)
 
 	versions, err := list(ctx, c, id)
 	if err != nil {
@@ -123,7 +131,7 @@ func (client *Client) Fetch(ctx context.Context, tenant string, blobId blob.Blob
 
 func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobId) (blob.BlobMD, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Head", nil, logger.TraceKVString("id", blobId.String()))
+	ctx, span := client.otelTracer.SpanWithAttributes(ctx, "awss3.Head", slog.String("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -138,9 +146,9 @@ func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobI
 		return blob.BlobMD{}, err
 	}
 
-	logger.InfoCtx(ctx).
-		Str("id", id.String()).
-		Msg("awss3.Head")
+	log.Log().InfoCtx(ctx, "awss3.Head",
+		log.WithString("id", id.String()),
+	)
 
 	versions, err := list(ctx, c, id)
 	if err != nil {
@@ -167,7 +175,7 @@ func (client *Client) Head(ctx context.Context, tenant string, blobId blob.BlobI
 
 func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobId) ([]blob.ListResult, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.ListDir", nil, logger.TraceKVString("id", blobId.String()))
+	ctx, span := client.otelTracer.SpanWithAttributes(ctx, "awss3.ListDir", slog.String("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -182,9 +190,9 @@ func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobI
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).
-		Str("id", id.String()).
-		Msg("awss3.ListDir")
+	log.Log().InfoCtx(ctx, "awss3.ListDir",
+		log.WithString("id", id.String()),
+	)
 
 	blobs, err := list(ctx, c, id)
 	if err != nil {
@@ -204,7 +212,10 @@ func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobI
 	for _, awsId := range blobs {
 		blobMD, err := head(ctx, c, awsId)
 		if err != nil {
-			logger.ErrorCtx(ctx, err).Str("id", awsId.String()).Msg("awss3.head")
+			log.Log().ErrorCtx(ctx, err, "awss3.head",
+				log.WithString("id", id.String()),
+			)
+
 			continue
 		}
 
@@ -241,7 +252,7 @@ func (client *Client) List(ctx context.Context, tenant string, blobId blob.BlobI
 
 func (client *Client) Push(ctx context.Context, tenant string, blobId blob.BlobId, blobInfo blob.BlobMD, reader io.ReadSeeker) (blob.BlobId, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "awss3.Push", nil, logger.TraceKVString("id", blobId.String()))
+	ctx, span := client.otelTracer.SpanWithAttributes(ctx, "awss3.Push", slog.String("id", blobId.String()))
 	defer func() {
 		span.End(err)
 	}()
@@ -261,9 +272,9 @@ func (client *Client) Push(ctx context.Context, tenant string, blobId blob.BlobI
 		return blob.BlobId{}, err
 	}
 
-	logger.InfoCtx(ctx).
-		Str("id", id.String()).
-		Msg("awss3.Push")
+	log.Log().InfoCtx(ctx, "awss3.Push",
+		log.WithString("id", id.String()),
+	)
 
 	objects, err := list(ctx, c, id)
 	if err != nil {
@@ -318,6 +329,7 @@ func createS3Client(awsCfg awsclient.Config, appCfg awsclient.S3Client) (s3Clien
 		return s3Client{}, fmt.Errorf("aws.config: %w", err)
 	}
 	return s3Client{
-		s3Client: s3.NewFromConfig(clientCfg),
+		otelTracer: tracer.Tracer(otelScope),
+		s3Client:   s3.NewFromConfig(clientCfg),
 	}, nil
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
@@ -41,10 +41,10 @@ func TestPublish(t *testing.T) {
 
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
-	err = logger.ConfigureOtel(ctx, "devapp", logger.DevConfig)
+	err = tracer.Configure(ctx, "devapp", tracer.Config{})
 	require.NoError(t, err)
 	defer func() {
-		logger.Shutdown()
+		tracer.Shutdown(context.Background())
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
@@ -82,7 +82,7 @@ func TestPublish(t *testing.T) {
 			},
 		},
 	}
-	ctx, span := logger.Span(ctx, "testPubklisher", nil)
+	ctx, span := tracer.Tracer("asd").Span(ctx, "testPubklisher")
 	err = commandPublisher.Publish(ctx, msgbus.Metadata{Id: testId1}, testEmail1)
 	require.NoError(t, err)
 	span.End(err)
@@ -96,10 +96,10 @@ func TestServer(t *testing.T) {
 
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
-	err = logger.ConfigureOtel(ctx, "devapp", logger.DevConfig)
+	err = tracer.Configure(ctx, "devapp", tracer.Config{})
 	require.NoError(t, err)
 	defer func() {
-		logger.Shutdown()
+		tracer.Shutdown(context.Background())
 		fmt.Println("loagger.Shutdown ;)")
 	}()
 

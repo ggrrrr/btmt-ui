@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 type (
@@ -68,7 +68,7 @@ func (w waiter) Wait() (err error) {
 	// Here we wait for OS signal or for root ctx cancel call
 	g.Go(func() error {
 		<-ctx.Done()
-		logger.Info().Msg("got kill signal")
+		log.Log().Info("got kill signal")
 		w.cancel()
 		for _, fn := range w.cleanupFuncs {
 			cleanupFunc := fn
@@ -83,7 +83,7 @@ func (w waiter) Wait() (err error) {
 		g.Go(func() error { return waitFn(ctx) })
 	}
 
-	logger.Info().Msg("started")
+	log.Log().Info("started")
 	return g.Wait()
 }
 

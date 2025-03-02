@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	msgbusv1 "github.com/ggrrrr/btmt-ui/be/common/msgbus/v1"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -68,10 +68,10 @@ func TestPubSubNats(t *testing.T) {
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
 
-	err = logger.ConfigureOtel(rootCtx, "testapp", logger.DevConfig)
+	err = tracer.Configure(rootCtx, "testapp", tracer.Config{})
 	require.NoError(t, err)
 	defer func() {
-		logger.Shutdown()
+		tracer.Shutdown(rootCtx)
 		fmt.Println("logger.Shutdown ;)")
 	}()
 

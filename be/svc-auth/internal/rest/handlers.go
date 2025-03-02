@@ -6,7 +6,6 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/web"
 	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 )
@@ -15,14 +14,13 @@ var _ (AppHandler) = (*server)(nil)
 
 func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.UserList", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.UserList")
 	defer func() {
 		span.End(err)
 	}()
 
 	list, err := s.app.UserList(ctx)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("UserList")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -47,13 +45,12 @@ func (s *server) UserList(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("\t\t %v \n", line)
 		out = append(out, line)
 	}
-	logger.InfoCtx(r.Context()).Msg("UserList")
 	web.SendJSONPayload(r.Context(), w, "ok", out)
 }
 
 func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.LoginPasswd", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.LoginPasswd")
 	defer func() {
 		span.End(err)
 	}()
@@ -66,16 +63,9 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 	}
 	loginPasswd, err := s.app.LoginPasswd(ctx, req.Username, req.Password)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("LoginPasswd")
 		web.SendError(ctx, w, err)
 		return
 	}
-
-	logger.InfoCtx(ctx).
-		Str("Username", req.Username).
-		Str("exp", loginPasswd.AccessToken.ExpiresAt.String()).
-		Msg("LoginPasswd")
-
 	out := authpb.LoginTokenPayload{
 		Username:      req.Username,
 		AdminUsername: loginPasswd.AdminSubject,
@@ -104,31 +94,29 @@ func (s *server) LoginPasswd(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) TokenValidate(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.TokenValidate", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.TokenValidate")
 	defer func() {
 		span.End(err)
 	}()
 
 	err = s.app.TokenValidate(ctx)
 	if err != nil {
-		logger.ErrorCtx(r.Context(), err).Msg("TokenValidate")
 		web.SendError(ctx, w, err)
 		return
 	}
-	logger.InfoCtx(r.Context()).Msg("Validate")
 	web.SendJSONPayload(ctx, w, "ok", nil)
 }
 
 func (s *server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	var err error
-	ctx, span := logger.Span(r.Context(), "rest.TokenRefresh", nil)
+	ctx, span := s.tracer.Span(r.Context(), "rest.TokenValidate")
+
 	defer func() {
 		span.End(err)
 	}()
 
 	loginToken, err := s.app.TokenRefresh(ctx)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("TokenRefresh")
 		web.SendError(ctx, w, err)
 		return
 	}
@@ -141,6 +129,5 @@ func (s *server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	logger.InfoCtx(r.Context()).Msg("TokenRefresh")
 	web.SendJSONPayload(ctx, w, "ok", &out)
 }

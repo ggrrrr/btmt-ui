@@ -6,7 +6,6 @@ import (
 	"fmt"
 	htmltemplate "html/template"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/templ"
 	templv1 "github.com/ggrrrr/btmt-ui/be/common/templ/v1"
@@ -51,7 +50,7 @@ func (v *tmplValidator) RenderImg(imageName string) htmltemplate.HTML {
 
 func (a *Application) validate(ctx context.Context, authInfo roles.AuthInfo, template *tmplpb.TemplateUpdate) (*tmplValidator, error) {
 	var err error
-	ctx, span := logger.Span(ctx, "validate", template)
+	ctx, span := a.tracer.SpanWithData(ctx, "validate", template)
 	defer func() {
 		span.End(err)
 	}()

@@ -4,17 +4,22 @@ import (
 	"context"
 	"crypto/rsa"
 	"encoding/base64"
+	"log/slog"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.common.token"
+
 type (
 	signer struct {
+		tracer     tracer.OTelTracer
 		signMethod string
 		signKey    *rsa.PrivateKey
 	}
@@ -29,9 +34,8 @@ type (
 var _ (Signer) = (*signer)(nil)
 
 func NewSigner(keyFile string) (*signer, error) {
-	logger.Info().
-		Str("key_file", keyFile).
-		Msg("NewSigner")
+	log.Log().Info("NewSigner",
+		slog.String("key_file", keyFile))
 
 	signKeyBytes, err := os.ReadFile(keyFile)
 	if err != nil {
@@ -44,6 +48,7 @@ func NewSigner(keyFile string) (*signer, error) {
 	}
 
 	return &signer{
+		tracer:     tracer.Tracer(otelScope),
 		signMethod: SignMethod_RS254,
 		signKey:    signKey,
 	}, nil
@@ -51,7 +56,7 @@ func NewSigner(keyFile string) (*signer, error) {
 
 func (c *signer) Sign(ctx context.Context, ttl time.Duration, authInfo roles.AuthInfo) (string, time.Time, error) {
 	var err error
-	_, span := logger.Span(ctx, "token.Sign", nil)
+	_, span := c.tracer.Span(ctx, "Sign")
 	defer func() {
 		span.End(err)
 	}()

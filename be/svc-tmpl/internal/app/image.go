@@ -3,19 +3,20 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	appError "github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
 	appImage "github.com/ggrrrr/btmt-ui/be/common/image"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/ddd"
 )
 
 func (a *Application) GetResizedImage(ctx context.Context, fileId string) (*ddd.FileWriterTo, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetResizedImage", nil, logger.TraceKVString("fileId", fileId))
+	ctx, span := a.tracer.SpanWithAttributes(ctx, "GetResizedImage", slog.String("fileId", fileId))
 	defer func() {
 		span.End(err)
 	}()
@@ -31,24 +32,17 @@ func (a *Application) GetResizedImage(ctx context.Context, fileId string) (*ddd.
 		return nil, appError.BadRequestError("file name not supported", err)
 	}
 
-	logger.InfoCtx(ctx).
-		Any("info", fileId).
-		Msg("GetResizedImage")
+	log.Log().InfoCtx(ctx, "GetResizedImage",
+		slog.Any("info", fileId),
+	)
 
 	reader, err := a.blobStore.Fetch(ctx, "localhost", imageBlobId)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Fetch")
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).
-		Any("info", reader).
-		Any("id", fileId).
-		Msg("Fetch")
-
 	res, err := appImage.ResizeImage(ctx, 0, reader)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Fetch")
 		return nil, err
 	}
 
@@ -68,7 +62,7 @@ func (a *Application) GetResizedImage(ctx context.Context, fileId string) (*ddd.
 
 func (a *Application) GetImage(ctx context.Context, fileId string, maxWight int) (*ddd.FileWriterTo, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "GetImage", nil, logger.TraceKVString("fileId", fileId))
+	ctx, span := a.tracer.SpanWithAttributes(ctx, "GetImage", slog.String("fileId", fileId))
 	defer func() {
 		span.End(err)
 	}()
@@ -84,20 +78,10 @@ func (a *Application) GetImage(ctx context.Context, fileId string, maxWight int)
 		return nil, appError.BadRequestError("file name not supported", err)
 	}
 
-	logger.InfoCtx(ctx).
-		Any("info", fileId).
-		Msg("GetFile")
-
 	res, err := a.blobStore.Fetch(ctx, "localhost", imageBlobId)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Fetch")
 		return nil, err
 	}
-
-	logger.InfoCtx(ctx).
-		Any("info", res).
-		Any("id", fileId).
-		Msg("Fetch")
 
 	return &ddd.FileWriterTo{
 			ContentType: res.Blob.MD.ContentType,
@@ -112,7 +96,7 @@ func (a *Application) GetImage(ctx context.Context, fileId string, maxWight int)
 
 func (a *Application) ListImages(ctx context.Context) ([]ddd.ImageInfo, error) {
 	var err error
-	ctx, span := logger.Span(ctx, "ListImages", nil)
+	ctx, span := a.tracer.Span(ctx, "ListImages")
 	defer func() {
 		span.End(err)
 	}()
@@ -123,12 +107,8 @@ func (a *Application) ListImages(ctx context.Context) ([]ddd.ImageInfo, error) {
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).
-		Msg("ListImages")
-
 	res, err := a.blobStore.List(ctx, authInfo.Realm, a.imagesFolder)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("ListImages.List")
 		return nil, err
 	}
 
@@ -153,10 +133,6 @@ func (a *Application) ListImages(ctx context.Context) ([]ddd.ImageInfo, error) {
 		out = append(out, i)
 	}
 
-	logger.InfoCtx(ctx).
-		Any("info", res).
-		Msg("Fetch")
-
 	return out, nil
 }
 
@@ -166,10 +142,10 @@ func (a *Application) PutImage(ctx context.Context, tempFile blob.TempFile) erro
 	}()
 
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "PutImage", nil,
-		logger.TraceKVString("FileName", tempFile.FileName),
-		logger.TraceKVString("ContentType", tempFile.ContentType),
-		logger.TraceKVString("TempFileName", tempFile.TempFileName),
+	ctx, span := a.tracer.SpanWithAttributes(ctx, "PutImage",
+		slog.String("FileName", tempFile.FileName),
+		slog.String("ContentType", tempFile.ContentType),
+		slog.String("TempFileName", tempFile.TempFileName),
 	)
 	defer func() {
 		span.End(err)
@@ -179,10 +155,6 @@ func (a *Application) PutImage(ctx context.Context, tempFile blob.TempFile) erro
 	if err != nil {
 		return appError.BadRequestError("file name not supported", err)
 	}
-
-	logger.InfoCtx(ctx).
-		Any("file", tempFile).
-		Msg("PutImage")
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	err = a.appPolices.CanDo(authInfo.Realm, "some", authInfo)
@@ -203,17 +175,14 @@ func (a *Application) PutImage(ctx context.Context, tempFile blob.TempFile) erro
 
 	reader, err := os.Open(tempFile.TempFileName)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Any("tempFile", tempFile).Msg("PutFile")
 		return err
 	}
 	defer reader.Close()
 
-	id, err := a.blobStore.Push(ctx, authInfo.Realm, imageBlobId, blobInfo, reader)
+	_, err = a.blobStore.Push(ctx, authInfo.Realm, imageBlobId, blobInfo, reader)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Any("tempFile", tempFile).Msg("PutFile")
 		return err
 	}
-	logger.InfoCtx(ctx).Str("id", id.String()).Msg("PutFile")
 
 	return nil
 }

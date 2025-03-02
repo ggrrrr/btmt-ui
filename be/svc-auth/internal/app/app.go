@@ -3,16 +3,20 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
+
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-auth"
 
 type (
 	AppCfgFunc func(a *Application) error
@@ -34,6 +38,7 @@ type (
 	}
 
 	Application struct {
+		otelTracer      tracer.OTelTracer
 		accessTokenTTL  time.Duration
 		refreshTokenTTL time.Duration
 		appPolices      roles.AppPolices
@@ -46,7 +51,9 @@ type (
 var _ (App) = (*Application)(nil)
 
 func New(cfgs ...AppCfgFunc) (*Application, error) {
-	a := &Application{}
+	a := &Application{
+		otelTracer: tracer.Tracer(otelScope),
+	}
 	for _, c := range cfgs {
 		err := c(a)
 		if err != nil {
@@ -54,7 +61,7 @@ func New(cfgs ...AppCfgFunc) (*Application, error) {
 		}
 	}
 	if a.appPolices == nil {
-		logger.Warn().Msg("use mock AppPolices")
+		log.Log().Warn(nil, "use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
 	if a.accessTokenTTL == 0 {
@@ -64,10 +71,9 @@ func New(cfgs ...AppCfgFunc) (*Application, error) {
 		return nil, fmt.Errorf("ttl.refresh is 0")
 	}
 
-	logger.Info().
-		Int("refresh.token.ttl.days", int(a.refreshTokenTTL.Hours()/24)).
-		Int("access.token.ttl.minutes", int(a.accessTokenTTL.Minutes())).
-		Msg("app.New")
+	log.Log().Info("app.New",
+		slog.Int("refresh.token.ttl.days", int(a.refreshTokenTTL.Hours()/24)),
+		slog.Int("access.token.ttl.minutes", int(a.accessTokenTTL.Minutes())))
 	return a, nil
 }
 
@@ -135,7 +141,7 @@ func (ap *Application) findEmail(ctx context.Context, email string) (*ddd.AuthPa
 		return nil, nil
 	}
 	if len(auths) > 1 {
-		logger.Error(fmt.Errorf("multiple result")).Str("email", string(email)).Msg("findEmail")
+		log.Log().ErrorCtx(ctx, fmt.Errorf("multiple result"), "findEmail")
 		return nil, ErrAuthMultipleEmail
 	}
 	return &auths[0], nil

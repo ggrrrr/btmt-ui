@@ -2,9 +2,10 @@ package app
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	authpb "github.com/ggrrrr/btmt-ui/be/svc-auth/authpb/v1"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
@@ -12,7 +13,7 @@ import (
 
 func (ap *Application) LoginPasswd(ctx context.Context, username, passwd string) (ddd.LoginToken, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "LoginPasswd", nil, logger.TraceKVString("username", username))
+	ctx, span := ap.otelTracer.SpanWithAttributes(ctx, "LoginPasswd", slog.String("username", username))
 	defer func() {
 		span.End(err)
 	}()
@@ -28,8 +29,7 @@ func (ap *Application) LoginPasswd(ctx context.Context, username, passwd string)
 
 	authPasswd, err := ap.findEmail(ctx, username)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).
-			Msg("ap.findEmail")
+		log.Log().ErrorCtx(ctx, err, "ap.findEmail")
 		return ddd.LoginToken{}, ErrAuthUserPassword
 	}
 
@@ -54,7 +54,7 @@ func (ap *Application) LoginPasswd(ctx context.Context, username, passwd string)
 
 	accessToken, expiresAt, err := ap.signer.Sign(ctx, ap.accessTokenTTL, authInfo)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("ap.signer.Sign")
+		log.Log().ErrorCtx(ctx, err, "ap.signer.Sign")
 		return ddd.LoginToken{}, app.SystemError("Unable to sign, please try again later", nil)
 	}
 
@@ -69,13 +69,13 @@ func (ap *Application) LoginPasswd(ctx context.Context, username, passwd string)
 
 	refreshToken, refreshExpiresAt, err := ap.signer.Sign(ctx, ap.refreshTokenTTL, refreshRole)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("ap.signer.Sign")
+		log.Log().ErrorCtx(ctx, err, "ap.signer.Sign")
 		return ddd.LoginToken{}, app.SystemError("Unable to sign, please try again later", nil)
 	}
 
 	err = ap.historyRepo.SaveHistory(ctx, authInfo, authpb.AuthSvc_LoginPasswd_FullMethodName)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("ap.authRepo.SaveHistory")
+		log.Log().ErrorCtx(ctx, err, "ap.authRepo.SaveHistory")
 		return ddd.LoginToken{}, app.SystemError("Unable to sign, please try again later", nil)
 	}
 
@@ -96,7 +96,7 @@ func (ap *Application) LoginPasswd(ctx context.Context, username, passwd string)
 
 func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	ctx, span := logger.SpanWithAttributes(ctx, "TokenValidate", nil, logger.TraceKVString("email", authInfo.Subject))
+	ctx, span := ap.otelTracer.SpanWithAttributes(ctx, "TokenValidate")
 	defer span.End(err)
 
 	if authInfo.Subject == "" {
@@ -105,7 +105,7 @@ func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 	}
 	auth, err := ap.findEmail(ctx, authInfo.Subject)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("Validate")
+		log.Log().ErrorCtx(ctx, err, "Validate")
 		return app.SystemError("failed to fetch email", err)
 	}
 	if auth == nil {
@@ -121,7 +121,7 @@ func (ap *Application) TokenValidate(ctx context.Context) (err error) {
 
 func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginToken, err error) {
 	authInfo := roles.AuthInfoFromCtx(ctx)
-	ctx, span := logger.SpanWithAttributes(ctx, "TokenRefresh", nil, logger.TraceKVString("email", authInfo.Subject))
+	ctx, span := ap.otelTracer.SpanWithAttributes(ctx, "TokenRefresh")
 	defer span.End(err)
 
 	err = ap.appPolices.CanDo(authInfo.Realm, authpb.AuthSvc_TokenRefresh_FullMethodName, authInfo)
@@ -131,7 +131,7 @@ func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginTo
 
 	auth, err := ap.findEmail(ctx, authInfo.Subject)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("TokenRefresh")
+		log.Log().ErrorCtx(ctx, err, "TokenRefresh")
 		return loginToken, app.SystemError("failed to fetch email", err)
 	}
 	if auth == nil {
@@ -145,7 +145,7 @@ func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginTo
 
 	history, err := ap.historyRepo.GetHistory(ctx, authInfo.ID)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("TokenRefresh")
+		log.Log().ErrorCtx(ctx, err, "TokenRefresh")
 		return loginToken, app.SystemError("failed to fetch login history", err)
 	}
 
@@ -158,7 +158,7 @@ func (ap *Application) TokenRefresh(ctx context.Context) (loginToken ddd.LoginTo
 
 	jwtValue, expiresAt, err := ap.signer.Sign(ctx, ap.accessTokenTTL, newAuthInfo)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("ap.signer.Sign")
+		log.Log().ErrorCtx(ctx, err, "ap.signer.Sign")
 		return ddd.LoginToken{}, app.SystemError("Unable to sign, please try again later", nil)
 	}
 

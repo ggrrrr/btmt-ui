@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 type webResponse struct {
@@ -94,14 +94,14 @@ func sendJSON(ctx context.Context, w http.ResponseWriter, code int, msg string, 
 
 	b, err := json.Marshal(body)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("unable to marshal response body")
+		log.Log().ErrorCtx(ctx, err, "unable to marshal response body")
 	}
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_, err = w.Write(b)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("unable to write response")
+		log.Log().ErrorCtx(ctx, err, "unable to write response")
 	}
 }
 
@@ -110,6 +110,6 @@ func sendText(ctx context.Context, w http.ResponseWriter, code int, text string)
 	w.WriteHeader(code)
 	_, err := w.Write([]byte(text))
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("unable to write response")
+		log.Log().ErrorCtx(ctx, err, "unable to write response")
 	}
 }

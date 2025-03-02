@@ -163,7 +163,11 @@ func TestValidate(t *testing.T) {
 	store, err := mem.New()
 	require.NoError(t, err)
 
-	testApp, err := New(WithAuthRepo(store), WithTokenSigner(token.NewSignerMock()))
+	testApp, err := New(
+		WithAuthRepo(store),
+		WithTokenSigner(token.NewSignerMock()),
+		WithTokenTTL(1, 2),
+	)
 	require.NoError(t, err)
 
 	authItem := ddd.AuthPasswd{

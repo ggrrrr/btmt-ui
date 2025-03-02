@@ -3,6 +3,7 @@ package jetstream
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"sync"
 	"testing"
@@ -13,7 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/msgbus"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/token"
@@ -71,10 +73,10 @@ func TestPublish(t *testing.T) {
 	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
 	os.Setenv("SERVICE_NAME", "test-service")
 
-	err = logger.ConfigureOtel(rootCtx, "testapp", logger.DevConfig)
+	err = tracer.Configure(rootCtx, "testapp", tracer.Config{})
 	require.NoError(t, err)
 	defer func() {
-		logger.Shutdown()
+		tracer.Shutdown(rootCtx)
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
@@ -94,8 +96,8 @@ func TestPublish(t *testing.T) {
 	}()
 	fmt.Printf(" %+v \n", stream)
 
-	ctx, span := logger.Span(rootCtx, "main.Method", nil)
-	logger.InfoCtx(ctx).Msg("main.Method")
+	ctx, span := tracer.Tracer("asd").Span(rootCtx, "main.Method")
+	log.Log().InfoCtx(ctx, "main.Method")
 
 	testPublisher, err := NewPublisher(conn, topic, token.NewTokenGenerator("test-publisher", token.NewSignerMock()))
 	require.NoError(t, err)
@@ -146,10 +148,10 @@ type handlerSvc struct {
 
 func (h handlerSvc) handle(ctx context.Context, subject string, _ msgbus.Metadata, data []byte) error {
 	defer h.wg.Done()
-	ctx, span := logger.Span(ctx, "ConsumerLoop.handler", nil)
+	// ctx, span := logger.Span(ctx, "ConsumerLoop.handler", nil)
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	assert.Equalf(h.t, "mockuser", authInfo.Subject, "authInfo is not set %#v", authInfo)
-	logger.InfoCtx(ctx).Str("group", h.name).Any("data", string(data)).Msg("ConsumerLoop")
-	span.End(nil)
+	log.Log().InfoCtx(ctx, "asdasd", slog.String("group", h.name), slog.String("data", string(data)))
+	// span.End(nil)
 	return nil
 }

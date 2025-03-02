@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
 )
 
 func (s *Server) handlerRecoverer(next http.Handler) http.Handler {
@@ -23,8 +21,9 @@ func (s *Server) handlerRecoverer(next http.Handler) http.Handler {
 				// 	Msg("httpRecovery")
 
 				// fmt.Println(string(debug.Stack()))
+				// TODO
 				fmt.Printf("\nrecover: %#v\n\n", rvr)
-				logger.ErrorCtx(r.Context(), fmt.Errorf("panic")).Any("panic", rvr).Stack().Send()
+				// fmt.Printf( fmt.Errorf("panic")).Any("panic", rvr).Stack().Send()
 
 				SendJSONSystemError(r.Context(), w, "internal panic", nil, nil)
 			}

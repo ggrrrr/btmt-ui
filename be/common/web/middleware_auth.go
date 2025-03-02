@@ -1,13 +1,14 @@
 package web
 
 import (
+	"log/slog"
 	"net/http"
 
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 )
 
@@ -19,12 +20,18 @@ func (s *Server) handlerAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		infoLog := logger.Debug()
+		logAttr := []slog.Attr{}
+
 		var authInfo roles.AuthInfo
+		var ctx = r.Context()
 		var err error
-		var span = trace.SpanFromContext(r.Context())
+		var span = trace.SpanFromContext(ctx)
 		defer func() {
-			infoLog.Msg("handlerAuth")
+			if err != nil {
+				log.Log().ErrorCtx(ctx, err, "cors", logAttr...)
+			} else {
+				log.Log().DebugCtx(ctx, "cors", logAttr...)
+			}
 		}()
 
 		userRequest := roles.FromHttpRequest(r.Header, r.Cookies(), r)
@@ -34,28 +41,28 @@ func (s *Server) handlerAuth(next http.Handler) http.Handler {
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
-				infoLog.
-					Str("Method", r.Method).
-					Any("request.device", userRequest.Device).
-					Str("request.AuthScheme", userRequest.AuthData.AuthScheme).
-					Err(err)
-				SendError(r.Context(), w, app.UnauthenticatedError("Unauthenticated", nil))
+				logAttr = append(logAttr,
+					slog.String("Method", r.Method),
+					slog.Any("request.device", userRequest.Device),
+					slog.String("request.AuthScheme", userRequest.AuthData.AuthScheme),
+				)
+				SendError(ctx, w, app.UnauthenticatedError("Unauthenticated", nil))
 				return
 			}
-
-			infoLog.Any("authInfo", authInfo)
+			logAttr = append(logAttr, slog.Any("authInfo", authInfo))
 		}
 
-		infoLog.
-			Any("Method", r.Method).
-			Any("HttpUserAgent", r.Header.Get(roles.HttpUserAgent)).
-			Any("remoteAddr", r.RemoteAddr).
-			Any("device", userRequest.Device).
-			Str("AuthScheme", userRequest.AuthData.AuthScheme).
-			Str("FullMethod", userRequest.FullMethod)
+		logAttr = append(logAttr,
+			slog.Any("Method", r.Method),
+			slog.Any("HttpUserAgent", r.Header.Get(roles.HttpUserAgent)),
+			slog.Any("remoteAddr", r.RemoteAddr),
+			slog.Any("device", userRequest.Device),
+			slog.Any("AuthScheme", userRequest.AuthData.AuthScheme),
+			slog.Any("FullMethod", userRequest.FullMethod),
+		)
 
 		authInfo.Device = userRequest.Device
-		ctx := roles.CtxWithAuthInfo(r.Context(), authInfo)
+		ctx = roles.CtxWithAuthInfo(r.Context(), authInfo)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

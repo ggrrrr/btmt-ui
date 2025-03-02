@@ -3,11 +3,13 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	"github.com/ggrrrr/btmt-ui/be/svc-people/internal/ddd"
@@ -16,12 +18,15 @@ import (
 	peoplepb "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-people"
+
 type (
 	OptionFn func(a *Application) error
 
 	Filters map[string][]string
 
 	Application struct {
+		tracer     tracer.OTelTracer
 		repoPeople ddd.PeopleRepo
 		appPolices roles.AppPolices
 		stateStore state.StateStore
@@ -49,7 +54,9 @@ var (
 // var _ (App) = (*App)(nil)
 
 func New(cfgs ...OptionFn) (*Application, error) {
-	a := &Application{}
+	a := &Application{
+		tracer: tracer.Tracer(otelScope),
+	}
 	for _, c := range cfgs {
 		err := c(a)
 		if err != nil {
@@ -57,7 +64,7 @@ func New(cfgs ...OptionFn) (*Application, error) {
 		}
 	}
 	if a.appPolices == nil {
-		logger.Warn().Msg("use mock AppPolices")
+		log.Log().Warn(nil, "use mock AppPolices")
 		a.appPolices = roles.NewAppPolices()
 	}
 	if a.appPolices == nil ||
@@ -90,7 +97,7 @@ func WithStateStore(store state.StateStore) OptionFn {
 }
 
 func (a *Application) Save(ctx context.Context, p *peoplepb.Person) (err error) {
-	ctx, span := logger.Span(ctx, "Save", p)
+	ctx, span := a.tracer.SpanWithData(ctx, "Save", p)
 	defer func() {
 		span.End(err)
 	}()
@@ -126,12 +133,12 @@ func (a *Application) Save(ctx context.Context, p *peoplepb.Person) (err error) 
 		return err
 	}
 
-	logger.DebugCtx(ctx).Any("data", p).Msg("Save")
+	log.Log().DebugCtx(ctx, "save")
 	return nil
 }
 
 func (a *Application) GetById(ctx context.Context, id string) (person *peoplepb.Person, err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "Save", nil, logger.TraceKVString("person.id", id))
+	ctx, span := a.tracer.SpanWithAttributes(ctx, "GetById", slog.String("id", id))
 	defer func() {
 		span.End(err)
 	}()
@@ -141,7 +148,7 @@ func (a *Application) GetById(ctx context.Context, id string) (person *peoplepb.
 		return nil, err
 	}
 
-	logger.InfoCtx(ctx).Str("id", id).Msg("GetById")
+	log.Log().InfoCtx(ctx, "getByID", slog.String("id", id))
 	person, err = a.repoPeople.GetById(ctx, id)
 	if err != nil {
 		return
@@ -155,17 +162,15 @@ func (a *Application) GetById(ctx context.Context, id string) (person *peoplepb.
 }
 
 func (a *Application) List(ctx context.Context, filters Filters) (result []*peoplepb.Person, err error) {
-	ctx, span := logger.Span(ctx, "List", nil)
+	ctx, span := a.tracer.Span(ctx, "List")
 	defer func() {
 		span.End(err)
 	}()
 
 	authInfo := roles.AuthInfoFromCtx(ctx)
 	if err := a.appPolices.CanDo(authInfo.Realm, peoplepb.PeopleSvc_Save_FullMethodName, authInfo); err != nil {
-		logger.ErrorCtx(ctx, err).Msg("List")
 		return nil, err
 	}
-	logger.DebugCtx(ctx).Any("filters", filters).Msg("List")
 
 	filtersFunc := []repo.AddFilterFunc{}
 	if len(filters[FilterPINs]) > 0 {
@@ -188,7 +193,6 @@ func (a *Application) List(ctx context.Context, filters Filters) (result []*peop
 
 	out, err := a.repoPeople.List(ctx, ff)
 	if err != nil {
-		logger.ErrorCtx(ctx, err).Msg("List")
 
 		return nil, err
 	}
@@ -196,7 +200,7 @@ func (a *Application) List(ctx context.Context, filters Filters) (result []*peop
 }
 
 func (a *Application) Update(ctx context.Context, p *peoplepb.Person) (err error) {
-	ctx, span := logger.Span(ctx, "Update", p)
+	ctx, span := a.tracer.SpanWithData(ctx, "Update", p)
 	defer func() {
 		span.End(err)
 	}()
@@ -206,7 +210,6 @@ func (a *Application) Update(ctx context.Context, p *peoplepb.Person) (err error
 	if err != nil {
 		return
 	}
-	logger.DebugCtx(ctx).Any("person", p).Msg("Update")
 	err = a.repoPeople.Update(ctx, p)
 	if err != nil {
 		return
@@ -218,10 +221,6 @@ func (a *Application) Update(ctx context.Context, p *peoplepb.Person) (err error
 }
 
 func (*Application) IDParse(ctx context.Context, request *peoplepb.IDParseRequest) (result *peoplepb.IDParseResponse, err error) {
-	_, span := logger.Span(ctx, "PinParse", nil)
-	defer func() {
-		span.End(err)
-	}()
 
 	info, err := pin.Parse(request.Number)
 	if err != nil {
@@ -242,7 +241,6 @@ func (*Application) IDParse(ctx context.Context, request *peoplepb.IDParseReques
 func parseEGN(person *peoplepb.Person) {
 	res, err := pin.Parse(person.IdNumbers["EGN"])
 	if err != nil {
-		logger.Error(err).Any("EGN", person)
 		return
 	}
 	if person.Dob == nil {
@@ -260,7 +258,6 @@ func parseEGN(person *peoplepb.Person) {
 	if len(res.Gender) > 0 {
 		person.Gender = res.Gender
 	}
-	logger.Debug().Any("pin", person)
 }
 
 func (a *Application) updateStore(ctx context.Context, person *peoplepb.Person) error {

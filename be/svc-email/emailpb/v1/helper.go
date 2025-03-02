@@ -1,6 +1,10 @@
 package emailpbv1
 
-import "github.com/ggrrrr/btmt-ui/be/common/logger"
+import (
+	"log/slog"
+
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/td"
+)
 
 func CreateList(l []*EmailAddr) []string {
 	if len(l) == 0 {
@@ -16,12 +20,14 @@ func CreateList(l []*EmailAddr) []string {
 
 }
 
-var _ (logger.TraceDataExtractor) = (*SendEmail)(nil)
+var _ (td.TraceDataExtractor) = (*SendEmail)(nil)
 
 // Extract implements logger.TraceDataExtractor.
-func (x *SendEmail) Extract() logger.TraceData {
-	return logger.TraceData{
-		"email.id":            logger.TraceValueString(x.Id),
-		"email.account.realm": logger.TraceValueString(x.Message.FromAccount.Realm),
+func (x *SendEmail) Extract() *td.TraceData {
+	return &td.TraceData{
+		KV: map[string]slog.Value{
+			"email.id":            slog.StringValue(x.Id),
+			"email.account.realm": slog.StringValue(x.Message.FromAccount.Realm),
+		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
 )
@@ -31,6 +32,7 @@ func TestSaveGetList(t *testing.T) {
 	require.NoError(t, err)
 
 	testRepo := authRepo{
+		otelTracer:  tracer.Tracer(otelScope),
 		db:          db,
 		passwdTable: "test_passwd",
 	}

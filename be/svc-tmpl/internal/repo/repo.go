@@ -3,18 +3,23 @@ package repo
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/mgo"
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-tmpl"
+
 type (
 	Repo struct {
+		tracer     tracer.OTelTracer
 		collection string
 		db         mgo.Repo
 	}
@@ -22,13 +27,14 @@ type (
 
 func New(collection string, db mgo.Repo) *Repo {
 	return &Repo{
+		tracer:     tracer.Tracer(otelScope),
 		collection: collection,
 		db:         db,
 	}
 }
 
 func (r *Repo) Save(ctx context.Context, template *tmplpb.Template) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", nil, logger.TraceKVString("template.name", template.Name))
+	ctx, span := r.tracer.SpanWithAttributes(ctx, "repo.Save", slog.String("template.name", template.Name))
 	defer func() {
 		span.End(err)
 	}()
@@ -50,11 +56,11 @@ func (r *Repo) Save(ctx context.Context, template *tmplpb.Template) (err error) 
 }
 
 func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []*tmplpb.Template, err error) {
-	_, span := logger.Span(ctx, "repo.List", nil)
+	_, span := r.tracer.Span(ctx, "repo.List")
 	defer func() {
 		span.End(err)
 	}()
-	logger.InfoCtx(ctx).Msg("repo.List")
+	log.Log().InfoCtx(ctx, "repo.List")
 
 	cur, err := r.db.Find(ctx, r.collection, bson.M{})
 	if err != nil {
@@ -85,7 +91,7 @@ func (r *Repo) List(ctx context.Context, filter app.FilterFactory) (result []*tm
 
 func (r *Repo) GetById(ctx context.Context, fromId string) (*tmplpb.Template, error) {
 	var err error
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.GetById", nil, logger.TraceKVString("id", fromId), logger.TraceKVString("collection", r.collection))
+	ctx, span := r.tracer.SpanWithAttributes(ctx, "repo.GetById", slog.String("id", fromId), slog.String("collection", r.collection))
 	defer func() {
 		span.End(err)
 	}()
@@ -96,12 +102,12 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*tmplpb.Template, er
 	}
 
 	res := r.db.FindOne(ctx, r.collection, bson.M{"_id": id})
-	logger.DebugCtx(ctx).
-		Str("collection", r.collection).
-		Str("fromId", fromId).
-		Str("id.Hex", id.Hex()).
-		Any("id", id).
-		Send()
+	log.Log().DebugCtx(ctx, "GetById",
+		slog.String("collection", r.collection),
+		slog.String("fromId", fromId),
+		slog.String("id.Hex", id.Hex()),
+		slog.String("id", id.String()),
+	)
 
 	if res.Err() != nil {
 		err = res.Err()
@@ -120,7 +126,7 @@ func (r *Repo) GetById(ctx context.Context, fromId string) (*tmplpb.Template, er
 }
 
 func (r *Repo) Update(ctx context.Context, template *tmplpb.Template) (err error) {
-	ctx, span := logger.SpanWithAttributes(ctx, "repo.Save", template)
+	ctx, span := r.tracer.SpanWithData(ctx, "repo.Save", template)
 	defer func() {
 		span.End(err)
 	}()
@@ -152,19 +158,16 @@ func (r *Repo) Update(ctx context.Context, template *tmplpb.Template) (err error
 		"$set": setReq,
 	}
 
-	logger.DebugCtx(ctx).
-		Any("updateReq", updateReq).
-		Str("id", template.Id).
-		Msg("Update")
 	resp, err := r.db.UpdateByID(ctx, r.collection, id, updateReq)
 	if err != nil {
 		return
 	}
 
-	logger.InfoCtx(ctx).
-		Any("id", template.Id).
-		Any("matchedCount", resp.MatchedCount).
-		Msg("Update")
+	log.Log().DebugCtx(ctx, "Update",
+		slog.Any("updateReq", updateReq),
+		slog.Any("res", resp),
+		slog.String("id", template.Id),
+	)
 
 	return
 

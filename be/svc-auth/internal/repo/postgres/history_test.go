@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/postgres"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/svc-auth/internal/ddd"
@@ -22,6 +23,7 @@ func TestHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	testRepo := authRepo{
+		otelTracer:   tracer.Tracer(otelScope),
 		db:           db,
 		historyTable: "test_history",
 	}

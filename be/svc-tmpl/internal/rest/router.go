@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/svc-tmpl/internal/app"
 )
 
@@ -22,13 +23,15 @@ type (
 	}
 
 	server struct {
-		app app.App
+		tracer tracer.OTelTracer
+		app    app.App
 	}
 )
 
 func Handler(a app.App) *server {
 	return &server{
-		app: a,
+		tracer: tracer.Tracer(otelScope),
+		app:    a,
 	}
 }
 

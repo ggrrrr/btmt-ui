@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
-	"github.com/ggrrrr/btmt-ui/be/common/logger"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/log"
 )
 
 type (
@@ -35,10 +35,10 @@ func (tmp *TmpReadCloser) Close() error {
 	defer func() {
 		err := os.Remove(tmp.tmpFile.Name())
 		if err != nil {
-			logger.Warn().
-				Err(err).
-				Str("tmpFile", tmp.tmpFile.Name()).
-				Msg("unable to remove tmp file")
+
+			log.Log().Warn(err, "unable to remove tmp file",
+				log.WithString("fmpFile", tmp.tmpFile.Name()))
+
 		}
 
 	}()
@@ -75,10 +75,6 @@ func HeadImage(name string) (blob.MDImageInfo, error) {
 // go get -u github.com/rwcarlsen/goexif/exif
 func ResizeImage(ctx context.Context, toHeight int, from blob.BlobReader) (*ResizedImage, error) {
 	var err error
-	_, span := logger.SpanWithAttributes(ctx, "common.image.ResizeImage", nil, logger.TraceKVString("image.name", from.Blob.MD.Name))
-	defer func() {
-		span.End(err)
-	}()
 
 	if toHeight < 50 {
 		toHeight = 256 / 2
