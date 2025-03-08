@@ -73,7 +73,7 @@ func (c *NatsPublisher) Shutdown() error {
 	if c.conn == nil {
 		return nil
 	}
-	return c.conn.shutdown()
+	return c.conn.Shutdown()
 }
 
 func (c *NatsPublisher) publish(ctx context.Context, uniqId string, msg *nats.Msg) error {

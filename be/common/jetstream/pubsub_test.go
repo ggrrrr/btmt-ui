@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -26,13 +25,11 @@ var cfg = Config{
 }
 
 func TestKeyValue(t *testing.T) {
-	// verifier := token.NewVerifierMock()
-
 	myVal := "some value 1"
 
 	rootCtx := context.Background()
 
-	conn, err := Connect(cfg)
+	conn, err := ConnectForTest()
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()
@@ -64,23 +61,19 @@ func TestPublish(t *testing.T) {
 	testId := uuid.New()
 
 	topic := "test"
-	verifier := token.NewVerifierMock()
 	wg := sync.WaitGroup{}
 
 	var err error
 	rootCtx := context.Background()
 
-	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
-	os.Setenv("SERVICE_NAME", "test-service")
-
-	err = tracer.Configure(rootCtx, "testapp", tracer.Config{})
+	err = tracer.ConfigureForTest()
 	require.NoError(t, err)
 	defer func() {
 		tracer.Shutdown(rootCtx)
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	conn, err := Connect(cfg, WithVerifier(verifier))
+	conn, err := ConnectForTest()
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()

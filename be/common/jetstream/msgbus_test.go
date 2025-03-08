@@ -3,7 +3,6 @@ package jetstream
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -65,18 +64,14 @@ func TestPubSubNats(t *testing.T) {
 	var err error
 	rootCtx := context.Background()
 
-	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
-	os.Setenv("SERVICE_NAME", "test-service")
-
-	err = tracer.Configure(rootCtx, "testapp", tracer.Config{})
+	err = tracer.ConfigureForTest()
 	require.NoError(t, err)
 	defer func() {
 		tracer.Shutdown(rootCtx)
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	verifier := token.NewVerifierMock()
-	conn, err := Connect(cfg, WithVerifier(verifier))
+	conn, err := ConnectForTest()
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()

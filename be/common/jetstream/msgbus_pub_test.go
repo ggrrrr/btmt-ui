@@ -21,19 +21,18 @@ func Test(t *testing.T) {
 
 	var err error
 	ctx := context.Background()
-	verifier := token.NewVerifierMock()
 	// wg := sync.WaitGroup{}
 
 	mockTokenGenerotar := token.NewTokenGenerator("test-publisher", token.NewSignerMock())
 
-	err = tracer.Configure(ctx, "testapp", tracer.Config{})
+	err = tracer.ConfigureForTest()
 	require.NoError(t, err)
 	defer func() {
 		tracer.Shutdown(ctx)
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	conn, err := Connect(cfg, WithVerifier(verifier))
+	conn, err := ConnectForTest()
 	require.NoError(t, err)
 	defer func() {
 		conn.conn.Close()

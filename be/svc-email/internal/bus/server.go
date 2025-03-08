@@ -9,6 +9,8 @@ import (
 	emailpbv1 "github.com/ggrrrr/btmt-ui/be/svc-email/emailpb/v1"
 )
 
+const otelScope string = "go.github.com.ggrrrr.btmt-ui.be.svc-email"
+
 type (
 	emailSender interface {
 		SendEmail(ctx context.Context, msg *emailpbv1.EmailMessage) error
@@ -23,7 +25,8 @@ type (
 func Start(ctx context.Context, app emailSender, consumer msgbus.MessageConsumer[*emailpbv1.SendEmail]) error {
 
 	s := &server{
-		app: app,
+		tracer: tracer.Tracer(otelScope),
+		app:    app,
 	}
 
 	consumer.Consumer(ctx, s.handlerSendEmail)

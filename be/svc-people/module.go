@@ -38,17 +38,19 @@ func (m *Module) Configure(ctx context.Context, s system.Service) (err error) {
 	config.MustParse(&cfg)
 	m.cfg = cfg
 
-	db, err := mgo.New(ctx, m.cfg.MGO)
+	db, err := mgo.Connect(ctx, m.cfg.MGO)
 	if err != nil {
 		log.Log().Error(err, "mgo")
 		return err
 	}
 
+	natsConn, err := jetstream.Connect(m.cfg.Broker)
+
 	s.Waiter().AddCleanup(func() {
 		db.Close(context.Background())
 	})
 
-	stateStore, err := jetstream.NewStateStore(ctx, m.cfg.Broker, state.EntityTypeFromProto(&peoplepbv1.Person{}))
+	stateStore, err := jetstream.NewStateStore(ctx, natsConn, state.EntityTypeFromProto(&peoplepbv1.Person{}))
 	if err != nil {
 		return err
 	}

@@ -21,15 +21,15 @@ import (
 )
 
 type (
-	CfgTarget struct {
+	TargetCfg struct {
 		Addr string `env:"ADDR"`
 	}
-	CfgClient struct {
-		Target CfgTarget `envPrefix:"TARGET_"`
+	ClientCfg struct {
+		Target TargetCfg `envPrefix:"TARGET_"`
 	}
 
 	Config struct {
-		Client CfgClient `envPrefix:"OTEL_"`
+		Client ClientCfg `envPrefix:"OTEL_"`
 	}
 
 	OTelTracer interface {

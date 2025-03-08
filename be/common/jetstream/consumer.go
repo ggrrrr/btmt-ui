@@ -153,5 +153,5 @@ func (c *NatsConsumer) Shutdown() error {
 	if c.conn == nil {
 		return nil
 	}
-	return c.conn.shutdown()
+	return c.conn.Shutdown()
 }

@@ -33,12 +33,11 @@ func TestSave(t *testing.T) {
 	ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateSystemAdminUser(roles.SystemRealm, "mock", app.Device{}))
 	ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{Subject: "some"})
 
-	cfg := mgo.MgoTestCfg("test-people")
-	testDb, err := mgo.New(rootCtx, cfg)
+	testDb, err := mgo.ConnectForTest("test-people")
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
 
-	testRepo := repo.New(cfg.Collection, testDb)
+	testRepo := repo.New("test-people", testDb)
 
 	mockState := &state.MockStore{}
 
@@ -129,6 +128,9 @@ func TestSave(t *testing.T) {
 		{
 			test: "pin validator",
 			testFunc: func(tt *testing.T) {
+				if os.Getenv("PIN2") == "" {
+					tt.Skip("env pin2 not set")
+				}
 				p1 := &peoplepbv1.Person{
 					IdNumbers:    map[string]string{"EGN": os.Getenv("PIN2")},
 					Name:         "name 1",

@@ -28,12 +28,12 @@ func TestKVSetter(t *testing.T) {
 		Value: []byte("value 22"),
 	}
 
-	n, err := Connect(cfg)
+	n, err := ConnectForTest()
 	require.NoError(t, err)
 	defer n.js.DeleteKeyValue(ctx, objectType.String())
 	// n.js.kv
 
-	testKVSetter, err := NewStateStore(ctx, cfg, objectType)
+	testKVSetter, err := NewStateStore(ctx, n, objectType)
 	require.NoError(t, err)
 
 	rev1, err := testKVSetter.Push(ctx, o1)
@@ -45,7 +45,7 @@ func TestKVSetter(t *testing.T) {
 
 	fmt.Println("rev2", rev2)
 
-	testKVGetter, err := NewStateStore(ctx, cfg, objectType)
+	testKVGetter, err := NewStateStore(ctx, n, objectType)
 	require.NoError(t, err)
 
 	var actual1, actual2 state.EntityState

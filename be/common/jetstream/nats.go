@@ -60,7 +60,7 @@ func Connect(cfg Config, opts ...ConnOptionFunc) (*NatsConnection, error) {
 
 }
 
-func (c *NatsConnection) shutdown() error {
+func (c *NatsConnection) Shutdown() error {
 	if c.conn == nil {
 		return nil
 	}

@@ -47,7 +47,7 @@ type (
 
 var _ (Repo) = (*repo)(nil)
 
-func New(ctx context.Context, cfg Config) (*repo, error) {
+func Connect(ctx context.Context, cfg Config) (*repo, error) {
 	if cfg.TTL == 0 {
 		cfg.TTL = time.Second
 	}

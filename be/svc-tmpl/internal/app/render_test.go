@@ -11,6 +11,7 @@ import (
 
 	"github.com/ggrrrr/btmt-ui/be/common/app"
 	"github.com/ggrrrr/btmt-ui/be/common/blob"
+	"github.com/ggrrrr/btmt-ui/be/common/ltm/tracer"
 	"github.com/ggrrrr/btmt-ui/be/common/roles"
 	"github.com/ggrrrr/btmt-ui/be/common/state"
 	templv1 "github.com/ggrrrr/btmt-ui/be/common/templ/v1"
@@ -65,6 +66,7 @@ end.
 	rootCtx := roles.CtxWithAuthInfo(context.Background(), roles.CreateSystemAdminUser("localhost", "admin", app.Device{}))
 
 	testApp := &Application{
+		tracer:       tracer.Tracer(otelScope),
 		blobStore:    &mockBlobStore{},
 		appPolices:   roles.NewAppPolices(),
 		imagesFolder: blob.BlobId{},

@@ -17,11 +17,7 @@ type StateStore struct {
 	kv       jetstream.KeyValue
 }
 
-func NewStateStore(ctx context.Context, cfg Config, objectType state.EntityType) (*StateStore, error) {
-	conn, err := Connect(cfg)
-	if err != nil {
-		return nil, err
-	}
+func NewStateStore(ctx context.Context, conn *NatsConnection, objectType state.EntityType) (*StateStore, error) {
 
 	kv, err := conn.js.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket:      objectType.String(),

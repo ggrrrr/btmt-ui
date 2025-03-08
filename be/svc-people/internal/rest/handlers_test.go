@@ -26,18 +26,22 @@ import (
 	peoplepbv1 "github.com/ggrrrr/btmt-ui/be/svc-people/peoplepb/v1"
 )
 
+var (
+	collection string = "test-people"
+)
+
 func Test_Save(t *testing.T) {
 	rootCtx := context.Background()
+
 	// ctxAdmin := roles.CtxWithAuthInfo(rootCtx, roles.CreateAdminUser("mock", roles.Device{}))
 	// ctxNormal := roles.CtxWithAuthInfo(rootCtx, roles.AuthInfo{User: "some"})
 	// ctx = metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("%s %s", "mock", "admin"))
 
-	cfg := mgo.MgoTestCfg("test-people")
-	testDb, err := mgo.New(rootCtx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
 	mockState := &state.MockStore{}
-	testRepo := repo.New(cfg.Collection, testDb)
+	testRepo := repo.New(collection, testDb)
 	app, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),
@@ -79,12 +83,11 @@ func Test_Save(t *testing.T) {
 func Test_List(t *testing.T) {
 	rootCtx := context.Background()
 
-	cfg := mgo.MgoTestCfg("test-people")
-	testDb, err := mgo.New(rootCtx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	defer testDb.Close(rootCtx)
 
-	testRepo := repo.New(cfg.Collection, testDb)
+	testRepo := repo.New(collection, testDb)
 	app, err := app.New(
 		app.WithPeopleRepo(testRepo),
 		app.WithAppPolicies(roles.NewAppPolices()),

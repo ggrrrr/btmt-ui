@@ -56,7 +56,7 @@ func NewCommandConsumer[T proto.Message](
 	}, nil
 }
 
-func (c *ProtoConsumer[T]) Consumer(ctx context.Context, handler msgbus.MessageHandlerFunc[T]) {
+func (c *ProtoConsumer[T]) Consumer(ctx context.Context, handleFunc msgbus.MessageHandlerFunc[T]) {
 	c.consumer.Consume(ctx, func(ctx context.Context, subject string, md msgbus.Metadata, data []byte) error {
 		msg := &msgbusv1.Message{}
 		err := proto.Unmarshal(data, msg)
@@ -73,7 +73,7 @@ func (c *ProtoConsumer[T]) Consumer(ctx context.Context, handler msgbus.MessageH
 			return fmt.Errorf("anypb.UnmarshalTo %w", err)
 		}
 
-		handler(ctx, subject, md, payload)
+		handleFunc(ctx, subject, md, payload)
 		return nil
 	})
 }
@@ -81,4 +81,8 @@ func (c *ProtoConsumer[T]) Consumer(ctx context.Context, handler msgbus.MessageH
 func (c *ProtoConsumer[T]) Shutdown() {
 	log.Log().Info("Shutdown")
 	c.consumer.Shutdown()
+}
+
+func (c *ProtoConsumer[T]) Purge(ctx context.Context) error {
+	return c.jetStream.Purge(ctx, jetstream.WithPurgeSubject(c.internalMsg.publishSubject()))
 }

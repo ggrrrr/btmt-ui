@@ -14,15 +14,15 @@ import (
 )
 
 func TestSave(t *testing.T) {
+	collection := "test-templ"
 	var err error
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg("tmpl")
-	testDb, err := mgo.New(ctx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	// defer testRepo.Close()
 	defer testDb.Close(ctx)
 
-	testRepo := New(cfg.Collection, testDb)
+	testRepo := New(collection, testDb)
 
 	err = testDb.DB().Collection(testRepo.collection).Drop(ctx)
 	require.NoError(t, err)

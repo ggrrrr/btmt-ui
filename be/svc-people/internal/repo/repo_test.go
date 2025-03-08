@@ -22,19 +22,21 @@ type (
 	}
 )
 
-func TestSave(t *testing.T) {
+var (
+	collection string = "test-people"
+)
 
+func TestSave(t *testing.T) {
+	ctx := context.Background()
 	expectedDuration := time.Duration(400 * time.Millisecond)
 
-	ctx := context.Background()
-	cfg := mgo.MgoTestCfg("unit_test_people")
-	testDb, err := mgo.New(ctx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
 
-	testRepo := New(cfg.Collection, testDb)
+	testRepo := New(collection, testDb)
 
-	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
+	err = testDb.DB().Collection(collection).Drop(ctx)
 	require.NoError(t, err)
 
 	tests := []testCase{
@@ -149,14 +151,13 @@ func TestSave(t *testing.T) {
 // https://github.com/mongodb/mongo-go-driver/blob/v1.12.1/examples/documentation_examples/examples.go
 func TestList(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg("test_people")
-	testDb, err := mgo.New(ctx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
 
-	testRepo := New(cfg.Collection, testDb)
+	testRepo := New(collection, testDb)
 
-	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
+	err = testDb.DB().Collection(collection).Drop(ctx)
 	require.NoError(t, err)
 
 	testRepo.CreateIndex(ctx)
@@ -398,14 +399,13 @@ func TestList(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
-	cfg := mgo.MgoTestCfg("test-people")
-	testDb, err := mgo.New(ctx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	defer testDb.Close(ctx)
 
-	testRepo := New(cfg.Collection, testDb)
+	testRepo := New(collection, testDb)
 
-	err = testDb.DB().Collection(cfg.Collection).Drop(ctx)
+	err = testDb.DB().Collection(collection).Drop(ctx)
 	require.NoError(t, err)
 
 	tests := []testCase{

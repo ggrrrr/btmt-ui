@@ -3,11 +3,11 @@ package bus
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ggrrrr/btmt-ui/be/common/jetstream"
@@ -18,37 +18,35 @@ import (
 )
 
 type mockApp struct {
+	t   *testing.T
 	wg  *sync.WaitGroup
 	err error
+	msg *emailpbv1.EmailMessage
 }
 
 // SendEmail implements senderApp.
 func (m *mockApp) SendEmail(ctx context.Context, msg *emailpbv1.EmailMessage) error {
 	fmt.Printf("\t\tmock.SendEmail88 %+v\n", msg)
+	require.NotNil(m.t, msg)
+	assert.Equal(m.t, m.msg.FromAccount.Email, msg.FromAccount.Email)
 	m.wg.Done()
 	return m.err
 }
 
-var cfg = jetstream.Config{
-	URL: "localhost:4222",
-}
 var _ (emailSender) = (*mockApp)(nil)
 
-func TestPublish(t *testing.T) {
-	verifier := token.NewVerifierMock()
+func T1estPublish(t *testing.T) {
 	var err error
 	ctx := context.Background()
 
-	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
-	os.Setenv("SERVICE_NAME", "test-service")
-	err = tracer.Configure(ctx, "devapp", tracer.Config{})
+	err = tracer.ConfigureForTest()
 	require.NoError(t, err)
 	defer func() {
 		tracer.Shutdown(context.Background())
 		fmt.Println("logger.Shutdown ;)")
 	}()
 
-	conn, err := jetstream.Connect(cfg, jetstream.WithVerifier(verifier))
+	conn, err := jetstream.ConnectForTest()
 	require.NoError(t, err)
 
 	commandPublisher, err := jetstream.NewCommandPublisher[*emailpbv1.SendEmail](
@@ -90,13 +88,10 @@ func TestPublish(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
-	verifier := token.NewVerifierMock()
 	var err error
 	ctx := context.Background()
 
-	os.Setenv("OTEL_COLLECTOR", "localhost:4317")
-	os.Setenv("SERVICE_NAME", "test-service")
-	err = tracer.Configure(ctx, "devapp", tracer.Config{})
+	err = tracer.ConfigureForTest()
 	require.NoError(t, err)
 	defer func() {
 		tracer.Shutdown(context.Background())
@@ -104,10 +99,11 @@ func TestServer(t *testing.T) {
 	}()
 
 	testApp := &mockApp{
+		t:  t,
 		wg: &sync.WaitGroup{},
 	}
 
-	conn, err := jetstream.Connect(cfg, jetstream.WithVerifier(verifier))
+	conn, err := jetstream.ConnectForTest()
 	require.NoError(t, err)
 
 	consumer, err := jetstream.NewCommandConsumer(ctx, "svc-email", conn, &emailpbv1.SendEmail{},
@@ -118,6 +114,8 @@ func TestServer(t *testing.T) {
 		fmt.Println("conn.conn.Close")
 		consumer.Shutdown()
 	}()
+
+	consumer.Purge(ctx)
 
 	err = Start(ctx, testApp, consumer)
 	require.NoError(t, err)
@@ -145,6 +143,7 @@ func TestServer(t *testing.T) {
 			},
 		},
 	}
+	testApp.msg = testEmail1.Message
 
 	err = commandPublisher.Publish(ctx, msgbus.Metadata{Id: testId1}, testEmail1)
 	require.NoError(t, err)

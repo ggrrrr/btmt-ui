@@ -41,7 +41,12 @@ func (*Module) Name() string {
 func (m *Module) Configure(ctx context.Context, s system.Service) (err error) {
 	config.MustParse(&m.cfg)
 	m.system = s
-	db, err := mgo.New(ctx, m.cfg.MGO)
+	db, err := mgo.Connect(ctx, m.cfg.MGO)
+	if err != nil {
+		return err
+	}
+
+	natsConn, err := jetstream.Connect(m.cfg.Broker)
 	if err != nil {
 		return err
 	}
@@ -50,7 +55,11 @@ func (m *Module) Configure(ctx context.Context, s system.Service) (err error) {
 		db.Close(context.Background())
 	})
 
-	stateStore, err := jetstream.NewStateStore(ctx, m.cfg.Broker, state.EntityTypeFromProto(&tmplpbv1.TemplateData{}))
+	s.Waiter().AddCleanup(func() {
+		natsConn.Shutdown()
+	})
+
+	stateStore, err := jetstream.NewStateStore(ctx, natsConn, state.EntityTypeFromProto(&tmplpbv1.TemplateData{}))
 	if err != nil {
 		return err
 	}

@@ -21,9 +21,7 @@ import (
 	tmplpb "github.com/ggrrrr/btmt-ui/be/svc-tmpl/tmplpb/v1"
 )
 
-var natsCfg = jetstream.Config{
-	URL: "localhost:4222",
-}
+var collection string = "test-templ"
 
 func TestMock(t *testing.T) {
 	blobStore := new(blob.MockBlobStore)
@@ -34,12 +32,11 @@ func TestMock(t *testing.T) {
 	ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(realm, "admin", app.Device{}))
 	var err error
 
-	cfg := mgo.MgoTestCfg("tmpl")
-	testDb, err := mgo.New(ctx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	// defer testRepo.Close()
 	defer testDb.Close(ctx)
-	testRepo := repo.New(cfg.Collection, testDb)
+	testRepo := repo.New(collection, testDb)
 
 	_, err = New(WithBlobStore(blobStore), WithTmplRepo(testRepo), WithStateStore(stateStore))
 	require.NoError(t, err)
@@ -55,15 +52,18 @@ func Test_Save(t *testing.T) {
 
 	ctx = roles.CtxWithAuthInfo(ctx, roles.CreateSystemAdminUser(realm, "admin", app.Device{}))
 
-	cfg := mgo.MgoTestCfg("tmpl")
-	testDb, err := mgo.New(ctx, cfg)
+	testDb, err := mgo.ConnectForTest(collection)
 	require.NoError(t, err)
 	// defer testRepo.Close()
 	defer testDb.Close(ctx)
 
-	testRepo := repo.New(cfg.Collection, testDb)
+	testRepo := repo.New(collection, testDb)
 
-	stateStore, err := jetstream.NewStateStore(ctx, natsCfg, state.MustParseEntityType("templates"))
+	natsConn, err := jetstream.ConnectForTest()
+	require.NoError(t, err)
+	defer natsConn.Shutdown()
+
+	stateStore, err := jetstream.NewStateStore(ctx, natsConn, state.MustParseEntityType("templates"))
 	require.NoError(t, err)
 
 	blobClient, err := awss3.NewClient("test-bucket-1", awsclient.Config{
